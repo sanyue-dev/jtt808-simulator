@@ -187,7 +187,7 @@ public abstract class AbstractDriveTask implements Driveable
 
     public String getParameter(String name)
     {
-        return String.valueOf(this.parameters.get(name));
+        return null == this.parameters.get(name) ? null : String.valueOf(this.parameters.get(name));
     }
 
     public TaskState getState()
