@@ -10,6 +10,7 @@ import cn.org.hentai.simulator.task.log.LogType;
 import cn.org.hentai.simulator.task.runner.Executable;
 import cn.org.hentai.simulator.task.net.ConnectionPool;
 import cn.org.hentai.simulator.util.ByteUtils;
+import cn.org.hentai.simulator.util.Coordtransform;
 import cn.org.hentai.simulator.util.LBSUtils;
 import cn.org.hentai.simulator.util.Packet;
 import org.slf4j.Logger;
@@ -216,11 +217,18 @@ public class SimpleDriveTask extends AbstractDriveTask
                 JTT808Message msg = new JTT808Message();
                 msg.id = 0x0200;
                 int direction = lastPosition == null ? 0 : LBSUtils.caculateAngle(lastPosition.getLongitude(), lastPosition.getLatitude(), point.getLongitude(), point.getLatitude());
+
+                Double[] gcj02 = Coordtransform.BD09ToGCJ02(point.getLongitude(), point.getLatitude());
+                Double[] wgs84 = Coordtransform.GCJ02ToWGS84(gcj02[0], gcj02[1]);
+
+                double latitude = wgs84[0];
+                double longitude = wgs84[1];
+
                 Packet p = Packet.create(128)
                         .addInt(point.getWarnFlags() | getWarningFlags())                               // DWORD, 报警标志位
                         .addInt(point.getStatus() | getStateFlags())                                    // DWORD，状态
-                        .addInt((int)(point.getLatitude() * 100_0000))                                  // DWORD，纬度
-                        .addInt((int)(point.getLongitude() * 100_0000))                                 // DWORD，经度
+                        .addInt((int)(latitude * 100_0000))                                  // DWORD，纬度
+                        .addInt((int)(longitude * 100_0000))                                 // DWORD，经度
                         .addShort((short)0)                                                             // WORD，海拔
                         .addShort((short)(point.getSpeed() * 10))                                       // WORD，速度
                         .addShort((short)direction)                                                     // WORD，方向
