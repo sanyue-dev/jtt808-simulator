@@ -221,8 +221,8 @@ public class SimpleDriveTask extends AbstractDriveTask
                 Double[] gcj02 = Coordtransform.BD09ToGCJ02(point.getLongitude(), point.getLatitude());
                 Double[] wgs84 = Coordtransform.GCJ02ToWGS84(gcj02[0], gcj02[1]);
 
-                double latitude = wgs84[0];
-                double longitude = wgs84[1];
+                double longitude = wgs84[0];
+                double latitude = wgs84[1];
 
                 Packet p = Packet.create(128)
                         .addInt(point.getWarnFlags() | getWarningFlags())                               // DWORD, 报警标志位
