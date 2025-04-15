@@ -114,11 +114,7 @@ public abstract class AbstractDriveTask implements Driveable
     {
         // 复制一份
         this.drivePlan = plan;
-        this.parameters = new HashMap<>(settings.size());
-        for (String key : settings.keySet())
-        {
-            this.parameters.put(key, settings.get(key));
-        }
+        this.parameters = new HashMap<>(settings);
         this.mode = getParameter("mode");
 
         this.state = TaskState.idle;
