@@ -278,7 +278,7 @@
 </body>
 <#include "inc/footer.ftlh">
 <script type="text/javascript" src="//api.map.baidu.com/getscript?v=2.0&ak=${baiduMapKey}&services=&t=20180917142401"></script>
-<script type="text/javascript" src="${context}/static/js/BMapLib.AutoCar.js"></script>
+<script type="text/javascript" src="/static/js/BMapLib.AutoCar.js"></script>
 <script type="text/javascript">
 
     var taskId = '${id}';
@@ -308,7 +308,7 @@
             var on = !(el.hasClass('active'));
             var bitIndex = el.index();
 
-            $.post('${context}/monitor/bit/set', { id : taskId, type : type, bitIndex : bitIndex, on : on }, function(result)
+            $.post('/monitor/bit/set', { id : taskId, type : type, bitIndex : bitIndex, on : on }, function(result)
             {
                 if (result.error && result.error.code) return console.error(result);
                 if (on) el.addClass('active');
@@ -319,7 +319,7 @@
 
     function terminate()
     {
-        $.post('${context}/monitor/terminate', { id : taskId }, function(result)
+        $.post('/monitor/terminate', { id : taskId }, function(result)
         {
             if (result.error && result.error.code) return alert(result.error.reason);
             alert('已成功终止任务');
@@ -333,7 +333,7 @@
 
     function loadTaskInfo()
     {
-        $.post('${context}/monitor/info', { id : taskId }, function(result)
+        $.post('/monitor/info', { id : taskId }, function(result)
         {
             if (result.error && result.error.code) return alert(result.error.reason);
             var info = result.data;
@@ -350,7 +350,7 @@
             vehicle = new BMapLib.AutoCar(map, startPoint, {
                 label : info.vehicleNumber,
                 labelColor : '#0099ff',
-                icon : new BMap.Icon('${context}/static/img/vehicle.png', new BMap.Size(68, 68)),
+                icon : new BMap.Icon('/static/img/vehicle.png', new BMap.Size(68, 68)),
                 iconOffset : new BMap.Size(0, 0),
                 enableRotation : true,
                 autoView : true,
@@ -379,7 +379,7 @@
 
     function loadLogs()
     {
-        $.post('${context}/monitor/logs', { id : taskId, timeAfter : lastLogTime }, function(result)
+        $.post('/monitor/logs', { id : taskId, timeAfter : lastLogTime }, function(result)
         {
             if (result.error && result.error.code) return console.error(result), setTimeout(loadLogs, 2000);
             var logs = result.data;
@@ -411,7 +411,7 @@
 
     function trace()
     {
-        $.post('${context}/monitor/position', { id : taskId, time : lastPositionTime }, function(result)
+        $.post('/monitor/position', { id : taskId, time : lastPositionTime }, function(result)
         {
             if (result.error && result.error.code) return console.error(result), setTimeout(trace, 2000);
 

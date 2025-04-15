@@ -535,12 +535,12 @@
             if (route.stayPoints.length == 0 && !confirm('你未设定停留点，是否继续保存？')) return false;
             if (route.troubleSegments.length == 0 && !confirm('你未设定问题路段，是否继续保存？')) return false;
 
-            $.post('${context}/route/save', { name : name, minSpeed : minSpeed, maxSpeed : maxSpeed,
+            $.post('/route/save', { name : name, minSpeed : minSpeed, maxSpeed : maxSpeed,
                 mileages : parseInt(route.mileages * 100), pointsJsonText : pointsJson, stayPointsJsonText : stayPointsJson, segmentsJsonText : segmentsJson }, function(result)
             {
                 if (result.error && result.error.code) return alert(result.error.reason);
                 alert('保存成功');
-                location.href = '${context}/route/index';
+                location.href = '/route/index';
             });
         });
 

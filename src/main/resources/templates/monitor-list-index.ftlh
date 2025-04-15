@@ -21,7 +21,7 @@
     {
         setCurrentMenu('list-monitor');
         $('#route-table').paginate({
-            url: '${context}/monitor/list/json',
+            url: '/monitor/list/json',
             fields: [
                 {
                     name: 'routeName',
@@ -87,7 +87,7 @@
                     formatter: function (i, v, r)
                     {
                         var html = '';
-                        html += '<a href="${context}/monitor/view?id=' + v + '" target="_blank" class="btn btn-sm btn-blue">详情</a>';
+                        html += '<a href="/monitor/view?id=' + v + '" target="_blank" class="btn btn-sm btn-blue">详情</a>';
                         return html;
                     }
                 }

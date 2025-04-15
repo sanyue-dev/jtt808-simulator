@@ -8,7 +8,7 @@
 <div class="container">
 <#include "inc/sidebar.ftlh">
     <div class="content datasheet">
-        <h2>线路管理<a href="${context}/route/create" class="btn btn-sm btn-blue pull-right">创建新线路</a></h2>
+        <h2>线路管理<a href="/route/create" class="btn btn-sm btn-blue pull-right">创建新线路</a></h2>
         <hr />
         <div id="route-table"></div>
         <ul class="pagination"></ul>
@@ -21,7 +21,7 @@
     {
         setCurrentMenu('route');
         $('#route-table').paginate({
-            url: '${context}/route/list',
+            url: '/route/list',
             fields: [
                 {
                     name: 'id',
@@ -93,7 +93,7 @@
     function remove(id)
     {
         if (!confirm('真的要删除吗？')) return;
-        $.post('${context}/route/remove', { id : id }, function(result)
+        $.post('/route/remove', { id : id }, function(result)
         {
             if (result.error && result.error.code) return alert(result.error.reason);
             alert('删除成功');
