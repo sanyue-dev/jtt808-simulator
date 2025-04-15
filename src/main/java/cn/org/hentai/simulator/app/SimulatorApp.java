@@ -20,9 +20,8 @@ import java.util.TimeZone;
 /**
  * Created by matrixy when 2019/8/13.
  */
-@ComponentScan(value = {"cn.org.hentai"})
-@MapperScan(basePackages = "cn.org.hentai")
-@SpringBootApplication
+@MapperScan(basePackages = "cn.org.hentai.simulator.web.mapper")
+@SpringBootApplication(scanBasePackages = {"cn.org.hentai.simulator.web"})
 public class SimulatorApp
 {
     static Logger logger = LoggerFactory.getLogger(SimulatorApp.class);

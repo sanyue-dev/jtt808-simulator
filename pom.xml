@@ -11,7 +11,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.18</version>
+        <version>3.3.3</version>
     </parent>
 
     <properties>
@@ -28,7 +28,7 @@
         <dependency>
             <groupId>org.mybatis.spring.boot</groupId>
             <artifactId>mybatis-spring-boot-starter</artifactId>
-            <version>2.3.0</version>
+            <version>3.0.4</version>
         </dependency>
         <dependency>
             <groupId>com.danielflower.apprunner</groupId>
@@ -79,7 +79,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <fork>true</fork>
                     <mainClass>cn.org.hentai.simulator.app.SimulatorApp</mainClass>
                 </configuration>
                 <executions>
