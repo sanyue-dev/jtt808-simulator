@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<#include "inc/resource.ftl">
+<#include "inc/resource.ftlh">
     <title>线路管理</title>
 </head>
 <body>
 <div class="container">
-<#include "inc/sidebar.ftl">
+<#include "inc/sidebar.ftlh">
     <div class="content datasheet">
         <h2>线路管理<a href="${context}/route/create" class="btn btn-sm btn-blue pull-right">创建新线路</a></h2>
         <hr />
@@ -15,7 +15,7 @@
     </div>
 </div>
 </body>
-<#include "inc/footer.ftl">
+<#include "inc/footer.ftlh">
 <script type="text/javascript">
     $(document).ready(function()
     {

@@ -1,0 +1,24 @@
+server:
+  port: 18888
+spring:
+  mvc:
+    static-path-pattern: /static/**
+  datasource:
+    username: root
+    password: root
+    url: jdbc:mysql://127.0.0.1:3306/simulator?autoReconnect=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+  freemarker:
+    template-loader-path: classpath:/templates
+map:
+  baidu:
+    key: 9c4c81899c09126709e74ac151ca86a0
+video:
+  path: /opt/video/
+vehicle-server:
+  addr: 127.0.0.1
+  port: '20021'
+mybatis:
+  type-aliases-package: cn.org.hentai.simulator.web.entity.Mapper
+file:
+  upload:
+    path: /opt/upload/

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <#include "inc/resource.ftl">
+    <#include "inc/resource.ftlh">
     <title>创建新线路</title>
     <style type="text/css">
         .content
@@ -107,7 +107,7 @@
 </head>
 <body>
 <div class="container">
-    <#include "inc/sidebar.ftl">
+    <#include "inc/sidebar.ftlh">
     <div class="content">
         <div id="panel">
             <h4>
@@ -179,7 +179,7 @@
     </div>
 </div>
 </body>
-<#include "inc/footer.ftl">
+<#include "inc/footer.ftlh">
 <script type="text/javascript" src="//api.map.baidu.com/getscript?v=2.0&ak=${baiduMapKey}&services=&t=20180917142401"></script>
 <script type="text/javascript" src="//api.map.baidu.com/library/DistanceTool/1.2/src/DistanceTool_min.js"></script>
 <script type="text/javascript">

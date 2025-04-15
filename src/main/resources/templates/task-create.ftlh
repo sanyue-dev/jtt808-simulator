@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <#include "inc/resource.ftl">
+    <#include "inc/resource.ftlh">
     <title>创建临时行程</title>
     <style type="text/css">
         .container .content .x-row
@@ -17,7 +17,7 @@
 </head>
 <body>
 <div class="container">
-    <#include "inc/sidebar.ftl">
+    <#include "inc/sidebar.ftlh">
     <div class="content">
         <h2>创建临时行程任务</h2>
         <hr />
@@ -75,7 +75,7 @@
     </div>
 </div>
 </body>
-<#include "inc/footer.ftl">
+<#include "inc/footer.ftlh">
 <script type="text/javascript">
     $(document).ready(function()
     {
