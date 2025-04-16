@@ -1,25 +1,28 @@
 package cn.org.hentai.simulator.task.net;
 
-import cn.org.hentai.simulator.jtt808.JTT808Decoder;
-import cn.org.hentai.simulator.jtt808.JTT808Message;
 import cn.org.hentai.simulator.task.AbstractDriveTask;
-import cn.org.hentai.simulator.task.event.EventCallable;
 import cn.org.hentai.simulator.task.event.EventDispatcher;
+import io.github.yezhihao.netmc.codec.MessageDecoder;
+import io.github.yezhihao.netmc.codec.MessageEncoder;
+import io.github.yezhihao.netmc.core.model.Message;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.util.CharsetUtil;
+import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
+import io.netty.handler.codec.MessageToByteEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yzh.protocol.basics.JTMessage;
+import org.yzh.protocol.codec.JTMessageAdapter;
 
 import java.net.InetSocketAddress;
 import java.net.SocketException;
-import java.nio.charset.Charset;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -28,6 +31,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ConnectionPool
 {
     static Logger logger = LoggerFactory.getLogger(ConnectionPool.class);
+
+    public static final JTMessageAdapter messageAdapter = new JTMessageAdapter("org.yzh.protocol.t808");
 
     EventLoopGroup group = null;
     Bootstrap bootstrap = null;
@@ -52,9 +57,32 @@ public class ConnectionPool
                 protected void initChannel(SocketChannel ch) throws Exception
                 {
                     ch.pipeline()
-                            .addLast(new JT808MessageDecoder())
-                            .addLast(new JT808MessageEncoder())
-                            .addLast(new SimpleNettyHandler());
+                            .addLast("frameDecoder", new DelimiterBasedFrameDecoder(2 + 21 + 1023 * 2 + 1 + 2,
+                                    Unpooled.wrappedBuffer(new byte[] { 0x7e }),
+                                    Unpooled.wrappedBuffer(new byte[] { 0x7e }, new byte[] { 0x7e })))
+                            .addLast("decoder", new ByteToMessageDecoder() {
+                                @Override
+                                protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) {
+//                                    logger.info("<<<<<{}", ByteBufUtil.hexDump(buf));
+                                    Object msg = ((MessageDecoder)messageAdapter).decode(buf, null);
+//                                    logger.info("<<<<<<<<<<{}", msg);
+                                    if (msg != null)
+                                        out.add(msg);
+                                    buf.skipBytes(buf.readableBytes());
+                                }
+                            })
+                            .addLast("encoder", new MessageToByteEncoder<Message>() {
+                                @Override
+                                protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out) {
+//                                    logger.info(">>>>>>>>>>{}", msg);
+                                    ByteBuf buf = ((MessageEncoder) messageAdapter).encode(msg, null);
+//                                    logger.info(">>>>>{}", ByteBufUtil.hexDump(buf));
+                                    out.writeBytes(new byte[] { 0x7e }).writeBytes(buf).writeBytes(new byte[] { 0x7e });
+                                    buf.release();
+                                }
+                            })
+                            .addLast("adapter", new SimpleNettyHandler())
+                    ;
                 }
             });
     }
@@ -130,7 +158,7 @@ public class ConnectionPool
         }
     }
 
-    static class SimpleNettyHandler extends SimpleChannelInboundHandler<JTT808Message>
+    static class SimpleNettyHandler extends SimpleChannelInboundHandler<JTMessage>
     {
         @Override
         public void channelActive(ChannelHandlerContext ctx) throws Exception
@@ -147,9 +175,9 @@ public class ConnectionPool
         }
 
         @Override
-        protected void channelRead0(ChannelHandlerContext ctx, JTT808Message msg) throws Exception
+        protected void channelRead0(ChannelHandlerContext ctx, JTMessage msg) throws Exception
         {
-            String msgId = String.format("%04x", msg.id & 0xffff);
+            String msgId = String.format("%04x", msg.getMessageId() & 0xffff);
             // logger.debug("received: {}", msgId);
             instance.notify("message_received", ctx.channel().id().asLongText(), msgId, msg);
         }

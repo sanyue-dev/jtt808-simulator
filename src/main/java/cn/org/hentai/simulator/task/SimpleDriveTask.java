@@ -1,23 +1,27 @@
 package cn.org.hentai.simulator.task;
 
 import cn.org.hentai.simulator.entity.Point;
-import cn.org.hentai.simulator.jtt808.JTT808Encoder;
 import cn.org.hentai.simulator.jtt808.JTT808Message;
+import cn.org.hentai.simulator.task.event.EventDispatcher;
 import cn.org.hentai.simulator.task.event.EventEnum;
 import cn.org.hentai.simulator.task.event.Listen;
-import cn.org.hentai.simulator.task.event.EventDispatcher;
 import cn.org.hentai.simulator.task.log.LogType;
-import cn.org.hentai.simulator.task.runner.Executable;
 import cn.org.hentai.simulator.task.net.ConnectionPool;
-import cn.org.hentai.simulator.util.ByteUtils;
+import cn.org.hentai.simulator.task.runner.Executable;
 import cn.org.hentai.simulator.util.Coordtransform;
 import cn.org.hentai.simulator.util.LBSUtils;
-import cn.org.hentai.simulator.util.Packet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yzh.protocol.basics.JTMessage;
+import org.yzh.protocol.commons.JT808;
+import org.yzh.protocol.t808.*;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by matrixy when 2020/5/9.
@@ -78,9 +82,9 @@ public class SimpleDriveTask extends AbstractDriveTask
 
     // 通用下行消息回调，先执行这个方法，后再按消息ID进行路由，所以最好不要在这里做应答
     @Listen(when = EventEnum.message_received)
-    public void onServerMessage(JTT808Message msg)
+    public void onServerMessage(JTMessage msg)
     {
-        log(LogType.MESSAGE_IN, ByteUtils.toString(JTT808Encoder.encode(msg)));
+        log(LogType.MESSAGE_IN, msg.toString());
     }
 
     @Listen(when = EventEnum.connected)
@@ -89,30 +93,26 @@ public class SimpleDriveTask extends AbstractDriveTask
         log(LogType.INFO, "connected");
         // 连接成功时，发送注册消息
         String sn = getParameter("device.sn");
-        byte[] vin = new byte[0];
-        try { vin = getParameter("vehicle.number").getBytes("GBK"); } catch(Exception ex) { }
 
-        JTT808Message msg = new JTT808Message();
-        msg.id = 0x0100;
-        msg.body = Packet.create(64)
-                .addShort((short)0x0001)
-                .addShort((short)0x0001)
-                .addBytes("CHINA".getBytes(), 5)
-                .addBytes("HENTAI-SIMULATOR".getBytes(), 20)
-                .addBytes(sn.getBytes(), 7)
-                .addByte((byte)0x01)
-                .addBytes(vin)
-                .getBytes();
+        T0100 msg = new T0100();
+        msg.setMessageId(JT808.终端注册);
+        msg.setProvinceId(1);
+        msg.setCityId(1);
+        msg.setMakerId("CHINA");
+        msg.setDeviceModel("HENTAI-SIMULATOR");
+        msg.setDeviceId(sn);
+        msg.setPlateColor(1);
+        msg.setPlateNo(getParameter("vehicle.number"));
 
         send(msg);
     }
 
     @Listen(when = EventEnum.message_received, attachment = "8001")
-    public void onGenericResponse(JTT808Message msg)
+    public void onGenericResponse(T0001 msg)
     {
-        int answerSequence = ByteUtils.getShort(msg.body, 0, 2) & 0xffff;
-        int answerMessageId = ByteUtils.getShort(msg.body, 2, 2) & 0xffff;
-        int result = msg.body[4] & 0xff;
+        int answerSequence = msg.getSerialNo();
+        int answerMessageId = msg.getMessageId();
+        int result = msg.getMessageId();
         logger.debug(String.format("answer -> seq: %4d, id: %04x, result: %02d", answerSequence, answerMessageId, result));
 
         // TODO: 应该整个hashmap保存上一次发送的消息ID，KEY为流水号
@@ -126,9 +126,9 @@ public class SimpleDriveTask extends AbstractDriveTask
 
     // 注册应答时
     @Listen(when = EventEnum.message_received, attachment = "8100")
-    public void onRegisterResponsed(JTT808Message msg)
+    public void onRegisterResponsed(T8100 msg)
     {
-        int result = msg.body[2] & 0xff;
+        int result = msg.getResultCode();
         if (result == 0x00)
         {
             log(LogType.INFO, "registered");
@@ -150,12 +150,11 @@ public class SimpleDriveTask extends AbstractDriveTask
 
     // 接收到文本信息
     @Listen(when = EventEnum.message_received, attachment = "8300")
-    public void onTTSMessage(JTT808Message msg)
+    public void onTTSMessage(T8300 msg)
     {
-        Packet p = Packet.create(msg.body);
-        int flag = p.nextByte() & 0xff;
-        String text = null;
-        try { text = new String(p.nextBytes(), "GBK"); } catch(Exception ex) { }
+        int flag = msg.getSign();
+        String text;
+        text = msg.getContent();
         boolean emergency = (flag & (1 << 0)) > 0;
         boolean display = (flag & (1 << 2)) > 0;
         boolean tts = (flag & (1 << 3)) > 0;
@@ -170,8 +169,10 @@ public class SimpleDriveTask extends AbstractDriveTask
         log(LogType.INFO, log + "文本：" + text);
 
         // 回应一下
-        GENERAL_RESPONSE.body = Packet.create(5).addShort((short) msg.sequence).addShort((short) msg.id).addByte((byte) 0x00).getBytes();
-        send(GENERAL_RESPONSE);
+        T0001 responMsg = new T0001();
+        responMsg.setSerialNo(msg.getSerialNo());
+        responMsg.setResultCode(0);
+        send(responMsg);
     }
 
     // 开始正常会话，发送心跳与位置
@@ -214,8 +215,6 @@ public class SimpleDriveTask extends AbstractDriveTask
             @Override
             public void execute(AbstractDriveTask driveTask)
             {
-                JTT808Message msg = new JTT808Message();
-                msg.id = 0x0200;
                 int direction = lastPosition == null ? 0 : LBSUtils.caculateAngle(lastPosition.getLongitude(), lastPosition.getLatitude(), point.getLongitude(), point.getLatitude());
 
                 Double[] gcj02 = Coordtransform.BD09ToGCJ02(point.getLongitude(), point.getLatitude());
@@ -224,17 +223,16 @@ public class SimpleDriveTask extends AbstractDriveTask
                 double longitude = wgs84[0];
                 double latitude = wgs84[1];
 
-                Packet p = Packet.create(128)
-                        .addInt(point.getWarnFlags() | getWarningFlags())                               // DWORD, 报警标志位
-                        .addInt(point.getStatus() | getStateFlags())                                    // DWORD，状态
-                        .addInt((int)(latitude * 100_0000))                                  // DWORD，纬度
-                        .addInt((int)(longitude * 100_0000))                                 // DWORD，经度
-                        .addShort((short)0)                                                             // WORD，海拔
-                        .addShort((short)(point.getSpeed() * 10))                                       // WORD，速度
-                        .addShort((short)direction)                                                     // WORD，方向
-                        .addBytes(ByteUtils.toBCD(sdf.format(new Date(point.getReportTime()))))         // BCD[6]，时间
-                        ;
-                // TODO: 增加附加信息
+                T0200 msg = new T0200();
+                msg.setMessageId(JT808.位置信息汇报);
+                msg.setWarnBit(point.getWarnFlags() | getWarningFlags());
+                msg.setStatusBit(point.getStatus() | getStateFlags());
+                msg.setLatitude((int)(latitude * 100_0000));
+                msg.setLongitude((int)(longitude * 100_0000));
+                msg.setAltitude(0);
+                msg.setSpeed((int) (point.getSpeed() * 10));
+                msg.setDirection(direction);
+                msg.setDeviceTime(LocalDateTime.ofInstant(Instant.ofEpochMilli(point.getReportTime()), ZoneId.systemDefault()));
 
                 // 里程数
                 int km = (lastPosition == null ? 0 : LBSUtils.directDistance(point.getLongitude(), point.getLatitude(), lastPosition.getLongitude(), lastPosition.getLatitude()));
@@ -243,11 +241,10 @@ public class SimpleDriveTask extends AbstractDriveTask
                 // 里程数单位为1/10公里
 
                 km = km / 100;
-                p.addByte((byte)0x01);
-                p.addByte((byte)0x04);
-                p.addInt(km);
 
-                msg.body = p.getBytes();
+                Map<Integer, Object> attributes = new HashMap<>();
+                attributes.put(0x01, km);
+                msg.setAttributes(attributes);
                 send(msg);
 
                 setCurrentPosition(point);
@@ -263,19 +260,18 @@ public class SimpleDriveTask extends AbstractDriveTask
     }
 
     @Override
-    public void send(JTT808Message msg)
-    {
+    public void send(JTMessage msg) {
         try
         {
-            msg.sim = getParameter("device.sim");
-            msg.sequence = (short)((sequence++) & 0xffff);
+            msg.setClientId(getParameter("device.sim"));
+            msg.setSerialNo((sequence++) & 0xffff);
             pool.send(connectionId, msg);
 
-            lastSentMessageId = msg.id;
+            lastSentMessageId = msg.getSerialNo();
 
-            logger.info("send: {} -> {} : {}", msg.sim, msg.sequence, String.format("%04x", msg.id));
+            logger.info("send: {} -> {} : {}", msg.getClientId(), msg.getSerialNo(), String.format("%04x", msg.getMessageId()));
 
-            log(LogType.MESSAGE_OUT, ByteUtils.toString(JTT808Encoder.encode(msg)));
+            log(LogType.MESSAGE_OUT, msg.toString());
         }
         catch (Exception e)
         {

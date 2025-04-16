@@ -10,6 +10,7 @@ import cn.org.hentai.simulator.task.runner.Executable;
 import cn.org.hentai.simulator.task.runner.RunnerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yzh.protocol.basics.JTMessage;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -225,5 +226,5 @@ public abstract class AbstractDriveTask implements Driveable
     }
 
     // 发送消息
-    public abstract void send(JTT808Message msg);
+    public abstract void send(JTMessage msg);
 }
