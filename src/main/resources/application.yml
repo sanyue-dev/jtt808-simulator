@@ -22,3 +22,7 @@ mybatis:
 file:
   upload:
     path: /opt/upload/
+
+logging:
+  level:
+    org.yzh.protocol.codec: WARN
