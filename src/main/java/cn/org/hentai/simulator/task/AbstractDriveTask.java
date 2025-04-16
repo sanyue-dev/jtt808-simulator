@@ -3,7 +3,6 @@ package cn.org.hentai.simulator.task;
 import cn.org.hentai.simulator.entity.DrivePlan;
 import cn.org.hentai.simulator.entity.Point;
 import cn.org.hentai.simulator.entity.TaskInfo;
-import cn.org.hentai.simulator.jtt808.JTT808Message;
 import cn.org.hentai.simulator.task.log.Log;
 import cn.org.hentai.simulator.task.log.LogType;
 import cn.org.hentai.simulator.task.runner.Executable;

@@ -1,7 +1,6 @@
 package cn.org.hentai.simulator.task;
 
 import cn.org.hentai.simulator.entity.Point;
-import cn.org.hentai.simulator.jtt808.JTT808Message;
 import cn.org.hentai.simulator.task.event.EventDispatcher;
 import cn.org.hentai.simulator.task.event.EventEnum;
 import cn.org.hentai.simulator.task.event.Listen;
@@ -16,7 +15,6 @@ import org.yzh.protocol.basics.JTMessage;
 import org.yzh.protocol.commons.JT808;
 import org.yzh.protocol.t808.*;
 
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -48,10 +46,6 @@ public class SimpleDriveTask extends AbstractDriveTask
 
     // 连接池
     ConnectionPool pool = ConnectionPool.getInstance();
-
-    SimpleDateFormat sdf = new SimpleDateFormat("YYMMddHHmmss");
-
-    final JTT808Message GENERAL_RESPONSE = new JTT808Message(0x0001);
 
     public SimpleDriveTask(long id, long routeId)
     {
