@@ -15,12 +15,12 @@
     </parent>
 
     <properties>
-        <project.build.jdk>1.8</project.build.jdk>
+        <project.build.jdk>17</project.build.jdk>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.version>1.8</java.version>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <java.version>17</java.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <encoding>UTF-8</encoding>
     </properties>
 
@@ -86,38 +86,6 @@
                         <goals>
                             <goal>repackage</goal>
                         </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.DontIncludeResourceTransformer">
-                                    <resource>.xxoo</resource>
-                                </transformer>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                    <resource>META-INF/spring.handlers</resource>
-                                </transformer>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                    <resource>META-INF/spring.schemas</resource>
-                                </transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <manifestEntries>
-                                        <Main-Class>cn.org.hentai.simulator.app.SimulatorApp</Main-Class>
-                                    </manifestEntries>
-                                </transformer>
-                            </transformers>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
