@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.yzh.protocol.basics.JTMessage;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
  * Created by matrixy when 2020/5/8.
@@ -45,7 +45,7 @@ public abstract class AbstractDriveTask implements Driveable
     private int stateFlags = (1 << 0) | (1 << 1) | (1 << 18);
 
     // 日志信息：在调试模式时记录下来
-    private ConcurrentLinkedQueue<Log> logs;
+    private ConcurrentSkipListMap<Long, Log> logs;
 
     // TODO: 需要把几个常用的，用于显示在表格上的属性值，整成成员属性，避免对Map的并发读写
     TaskInfo info;
@@ -56,7 +56,7 @@ public abstract class AbstractDriveTask implements Driveable
     {
         this.id = id;
         this.routeId = routeId;
-        this.logs = new ConcurrentLinkedQueue<Log>();
+        this.logs = new ConcurrentSkipListMap<>();
     }
 
     public long getId()
@@ -83,7 +83,8 @@ public abstract class AbstractDriveTask implements Driveable
     {
         // 只在DEBUG模式下才记录日志
         if ("debug".equals(mode) == false) return;
-        this.logs.add(new Log(type, System.currentTimeMillis(), attachment));
+        long ts = System.currentTimeMillis();
+        this.logs.put(ts, new Log(type, System.currentTimeMillis(), attachment));
     }
 
     /**
@@ -93,17 +94,7 @@ public abstract class AbstractDriveTask implements Driveable
      */
     public final List<Log> getLogs(long timeAfter)
     {
-        Iterator<Log> itr = this.logs.iterator();
-        List<Log> results = new LinkedList();
-
-        // TODO: 想办法整一个双端链表，避免头部无意义的空转
-        for (int i = 0; itr.hasNext(); i++)
-        {
-            Log item = itr.next();
-            if (item.time <= timeAfter) continue;
-            results.add(item);
-        }
-        return results;
+        return new ArrayList<>(this.logs.tailMap(timeAfter,false).values());
     }
 
     /**
