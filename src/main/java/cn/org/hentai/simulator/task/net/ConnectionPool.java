@@ -77,7 +77,7 @@ public class ConnectionPool
 //                                    logger.info(">>>>>>>>>>{}", msg);
                                     ByteBuf buf = ((MessageEncoder) messageAdapter).encode(msg, null);
 //                                    logger.info(">>>>>{}", ByteBufUtil.hexDump(buf));
-                                    out.writeBytes(new byte[] { 0x7e }).writeBytes(buf).writeBytes(new byte[] { 0x7e });
+                                    out.writeBytes(buf);
                                     buf.release();
                                 }
                             })
