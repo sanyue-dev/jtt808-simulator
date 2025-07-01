@@ -2,6 +2,10 @@ package cn.org.hentai.simulator.task.runner;
 
 import cn.org.hentai.simulator.task.AbstractDriveTask;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 /**
  * Created by matrixy when 2020/5/8.
  * LoopRunner线程管理器，用于分发/管理任务
@@ -9,19 +13,11 @@ import cn.org.hentai.simulator.task.AbstractDriveTask;
 public final class RunnerManager
 {
     static final RunnerManager instance = new RunnerManager();
-
-    // LoopRunner线程组
-    LoopRunner[] runners;
+    private final ScheduledExecutorService scheduler;
 
     private RunnerManager()
     {
-        runners = new LoopRunner[Runtime.getRuntime().availableProcessors()];
-        for (int i = 0; i < runners.length; i++)
-        {
-            runners[i] = new LoopRunner();
-            runners[i].setName("loop-runner-" + i);
-            runners[i].start();
-        }
+        this.scheduler = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
     }
 
     // 只要在应用程序启动时调用一下这个方法，就可以完成本类的static变量的初始化，省得加锁了
@@ -47,18 +43,15 @@ public final class RunnerManager
     }
 
     // 委托在milliseconds时间后运行某任务
-    public void execute(AbstractDriveTask driveTask, Executable task, int milliseconds, int interval)
-    {
-        int hash = Math.abs(driveTask.hashCode() % runners.length);
-        runners[hash].execute(driveTask, task, milliseconds, interval);
+    public void execute(AbstractDriveTask driveTask, Executable task, int milliseconds, int interval) {
+        scheduler.schedule(() -> {
+            task.execute(driveTask);
+        }, milliseconds, TimeUnit.MILLISECONDS);
     }
 
     // 关闭线程组里的所有LoopRunner
     public void shutdown()
     {
-        for (LoopRunner runner : runners)
-        {
-            runner.interrupt();
-        }
+        scheduler.shutdownNow();
     }
 }
