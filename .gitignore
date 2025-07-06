@@ -3,3 +3,4 @@ target
 /cache
 .idea
 *.db
+.java-version
