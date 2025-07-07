@@ -27,6 +27,8 @@ public class BatchController extends BaseController
     @Value("${vehicle-server.port}")
     String  vehicleServerPort;
 
+    private String mode;
+
     // 批量创建任务入口页面
     @RequestMapping("/index")
     public String index(Model model)
@@ -84,7 +86,7 @@ public class BatchController extends BaseController
                 {
                     put("server.address", serverAddress);
                     put("server.port", serverPort);
-                    put("mode", "debug");
+                    put("mode", mode);
                 }
             };
 
@@ -112,5 +114,10 @@ public class BatchController extends BaseController
             result.setError(ex);
         }
         return result;
+    }
+
+    @Value("${simulator.mode}")
+    public void setMode(String mode) {
+        this.mode = mode;
     }
 }

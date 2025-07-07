@@ -32,6 +32,8 @@ import java.util.Map;
 @RequestMapping("/task")
 public class TaskController
 {
+    private String mode;
+
     @Autowired
     RouteService routeService;
 
@@ -97,7 +99,7 @@ public class TaskController
                     put("device.sim", sim);
                     put("server.address", serverAddress);
                     put("server.port", serverPort);
-                    put("mode", "debug");
+                    put("mode", mode);
                     put("mileages", km);
                 }
             };
@@ -109,5 +111,10 @@ public class TaskController
             result.setError(ex);
         }
         return result;
+    }
+
+    @Value("${simulator.mode}")
+    public void setMode(String mode) {
+        this.mode = mode;
     }
 }

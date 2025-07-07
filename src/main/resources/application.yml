@@ -23,6 +23,9 @@ file:
   upload:
     path: /opt/upload/
 
+simulator:
+  mode: stress
+
 logging:
   level:
     org.yzh.protocol.codec: WARN
