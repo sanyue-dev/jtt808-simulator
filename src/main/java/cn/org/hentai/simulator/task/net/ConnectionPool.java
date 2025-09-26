@@ -1,6 +1,7 @@
 package cn.org.hentai.simulator.task.net;
 
 import cn.org.hentai.simulator.task.AbstractDriveTask;
+import cn.org.hentai.simulator.task.SimpleDriveTask;
 import cn.org.hentai.simulator.task.event.EventDispatcher;
 import io.github.yezhihao.netmc.codec.MessageDecoder;
 import io.github.yezhihao.netmc.codec.MessageEncoder;
@@ -88,12 +89,21 @@ public class ConnectionPool
     }
 
     // 连接到目标服务器
-    public String connect(String address, int port, AbstractDriveTask watcher)
+    public void connect(String address, int port, SimpleDriveTask watcher)
     {
-        Channel chl = bootstrap.register().channel();
-        connections.put(chl.id().asLongText(), new Connection(chl, watcher));
-        chl.connect(new InetSocketAddress(address, port));
-        return chl.id().asLongText();
+        ChannelFuture connectFuture = bootstrap.connect(address, port);
+
+        connectFuture.addListener((ChannelFuture future) -> {
+            if (future.isSuccess()) {
+                Channel chl = future.channel();
+                // 在 EventLoop 线程中安全地执行后续操作
+                connections.put(chl.id().asLongText(), new Connection(chl, watcher));
+                watcher.onConnectSuccess(chl);
+            } else {
+                // 连接失败，通知 watcher
+                watcher.onConnectFailure(future.cause());
+            }
+        });
     }
 
     // 关闭连接

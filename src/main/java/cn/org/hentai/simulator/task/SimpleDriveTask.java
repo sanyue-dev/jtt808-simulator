@@ -1,5 +1,6 @@
 package cn.org.hentai.simulator.task;
 
+import cn.org.hentai.simulator.TaskStatus;
 import cn.org.hentai.simulator.entity.Point;
 import cn.org.hentai.simulator.task.event.EventDispatcher;
 import cn.org.hentai.simulator.task.event.EventEnum;
@@ -9,6 +10,7 @@ import cn.org.hentai.simulator.task.net.ConnectionPool;
 import cn.org.hentai.simulator.task.runner.Executable;
 import cn.org.hentai.simulator.util.Coordtransform;
 import cn.org.hentai.simulator.util.LBSUtils;
+import io.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yzh.protocol.basics.JTMessage;
@@ -29,7 +31,12 @@ public class SimpleDriveTask extends AbstractDriveTask
     static Logger logger = LoggerFactory.getLogger(SimpleDriveTask.class);
 
     // 部标808协议连接id
-    String connectionId;
+    volatile String connectionId;
+
+    // 状态
+    volatile TaskStatus status;
+
+    volatile String token;
 
     // 1078多媒体传输协议接连id
     String multimediaConnectionId;
@@ -53,10 +60,9 @@ public class SimpleDriveTask extends AbstractDriveTask
     }
 
     @Override
-    public void startup()
-    {
+    public void startup() {
         EventDispatcher.register(this);
-        connectionId = pool.connect(getParameter("server.address"), Integer.parseInt(getParameter("server.port")), this);
+        pool.connect(getParameter("server.address"), Integer.parseInt(getParameter("server.port")), this);
 
         // 总行驶里程初始化
         Object km = getParameter("mileages");
@@ -72,6 +78,18 @@ public class SimpleDriveTask extends AbstractDriveTask
     {
         super.terminate();
         pool.close(connectionId);
+    }
+
+    // 新增：处理连接成功的回调
+    public void onConnectSuccess(Channel channel) {
+        // 当连接成功后，这个方法会被 ConnectionPool 调用
+        this.connectionId = channel.id().asLongText();
+    }
+
+    // 新增：处理连接失败的回调
+    public void onConnectFailure(Throwable cause) {
+        logger.error("onConnectFailure", cause);
+        this.terminate(); // 例如，失败了就直接终止任务
     }
 
     // 通用下行消息回调，先执行这个方法，后再按消息ID进行路由，所以最好不要在这里做应答
@@ -102,37 +120,30 @@ public class SimpleDriveTask extends AbstractDriveTask
     }
 
     @Listen(when = EventEnum.message_received, attachment = "8001")
-    public void onGenericResponse(T0001 msg)
-    {
-        int answerSequence = msg.getSerialNo();
-        int answerMessageId = msg.getMessageId();
-        int result = msg.getMessageId();
-        logger.debug(String.format("answer -> seq: %4d, id: %04x, result: %02d", answerSequence, answerMessageId, result));
-
-        // TODO: 应该整个hashmap保存上一次发送的消息ID，KEY为流水号
-        switch (lastSentMessageId)
-        {
-            // 其它就不管了
+    public void onGenericResponse(T0001 msg) {
+        if (status == TaskStatus.AUTHENTICATING) {
+            if (msg.isSuccess()) {
+                status = TaskStatus.AUTHENTICATION_SUCCESSFUL;
+            } else {
+                status = TaskStatus.AUTHENTICATION_FAILED;
+            }
         }
-
-        lastSentMessageId = 0;
+        next();
     }
 
     // 注册应答时
     @Listen(when = EventEnum.message_received, attachment = "8100")
-    public void onRegisterResponsed(T8100 msg)
-    {
+    public void onRegisterResponsed(T8100 msg) {
         int result = msg.getResultCode();
-        if (result == 0x00)
-        {
+        if (result == 0) {
+            status = TaskStatus.REGISTRATION_SUCCESSFUL;
+            token = msg.getToken();
             log(LogType.INFO, "registered");
-            startSession();
-        }
-        else
-        {
+        } else {
+            status = TaskStatus.REGISTRATION_FAILED;
             log(LogType.EXCEPTION, "register failed");
-            terminate();
         }
+        next();
     }
 
     @Listen(when = EventEnum.disconnected)
@@ -169,9 +180,17 @@ public class SimpleDriveTask extends AbstractDriveTask
         send(responMsg);
     }
 
-    // 开始正常会话，发送心跳与位置
-    protected void startSession()
-    {
+    // 根据状态进行下一步
+    protected void next() {
+        if (TaskStatus.REGISTRATION_SUCCESSFUL == status) {
+            authenticate();
+        } else if (TaskStatus.REGISTRATION_FAILED == status) {
+            terminate();
+        } else if (TaskStatus.AUTHENTICATION_SUCCESSFUL == status) {
+            reportLocation();
+        } else if (TaskStatus.AUTHENTICATION_FAILED == status) {
+            terminate();
+        }
         // 暂时先屏蔽掉，没发送心跳消息就暂时先不执行了
         /*
         executeConstantly(new Executable()
@@ -183,32 +202,38 @@ public class SimpleDriveTask extends AbstractDriveTask
             }
         }, 30000);
         */
-        reportLocation();
+//        reportLocation();
     }
 
-    public void reportLocation()
-    {
+    private void authenticate() {
+        executeConstantly(driveTask -> {
+            if (TaskStatus.REGISTRATION_SUCCESSFUL == status) {
+                status = TaskStatus.AUTHENTICATING;
+                T0102 message = new T0102();
+                message.setMessageId(JT808.终端鉴权);
+                message.setToken(token);
+                send(message);
+            }
+        }, 3000);
+    }
+
+    public void reportLocation() {
         lastPosition = getCurrentPosition();
         final Point point = getNextPoint();
-        if (point == null)
-        {
+        if (point == null) {
             // 10分钟后再关闭
-            executeAfter(new Executable()
-            {
+            executeAfter(new Executable() {
                 @Override
-                public void execute(AbstractDriveTask driveTask)
-                {
+                public void execute(AbstractDriveTask driveTask) {
                     terminate();
                 }
             }, 1000 * 60 * 10);
             return;
         }
 
-        executeAfter(new Executable()
-        {
+        executeAfter(new Executable() {
             @Override
-            public void execute(AbstractDriveTask driveTask)
-            {
+            public void execute(AbstractDriveTask driveTask) {
                 int direction = lastPosition == null ? 0 : LBSUtils.caculateAngle(lastPosition.getLongitude(), lastPosition.getLatitude(), point.getLongitude(), point.getLatitude());
 
                 Double[] gcj02 = Coordtransform.BD09ToGCJ02(point.getLongitude(), point.getLatitude());
@@ -221,8 +246,8 @@ public class SimpleDriveTask extends AbstractDriveTask
                 msg.setMessageId(JT808.位置信息汇报);
                 msg.setWarnBit(point.getWarnFlags() | getWarningFlags());
                 msg.setStatusBit(point.getStatus() | getStateFlags());
-                msg.setLatitude((int)(latitude * 100_0000));
-                msg.setLongitude((int)(longitude * 100_0000));
+                msg.setLatitude((int) (latitude * 100_0000));
+                msg.setLongitude((int) (longitude * 100_0000));
                 msg.setAltitude(0);
                 msg.setSpeed((int) (point.getSpeed() * 10));
                 msg.setDirection(direction);
@@ -244,31 +269,27 @@ public class SimpleDriveTask extends AbstractDriveTask
                 setCurrentPosition(point);
                 reportLocation();
             }
-        }, (int)Math.max(point.getReportTime() - System.currentTimeMillis(), 0));
+        }, (int) Math.max(point.getReportTime() - System.currentTimeMillis(), 0));
     }
 
-    public void heartbeat()
-    {
+    public void heartbeat() {
         // TODO: 需要完成心跳消息
         logger.debug("{}: heartbeat...", getParameter("device.sn"));
     }
 
     @Override
     public void send(JTMessage msg) {
-        try
-        {
+        try {
             msg.setClientId(getParameter("device.sim"));
             msg.setSerialNo((sequence++) & 0xffff);
             pool.send(connectionId, msg);
 
             lastSentMessageId = msg.getSerialNo();
 
-            logger.info("send: {} -> {} : {}", msg.getClientId(), msg.getSerialNo(), String.format("%04x", msg.getMessageId()));
+//            logger.info("send: {} -> {} : {}", msg.getClientId(), msg.getSerialNo(), String.format("%04x", msg.getMessageId()));
 
             log(LogType.MESSAGE_OUT, msg.toString());
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
