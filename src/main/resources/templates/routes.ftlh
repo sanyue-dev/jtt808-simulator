@@ -92,12 +92,14 @@
 
     function remove(id)
     {
-        if (!confirm('真的要删除吗？')) return;
-        $.post('/route/remove', { id : id }, function(result)
+        confirmDialog('真的要删除吗？', function()
         {
-            if (result.error && result.error.code) return alert(result.error.reason);
-            alert('删除成功');
-            $('#route-table').paginate('reload');
+            $.post('/route/remove', { id : id }, function(result)
+            {
+                if (result.error && result.error.code) return toastr('error', result.error.reason);
+                toastr('success', '删除成功');
+                $('#route-table').paginate('reload');
+            });
         });
     }
 

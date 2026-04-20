@@ -324,8 +324,8 @@
     {
         $.post('/monitor/terminate', { id : taskId }, function(result)
         {
-            if (result.error && result.error.code) return alert(result.error.reason);
-            alert('已成功终止任务');
+            if (result.error && result.error.code) return toastr('error', result.error.reason);
+            toastr('success', '已成功终止任务');
         });
     }
 
@@ -338,7 +338,7 @@
     {
         $.post('/monitor/info', { id : taskId }, function(result)
         {
-            if (result.error && result.error.code) return alert(result.error.reason);
+            if (result.error && result.error.code) return toastr('error', result.error.reason);
             var info = result.data;
             $('#routeName').html(info.routeName);
             $('#routeMileages').html((info.routeMileages / 1000).toFixed(2) + ' km');

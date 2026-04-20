@@ -939,19 +939,45 @@
             if (name.length == 0) return toastr('warning', '请输入线路名称');
             if (isNaN(minSpeed) || isNaN(maxSpeed) || minSpeed.length == 0 || maxSpeed.length == 0) return toastr('warning', '请输入速度区间'), false;
             if (points.length == 0) return toastr('warning', '你尚未设定线路轨迹'), false;
-            if (route.stayPoints.length == 0 && !confirm('你未设定停留点，是否继续保存？')) return false;
-            if (route.troubleSegments.length == 0 && !confirm('你未设定问题路段，是否继续保存？')) return false;
 
             var saveUrl = pageMode === 'edit' ? '/route/edit/save' : '/route/create/save';
             var payload = { name : name, minSpeed : minSpeed, maxSpeed : maxSpeed,
                 mileages : parseInt(route.mileages), stationsJsonText : stationsJson, pointsJsonText : pointsJson, stayPointsJsonText : stayPointsJson, segmentsJsonText : segmentsJson };
             if (pageMode === 'edit' && initialRoute && initialRoute.id) payload.id = initialRoute.id;
-            $.post(saveUrl, payload, function(result)
+
+            var submitSave = function()
             {
-                if (result.error && result.error.code) return alert(result.error.reason);
-                alert('保存成功');
-                location.href = '/route/index';
-            });
+                $.post(saveUrl, payload, function(result)
+                {
+                    if (result.error && result.error.code) return toastr('error', result.error.reason);
+                    toastr('success', '保存成功', 1200);
+                    setTimeout(function()
+                    {
+                        location.href = '/route/index';
+                    }, 300);
+                });
+            };
+
+            if (route.stayPoints.length == 0)
+            {
+                confirmDialog('你未设定停留点，是否继续保存？', function()
+                {
+                    if (route.troubleSegments.length == 0)
+                    {
+                        confirmDialog('你未设定问题路段，是否继续保存？', submitSave);
+                        return;
+                    }
+                    submitSave();
+                });
+                return false;
+            }
+            if (route.troubleSegments.length == 0)
+            {
+                confirmDialog('你未设定问题路段，是否继续保存？', submitSave);
+                return false;
+            }
+
+            submitSave();
         });
 
         $('#btn-add-station').off('click').on('click', function()
@@ -1026,8 +1052,14 @@
             if (route.troubleSegments.length > 0) resetTargets.push('问题路段');
             if (resetTargets.length > 0)
             {
-                var confirmed = confirm('重新规划线路会清空当前' + resetTargets.join('和') + '，确认继续吗？');
-                if (!confirmed) return;
+                confirmDialog('重新规划线路会清空当前' + resetTargets.join('和') + '，确认继续吗？', function()
+                {
+                    planWithOSRM(function()
+                    {
+                        toastr('success', '线路规划完成');
+                    });
+                });
+                return;
             }
             planWithOSRM(function()
             {

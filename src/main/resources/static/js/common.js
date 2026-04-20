@@ -153,11 +153,66 @@ function toastr(type, text, timeout)
 {
     if (!timeout) timeout = 5000;
     $('.toastr').remove();
-    var el = $('<div class="toastr toastr-' + type + '"><span>' + text + '</span></div>');
+    var el = $('<div class="toastr toastr-' + type + '"><span></span></div>');
+    el.find('span').text(text == null ? '' : String(text));
     $(document.body).append(el);
     el.fadeIn();
     setTimeout(function()
     {
-        el.fadeOut();
+        el.fadeOut(function()
+        {
+            el.remove();
+        });
     }, timeout);
+}
+
+function confirmDialog(text, onOk, onCancel)
+{
+    var mask = $('#x-confirm-dialog');
+    if (mask.length == 0)
+    {
+        mask = $('<div class="confirm-mask" id="x-confirm-dialog">'
+            + '<div class="confirm-dialog" tabindex="-1">'
+            + '<h1>提示</h1>'
+            + '<div class="confirm-dialog-body"></div>'
+            + '<div class="confirm-dialog-buttons">'
+            + '<a href="javascript:;" class="btn btn-sm btn-gray" data-role="cancel">取消</a>'
+            + '<a href="javascript:;" class="btn btn-sm btn-blue" data-role="ok">确定</a>'
+            + '</div>'
+            + '</div>'
+            + '</div>');
+        $(document.body).append(mask);
+        mask.on('click', function(e)
+        {
+            if ($(e.target).is('.confirm-mask')) closeConfirmDialog(true);
+        });
+        mask.on('click', '[data-role=cancel]', function()
+        {
+            closeConfirmDialog(true);
+        });
+        mask.on('click', '[data-role=ok]', function()
+        {
+            closeConfirmDialog(false);
+        });
+        $(document).on('keydown', function(e)
+        {
+            if (e.key === 'Escape' && mask.is(':visible')) closeConfirmDialog(true);
+        });
+    }
+    mask.find('.confirm-dialog-body').text(text == null ? '' : String(text));
+    mask.data('onOk', onOk);
+    mask.data('onCancel', onCancel);
+    mask.fadeIn(120, function()
+    {
+        mask.find('[data-role=ok]').focus();
+    });
+}
+
+function closeConfirmDialog(cancelled)
+{
+    var mask = $('#x-confirm-dialog');
+    if (mask.length == 0) return;
+    var callback = cancelled ? mask.data('onCancel') : mask.data('onOk');
+    mask.removeData('onOk').removeData('onCancel').fadeOut(120);
+    if (typeof(callback) == 'function') callback();
 }

@@ -95,11 +95,7 @@
             $.post('./run', params, function(result)
             {
                 if (result.error && result.error.code) return toastr('error', result.error.reason);
-                else
-                {
-                    // toastr('success', '启动成功');
-                    alert('启动成功');
-                }
+                toastr('success', '启动成功');
             });
         });
     });
