@@ -4,3 +4,6 @@ target
 .idea
 *.db
 .java-version
+.ace-tool/
+.playwright-mcp/
+.claude/
