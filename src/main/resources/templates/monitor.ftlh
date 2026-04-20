@@ -82,6 +82,9 @@
             color: #999999;
         }
         .anchorBL { display: none !important; }
+        .autocar-icon { background: none !important; border: none !important; }
+        .autocar-label { background-color: #00537f !important; color: #efefef !important; border: none !important; padding: 2px 10px !important; text-align: center !important; font-size: 12px !important; }
+        .leaflet-tooltip.autocar-label::before { border-top-color: #00537f !important; }
         .x-panel .x-panel-body h4
         {
             height: 30px;
@@ -277,8 +280,9 @@
 </div>
 </body>
 <#include "inc/footer.ftlh">
-<script type="text/javascript" src="//api.map.baidu.com/getscript?v=2.0&ak=${baiduMapKey}&services=&t=20180917142401"></script>
-<script type="text/javascript" src="/static/js/BMapLib.AutoCar.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script type="text/javascript" src="/static/js/LeafletAutoCar.js"></script>
 <script type="text/javascript">
 
     var taskId = '${id}';
@@ -291,12 +295,11 @@
     {
         setCurrentMenu('list-monitor');
 
-        map = new BMap.Map('map', { enableClick : false });
-        map.centerAndZoom('北京市', 16);
-        map.enableScrollWheelZoom(true);
-        map.setMapStyle({ style : 'midnight' });
-
-        BMapLib.EventBinding.setClickListener(onVehicleClick);
+        map = L.map('map', { zoomControl: true, attributionControl: false });
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            maxZoom: 19
+        }).addTo(map);
+        map.setView([39.9042, 116.4074], 16);
 
         loadTaskInfo();
 
@@ -344,14 +347,13 @@
             $('#simNumber').html(info.simNumber);
             $('#startTime').html(new Date(info.startTime).format('yyyy-MM-dd hh:mm:ss'));
 
-            var startPoint = new BMap.Point(info.longitude, info.latitude);
-            map.centerAndZoom(startPoint, 16);
+            var startPoint = L.latLng(info.latitude, info.longitude);
+            startPoint.arrivalTime = info.reportTime;
+            map.setView(startPoint, 16);
 
-            vehicle = new BMapLib.AutoCar(map, startPoint, {
+            vehicle = new LeafletAutoCar(map, startPoint, {
                 label : info.vehicleNumber,
                 labelColor : '#0099ff',
-                icon : new BMap.Icon('/static/img/vehicle.png', new BMap.Size(68, 68)),
-                iconOffset : new BMap.Size(0, 0),
                 enableRotation : true,
                 autoView : true,
                 time : info.reportTime
@@ -419,7 +421,11 @@
             {
                 lastPositionTime = result.data.reportTime;
                 showCurrentPosition(result.data.longitude, result.data.latitude, result.data.reportTime);
-                if (vehicle) vehicle.moveTo(new BMap.Point(result.data.longitude, result.data.latitude), result.data.reportTime);
+                if (vehicle) {
+                    var target = L.latLng(result.data.latitude, result.data.longitude);
+                    target.arrivalTime = result.data.reportTime;
+                    vehicle.moveTo(target, result.data.reportTime);
+                }
             }
 
             setTimeout(trace, 2000);

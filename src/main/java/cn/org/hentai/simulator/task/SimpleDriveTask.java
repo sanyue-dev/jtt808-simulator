@@ -8,7 +8,7 @@ import cn.org.hentai.simulator.task.event.Listen;
 import cn.org.hentai.simulator.task.log.LogType;
 import cn.org.hentai.simulator.task.net.ConnectionPool;
 import cn.org.hentai.simulator.task.runner.Executable;
-import cn.org.hentai.simulator.util.Coordtransform;
+
 import cn.org.hentai.simulator.util.LBSUtils;
 import io.netty.channel.Channel;
 import org.slf4j.Logger;
@@ -236,11 +236,8 @@ public class SimpleDriveTask extends AbstractDriveTask
             public void execute(AbstractDriveTask driveTask) {
                 int direction = lastPosition == null ? 0 : LBSUtils.caculateAngle(lastPosition.getLongitude(), lastPosition.getLatitude(), point.getLongitude(), point.getLatitude());
 
-                Double[] gcj02 = Coordtransform.BD09ToGCJ02(point.getLongitude(), point.getLatitude());
-                Double[] wgs84 = Coordtransform.GCJ02ToWGS84(gcj02[0], gcj02[1]);
-
-                double longitude = wgs84[0];
-                double latitude = wgs84[1];
+                double longitude = point.getLongitude();
+                double latitude = point.getLatitude();
 
                 T0200 msg = new T0200();
                 msg.setMessageId(JT808.位置信息汇报);
