@@ -17,6 +17,11 @@ div { box-sizing: border-box; }
     box-sizing: border-box;
     position: absolute;
     padding-left: 200px;
+    transition: padding-left 0.2s ease;
+}
+html.sidebar-collapsed .container
+{
+    padding-left: 56px;
 }
 .container .sidebar
 {
@@ -26,6 +31,55 @@ div { box-sizing: border-box; }
     position: absolute;
     left: 0px;
     top: 0px;
+    transition: width 0.2s ease;
+    overflow: hidden;
+}
+html.sidebar-collapsed .container .sidebar
+{
+    width: 56px;
+}
+html.sidebar-collapsed .container .sidebar .menu li
+{
+    padding-left: 0px;
+    text-align: center;
+}
+html.sidebar-collapsed .container .sidebar .menu li a
+{
+    display: none;
+}
+html.sidebar-collapsed .container .sidebar .menu li i
+{
+    margin-right: 0px;
+    font-size: 18px !important;
+    cursor: pointer;
+}
+html.sidebar-collapsed .container .sidebar .logo
+{
+    background-size: 36px;
+}
+.sidebar-toggle
+{
+    position: absolute;
+    bottom: 0px;
+    width: 100%;
+    text-align: center;
+    cursor: pointer;
+    color: #666666;
+    padding: 12px 0px;
+    border-top: 1px solid #333333;
+}
+.sidebar-toggle:hover
+{
+    color: #ffffff;
+    background-color: #222222;
+}
+html.sidebar-collapsed .container .sidebar-toggle .icon-collapse
+{
+    display: none;
+}
+html.sidebar-collapsed .container .sidebar-toggle .icon-expand
+{
+    display: inline-block !important;
 }
 .container .sidebar .logo
 {

@@ -22,5 +22,13 @@
             var link = $(this).find('a');
             location.href = link.attr('href');
         });
+
+        $('#sidebarToggle').click(function()
+        {
+            $(document.documentElement).toggleClass('sidebar-collapsed');
+            var isCollapsed = $(document.documentElement).hasClass('sidebar-collapsed');
+            localStorage.setItem('sidebar-collapsed', isCollapsed);
+            $(window).trigger('resize');
+        });
     });
 </script>
