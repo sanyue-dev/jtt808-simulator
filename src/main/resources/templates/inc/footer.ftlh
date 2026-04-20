@@ -25,8 +25,7 @@
 
         $('#sidebarToggle').click(function()
         {
-            $(document.documentElement).toggleClass('sidebar-collapsed');
-            var isCollapsed = $(document.documentElement).hasClass('sidebar-collapsed');
+            var isCollapsed = $(document.documentElement).toggleClass('sidebar-collapsed').hasClass('sidebar-collapsed');
             localStorage.setItem('sidebar-collapsed', isCollapsed);
             $(window).trigger('resize');
         });
