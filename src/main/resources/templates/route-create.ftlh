@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <#include "inc/resource.ftlh">
-    <title>创建新线路</title>
+    <title>${((pageMode!'create') == 'edit')?string('编辑线路', '创建新线路')}</title>
     <style type="text/css">
         .content
         {
@@ -144,7 +144,7 @@
     <div class="content">
         <div id="panel">
             <h4>
-                线路设置
+                ${((pageMode!'create') == 'edit')?string('编辑线路', '线路设置')}
                 <button id="btn-save" class="btn btn-sm btn-blue">保存</button>
                 <button id="btn-measure" class="btn btn-sm btn-gray">测距</button>
             </h4>
@@ -218,6 +218,12 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet.polylinemeasure@3.0.0/Leaflet.PolylineMeasure.min.js" crossorigin=""></script>
 <script type="text/javascript">
+    var pageMode = '${pageMode!"create"}';
+    var initialRoute = ${(routeJson!'null')?no_esc};
+    var initialStations = ${(stationsJson!'[]')?no_esc};
+    var initialPoints = ${(pointsJson!'[]')?no_esc};
+    var initialStayPoints = ${(stayPointsJson!'[]')?no_esc};
+    var initialTroubleSegments = ${(troubleSegmentsJson!'[]')?no_esc};
     var startPoint = null;
     var endPoint = null;
     var currentStationIndex = null;
@@ -292,16 +298,17 @@
         clearMarks();
     }
 
-    function addStationRow(name)
+    function addStationRow(name, stationData)
     {
-        var sid = id();
-        var index = route.stations.length;
-        var station = { id: sid, name: name || '', lat: null, lng: null, marker: null };
-        route.stations.push(station);
+        var station = stationData || { id: id(), name: name || '', lat: null, lng: null, marker: null };
+        if (typeof station.id == 'undefined' || station.id == null) station.id = id();
+        if (typeof station.marker == 'undefined') station.marker = null;
+        if (!stationData) route.stations.push(station);
+        var index = route.stations.indexOf(station);
         var shtml = '';
         shtml += '<div class="station" x-index="' + index + '">';
         shtml += '  <div class="station-title">站点</div>';
-        shtml += '  <div class="station-value"><input type="text" class="station-name" placeholder="输入地名以搜索" value="' + (name || '') + '" /></div>';
+        shtml += '  <div class="station-value"><input type="text" class="station-name" placeholder="输入地名以搜索" value="' + (station.name || '') + '" /></div>';
         shtml += '  <div class="station-action">';
         shtml += '      <a href="#" id="btn-remove-station"><i class="fa fa-times"></i></a>';
         shtml += '  </div>';
@@ -361,6 +368,115 @@
         }, 300);
     }
 
+    function refreshRouteSummary()
+    {
+        if (!route.points || route.points.length === 0)
+        {
+            $('#route-distance').text('-');
+            $('#route-duration').text('-');
+            return;
+        }
+        var km = (route.mileages / 1000).toFixed(2);
+        var minutes = Math.round(route.duration / 60);
+        $('#route-distance').text(km + ' 公里');
+        $('#route-duration').text(minutes + ' 分钟');
+    }
+
+    function redrawRoutePolyline()
+    {
+        if (!route.points || route.points.length === 0) return;
+        var latlngs = [];
+        for (var i = 0; i < route.points.length; i++)
+        {
+            var point = route.points[i];
+            latlngs.push([point.lat, point.lng]);
+        }
+        if (latlngs.length === 0) return;
+        var polyline = L.polyline(latlngs, { color: '#1E90FF', weight: 3 }).addTo(routeLayerGroup);
+        polyline.on('click', function(e)
+        {
+            if (mode !== 'segment') return;
+            if (e.originalEvent) L.DomEvent.stop(e.originalEvent);
+            chooseSegmentPoint(e.latlng);
+        });
+        if (latlngs.length > 1) map.fitBounds(L.latLngBounds(latlngs));
+        else map.setView(latlngs[0], 16);
+    }
+
+    function rebuildStationRows()
+    {
+        $('#stations').html('');
+        for (var i = 0; i < route.stations.length; i++)
+        {
+            var station = route.stations[i];
+            addStationRow(station.name || '', station);
+        }
+    }
+
+    function rebuildStationMarkers()
+    {
+        for (var i = 0; i < route.stations.length; i++)
+        {
+            var station = route.stations[i];
+            if (station.lat == null || station.lng == null) continue;
+            station.marker = L.marker([station.lat, station.lng]).addTo(routeLayerGroup).bindPopup(station.name || '站点');
+        }
+    }
+
+    function rebuildStayPointMarkers()
+    {
+        for (var i = 0; i < route.stayPoints.length; i++)
+        {
+            var point = route.stayPoints[i];
+            point.marker = L.marker([point.latitude, point.longitude]).addTo(routeLayerGroup);
+        }
+        route.__generate_stay_point_rows();
+    }
+
+    function rebuildTroubleSegmentPolylines()
+    {
+        for (var i = 0; i < route.troubleSegments.length; i++)
+        {
+            var item = route.troubleSegments[i];
+            var latlngs = [];
+            for (var j = item.startIndex; j <= item.endIndex; j++)
+            {
+                var point = route.points[j];
+                if (!point) continue;
+                latlngs.push([point.lat, point.lng]);
+            }
+            item.polyline = null;
+            if (latlngs.length > 1)
+            {
+                item.polyline = L.polyline(latlngs, {
+                    color: '#ef4444',
+                    weight: 6,
+                    opacity: 0.95
+                }).addTo(routeLayerGroup);
+            }
+        }
+        route.__generate_segment_rows();
+    }
+
+    function hydrateRouteEditor()
+    {
+        if (pageMode !== 'edit' || !initialRoute) return;
+        $('#name').val(v(initialRoute.name));
+        $('#minSpeed').val(v(initialRoute.minSpeed));
+        $('#maxSpeed').val(v(initialRoute.maxSpeed));
+        route.mileages = initialRoute.mileages || 0;
+        route.stations = initialStations || [];
+        route.points = initialPoints || [];
+        route.stayPoints = initialStayPoints || [];
+        route.troubleSegments = initialTroubleSegments || [];
+        rebuildStationRows();
+        redrawRoutePolyline();
+        rebuildStationMarkers();
+        rebuildStayPointMarkers();
+        rebuildTroubleSegmentPolylines();
+        refreshRouteSummary();
+    }
+
     function planWithOSRM(callback)
     {
         var coords = [];
@@ -392,10 +508,7 @@
         {
             if (i >= coords.length - 1)
             {
-                var km = (route.mileages / 1000).toFixed(2);
-                var minutes = Math.round(route.duration / 60);
-                $('#route-distance').text(km + ' 公里');
-                $('#route-duration').text(minutes + ' 分钟');
+                refreshRouteSummary();
                 for (var j = 0; j < route.stations.length; j++)
                 {
                     var station = route.stations[j];
@@ -706,8 +819,7 @@
             showClearControl: true,
             showUnitControl: true
         }).addTo(map);
-
-
+        hydrateRouteEditor();
 
         map.on('click', function(e)
         {
@@ -819,6 +931,7 @@
             var minSpeed = $.trim($('#minSpeed').val());
             var maxSpeed = $.trim($('#maxSpeed').val());
             var points = getRoutePoints();
+            var stationsJson = toJson(route.stations);
             var pointsJson = toJson(points);
             var stayPointsJson = toJson(route.stayPoints);
             var segmentsJson = toJson(route.troubleSegments);
@@ -829,8 +942,11 @@
             if (route.stayPoints.length == 0 && !confirm('你未设定停留点，是否继续保存？')) return false;
             if (route.troubleSegments.length == 0 && !confirm('你未设定问题路段，是否继续保存？')) return false;
 
-            $.post('/route/save', { name : name, minSpeed : minSpeed, maxSpeed : maxSpeed,
-                mileages : parseInt(route.mileages), pointsJsonText : pointsJson, stayPointsJsonText : stayPointsJson, segmentsJsonText : segmentsJson }, function(result)
+            var saveUrl = pageMode === 'edit' ? '/route/edit/save' : '/route/create/save';
+            var payload = { name : name, minSpeed : minSpeed, maxSpeed : maxSpeed,
+                mileages : parseInt(route.mileages), stationsJsonText : stationsJson, pointsJsonText : pointsJson, stayPointsJsonText : stayPointsJson, segmentsJsonText : segmentsJson };
+            if (pageMode === 'edit' && initialRoute && initialRoute.id) payload.id = initialRoute.id;
+            $.post(saveUrl, payload, function(result)
             {
                 if (result.error && result.error.code) return alert(result.error.reason);
                 alert('保存成功');
@@ -905,6 +1021,14 @@
 
         $('#btn-plan').off('click').on('click', function()
         {
+            var resetTargets = [];
+            if (route.stayPoints.length > 0) resetTargets.push('停留点');
+            if (route.troubleSegments.length > 0) resetTargets.push('问题路段');
+            if (resetTargets.length > 0)
+            {
+                var confirmed = confirm('重新规划线路会清空当前' + resetTargets.join('和') + '，确认继续吗？');
+                if (!confirmed) return;
+            }
             planWithOSRM(function()
             {
                 toastr('success', '线路规划完成');

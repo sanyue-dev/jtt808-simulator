@@ -8,6 +8,7 @@
     <result column="maxSpeed" jdbcType="INTEGER" property="maxSpeed" />
     <result column="mileages" jdbcType="INTEGER" property="mileages" />
     <result column="fingerPrint" jdbcType="VARCHAR" property="fingerPrint" />
+    <result column="stationsJson" jdbcType="LONGVARCHAR" property="stationsJson" />
   </resultMap>
   <sql id="Example_Where_Clause">
     <where>
@@ -68,7 +69,7 @@
     </where>
   </sql>
   <sql id="Base_Column_List">
-    id, name, minSpeed, maxSpeed, mileages, fingerPrint
+    id, name, minSpeed, maxSpeed, mileages, fingerPrint, stationsJson
   </sql>
   <select id="selectByExample" parameterType="cn.org.hentai.simulator.web.entity.RouteExample" resultMap="BaseResultMap">
     select
@@ -109,10 +110,10 @@
     </if>
   </delete>
   <insert id="insert" parameterType="cn.org.hentai.simulator.web.entity.Route" keyProperty="id" useGeneratedKeys="true">
-    insert into x_route (id, name, minSpeed, 
-      maxSpeed, mileages, fingerPrint)
-    values (#{id,jdbcType=BIGINT}, #{name,jdbcType=VARCHAR}, #{minSpeed,jdbcType=INTEGER}, 
-      #{maxSpeed,jdbcType=INTEGER}, #{mileages,jdbcType=INTEGER}, #{fingerPrint,jdbcType=VARCHAR})
+    insert into x_route (id, name, minSpeed,
+      maxSpeed, mileages, fingerPrint, stationsJson)
+    values (#{id,jdbcType=BIGINT}, #{name,jdbcType=VARCHAR}, #{minSpeed,jdbcType=INTEGER},
+      #{maxSpeed,jdbcType=INTEGER}, #{mileages,jdbcType=INTEGER}, #{fingerPrint,jdbcType=VARCHAR}, #{stationsJson,jdbcType=LONGVARCHAR})
   </insert>
   <insert id="insertSelective" parameterType="cn.org.hentai.simulator.web.entity.Route">
     insert into x_route
@@ -135,6 +136,9 @@
       <if test="fingerPrint != null">
         fingerPrint,
       </if>
+      <if test="stationsJson != null">
+        stationsJson,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -154,6 +158,9 @@
       </if>
       <if test="fingerPrint != null">
         #{fingerPrint,jdbcType=VARCHAR},
+      </if>
+      <if test="stationsJson != null">
+        #{stationsJson,jdbcType=LONGVARCHAR},
       </if>
     </trim>
   </insert>
@@ -184,6 +191,9 @@
       <if test="record.fingerPrint != null">
         fingerPrint = #{record.fingerPrint,jdbcType=VARCHAR},
       </if>
+      <if test="record.stationsJson != null">
+        stationsJson = #{record.stationsJson,jdbcType=LONGVARCHAR},
+      </if>
     </set>
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
@@ -196,7 +206,8 @@
       minSpeed = #{record.minSpeed,jdbcType=INTEGER},
       maxSpeed = #{record.maxSpeed,jdbcType=INTEGER},
       mileages = #{record.mileages,jdbcType=INTEGER},
-      fingerPrint = #{record.fingerPrint,jdbcType=VARCHAR}
+      fingerPrint = #{record.fingerPrint,jdbcType=VARCHAR},
+      stationsJson = #{record.stationsJson,jdbcType=LONGVARCHAR}
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
     </if>
@@ -219,6 +230,9 @@
       <if test="fingerPrint != null">
         fingerPrint = #{fingerPrint,jdbcType=VARCHAR},
       </if>
+      <if test="stationsJson != null">
+        stationsJson = #{stationsJson,jdbcType=LONGVARCHAR},
+      </if>
     </set>
     where id = #{id,jdbcType=BIGINT}
   </update>
@@ -228,7 +242,8 @@
       minSpeed = #{minSpeed,jdbcType=INTEGER},
       maxSpeed = #{maxSpeed,jdbcType=INTEGER},
       mileages = #{mileages,jdbcType=INTEGER},
-      fingerPrint = #{fingerPrint,jdbcType=VARCHAR}
+      fingerPrint = #{fingerPrint,jdbcType=VARCHAR},
+      stationsJson = #{stationsJson,jdbcType=LONGVARCHAR}
     where id = #{id,jdbcType=BIGINT}
   </update>
 </mapper>

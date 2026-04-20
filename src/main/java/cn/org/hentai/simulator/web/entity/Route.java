@@ -35,6 +35,8 @@ public class Route implements Serializable {
 
     private String fingerPrint;
 
+    private String stationsJson;
+
     /**
      */
     private static final long serialVersionUID = 1L;
@@ -181,12 +183,23 @@ public class Route implements Serializable {
         return this;
     }
 
+    public String getStationsJson()
+    {
+        return stationsJson;
+    }
+
+    public Route setStationsJson(String stationsJson)
+    {
+        this.stationsJson = stationsJson;
+        return this;
+    }
+
     /**
      */
     @Override
     public String toString()
     {
-        return "Route{" + "id=" + id + ", when='" + name + '\'' + ", minSpeed=" + minSpeed + ", maxSpeed=" + maxSpeed + ", mileages=" + mileages + ", fingerPrint='" + fingerPrint + '\'' + '}';
+        return "Route{" + "id=" + id + ", when='" + name + '\'' + ", minSpeed=" + minSpeed + ", maxSpeed=" + maxSpeed + ", mileages=" + mileages + ", fingerPrint='" + fingerPrint + '\'' + ", stationsJson='" + stationsJson + '\'' + '}';
     }
 
     @Override
@@ -207,6 +220,8 @@ public class Route implements Serializable {
             return false;
         if (getFingerPrint() != null ? !getFingerPrint().equals(route.getFingerPrint()) : route.getFingerPrint() != null)
             return false;
+        if (getStationsJson() != null ? !getStationsJson().equals(route.getStationsJson()) : route.getStationsJson() != null)
+            return false;
 
         return true;
     }
@@ -220,6 +235,7 @@ public class Route implements Serializable {
         result = 31 * result + (getMaxSpeed() != null ? getMaxSpeed().hashCode() : 0);
         result = 31 * result + (getMileages() != null ? getMileages().hashCode() : 0);
         result = 31 * result + (getFingerPrint() != null ? getFingerPrint().hashCode() : 0);
+        result = 31 * result + (getStationsJson() != null ? getStationsJson().hashCode() : 0);
         return result;
     }
 

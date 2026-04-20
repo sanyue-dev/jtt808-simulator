@@ -6,6 +6,7 @@ CREATE TABLE if not exists `x_route` (
   `maxSpeed` int(11) DEFAULT NULL COMMENT 'maxSpeed',
   `mileages` int(11) DEFAULT NULL COMMENT '里程（公里）',
   `fingerPrint` varchar(100) DEFAULT NULL COMMENT '线路指纹',
+  `stationsJson` text DEFAULT NULL COMMENT '站点信息JSON',
   PRIMARY KEY (`id`)
 ) COMMENT='线路';
 
