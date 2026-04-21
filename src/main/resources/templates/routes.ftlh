@@ -7,11 +7,17 @@
 <body>
 <div class="layout">
 <#include "inc/sidebar.ftlh">
-    <div class="layout__content layout__datasheet">
-        <h2>线路管理<a href="/route/create" class="btn btn--sm btn--blue pull-right">创建新线路</a></h2>
-        <hr />
-        <div id="route-table"></div>
-        <ul class="pagination"></ul>
+    <div class="layout__content">
+        <div class="layout__page">
+            <div class="page-header">
+                <h2>线路管理</h2>
+                <a href="/route/create" class="btn btn--sm btn--blue">创建新线路</a>
+            </div>
+            <div class="page-body">
+                <div id="route-table"></div>
+                <ul class="pagination"></ul>
+            </div>
+        </div>
     </div>
 </div>
 </body>

@@ -100,6 +100,25 @@ html.sidebar-collapsed .layout__toggle .layout__toggle-icon--expand { display: i
 
 /* -- content area -- */
 .layout__content { width: 100%; height: 100%; }
+
+/* -- page structure -- */
+.layout__page {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+}
+.page-header {
+    height: 56px; min-height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 32px; box-sizing: border-box;
+    background-color: var(--color-bg-panel);
+    border-bottom: 1px solid var(--color-border);
+}
+.page-header h2 { font-size: 16px; font-weight: 600; margin: 0; color: var(--color-text-primary); }
+.page-body {
+    flex: 1; overflow: auto;
+    padding: 24px 32px; background-color: var(--color-bg-page);
+}
+
 .layout__datasheet {
     padding: 32px; overflow: auto; background-color: var(--color-bg-page);
 }
@@ -195,11 +214,8 @@ input::placeholder { color: var(--color-text-secondary); opacity: .6; }
 .btn--orange:hover { background-color: var(--color-warning-hover); border-color: var(--color-warning-hover); }
 
 /* ========== Form layout ========== */
-.form { padding: 32px; }
 .form .grid__row { min-height: 44px; line-height: 44px; }
 .form input[type="text"] { width: 100%; }
-.form > h2 { font-size: 20px; font-weight: 600; margin: 0 0 4px 0; color: var(--color-text-primary); }
-.form > hr { margin: 12px 0 24px 0; }
 
 form .grid__row { min-height: 30px; line-height: 30px; }
 

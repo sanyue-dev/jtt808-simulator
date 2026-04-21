@@ -8,8 +8,12 @@
 <div class="layout">
     <#include "inc/sidebar.ftlh">
     <div class="layout__content">
-        <div class="batch">
-            <h2 class="batch__title">批量创建行程任务</h2>
+        <div class="layout__page">
+            <div class="page-header">
+                <h2>批量创建行程任务</h2>
+            </div>
+            <div class="page-body">
+                <div class="batch">
 
             <!-- 线路选择 -->
             <div class="batch__section">
@@ -92,6 +96,7 @@
             <!-- 提交 -->
             <div class="batch__actions">
                 <button class="btn btn--blue" id="btn-run" style="min-width: 120px; height: 38px; line-height: 38px; font-size: 14px;">创建任务</button>
+                </div>
             </div>
         </div>
     </div>
@@ -99,8 +104,7 @@
 </body>
 <#include "inc/footer.ftlh">
 <style>
-    .batch { padding: 32px; max-width: 860px; }
-    .batch__title { font-size: 20px; font-weight: 600; margin: 0 0 24px 0; color: var(--color-text-primary); }
+    .batch { max-width: 860px; }
     .batch__section {
         background: var(--color-bg-panel);
         border: 1px solid var(--color-border);

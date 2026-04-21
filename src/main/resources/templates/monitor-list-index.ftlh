@@ -7,11 +7,16 @@
 <body>
 <div class="layout">
 <#include "inc/sidebar.ftlh">
-    <div class="layout__content layout__datasheet">
-        <h2>行程任务</h2>
-        <hr />
-        <div id="route-table"></div>
-        <ul class="pagination"></ul>
+    <div class="layout__content">
+        <div class="layout__page">
+            <div class="page-header">
+                <h2>行程任务</h2>
+            </div>
+            <div class="page-body">
+                <div id="route-table"></div>
+                <ul class="pagination"></ul>
+            </div>
+        </div>
     </div>
 </div>
 </body>
