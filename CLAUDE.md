@@ -90,5 +90,8 @@ public void onCameraCaptureCommand(JTT808Message msg) { ... }
 
 - 前端页面为 FreeMarker 模板（`.ftlh`），公共组件在 `templates/inc/`（resource.ftlh / sidebar.ftlh / footer.ftlh）
 - 静态资源在 `static/proton/` 下，使用 jQuery 2.1.1 + Bootstrap
+- `static/js/common.js` 含全局函数：`confirmDialog(text, onOk, onCancel)`、`toastr(type, msg)`、`setCurrentMenu(id)`、`$.fn.paginate()`。弹窗/提示 UI 统一走这些函数，CSS class 遵循 BEM（`.confirm__body`、`.toast--success`），JS 选择器必须与 BEM class 精确匹配
+- CSS 共享样式（`.card-section__*`、`.page-header`、`.page-body`）在 `static/css/common.css`，页面特有样式写在各 `.ftlh` 的内联 `<style>` 块
 - 配置集中在 `application.yml`，包括数据库、车辆服务器地址
 - `simulator.mode` 配置模拟模式（当前为 `stress`）
+- 修改 `static/` 下的 JS/CSS 后浏览器可能缓存旧文件，验证时需强制刷新（DevTools: `ignoreCache` 或 Ctrl+Shift+R）
