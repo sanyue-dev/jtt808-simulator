@@ -283,17 +283,20 @@ form .grid__row { min-height: 30px; line-height: 30px; }
 table {
     width: 100%; border-collapse: collapse;
     background-color: var(--color-bg-panel);
+    border: 1px solid var(--color-border);
 }
 table td, table th {
     border-bottom: 1px solid var(--color-border); height: 40px;
     padding: 0 12px; color: var(--color-text-primary); font-size: 13px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 table th, thead td {
     font-weight: 600; color: var(--color-text-secondary); font-size: 12px;
     text-transform: uppercase; letter-spacing: .04em;
+    background-color: var(--color-bg-panel-muted);
+    border-bottom: 1px solid var(--color-border);
 }
-.table-bordered { border: 1px solid var(--color-border); }
-.table-bordered td, .table-bordered th { border: 1px solid var(--color-border); }
+table tbody tr { transition: background var(--transition-fast); }
 .table-striped tbody tr:nth-child(even) { background-color: var(--color-bg-panel-muted); }
 .table-hover tbody tr:hover { background-color: var(--color-bg-sidebar-hover); }
 .table-condensed td,
@@ -327,6 +330,44 @@ table th, thead td {
 .nav-list > li.nav-list__item--active { background-color: var(--color-primary); }
 .nav-list > li.nav-list__item--active a,
 .nav-list > li.nav-list__item--active a:visited { color: var(--color-text-inverse); }
+
+/* ========== Card section (shared) ========== */
+.card-section {
+    background: var(--color-bg-panel);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 20px 24px;
+    margin-bottom: 12px;
+}
+.card-section__header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+}
+.card-section__header h3 {
+    font-size: 12px; font-weight: 600; margin: 0; color: var(--color-text-secondary);
+    text-transform: uppercase; letter-spacing: .06em;
+}
+.card-section__fields { display: flex; flex-wrap: wrap; gap: 16px 32px; }
+.card-section__field { display: flex; flex-direction: column; gap: 6px; min-width: 200px; flex: 1; }
+.card-section__label { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); }
+.card-section__input {
+    height: 36px; padding: 0 12px; width: 100%;
+    border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+    background: var(--color-bg-panel); color: var(--color-text-primary);
+    box-sizing: border-box; font-size: 13px;
+    transition: border-color var(--transition-fast);
+}
+.card-section__input:focus { border-color: var(--color-text-primary); outline: none; }
+.card-section__hint { font-size: 11px; color: var(--color-text-secondary); margin-top: -2px; }
+.card-section__input-group { display: flex; align-items: center; gap: 12px; }
+.card-section__input-group .card-section__input { flex: 1; }
+.card-section__preview {
+    font-size: 12px; color: var(--color-text-secondary); white-space: nowrap;
+    font-family: "SF Mono", Consolas, monospace;
+    background: var(--color-bg-muted);
+    padding: 6px 10px; border-radius: var(--radius-sm); min-width: 100px; text-align: center;
+}
+.card-section__actions { margin-top: 24px; padding-left: 4px; }
 
 /* ========== Utility ========== */
 .text-center { text-align: center; }

@@ -16,8 +16,8 @@
                 <div class="batch">
 
             <!-- 线路选择 -->
-            <div class="batch__section">
-                <div class="batch__section-header">
+            <div class="card-section">
+                <div class="card-section-header">
                     <h3>行驶线路</h3>
                     <div class="batch__route-toolbar">
                         <button type="button" class="batch__toolbar-btn" id="btn-select-all">全选</button>
@@ -42,59 +42,59 @@
             </div>
 
             <!-- 车辆配置 -->
-            <div class="batch__section">
-                <div class="batch__section-header">
+            <div class="card-section">
+                <div class="card-section-header">
                     <h3>车辆配置</h3>
                 </div>
-                <div class="batch__fields">
-                    <div class="batch__field">
-                        <label class="batch__label">车辆数量</label>
-                        <input type="number" name="vehicleCount" id="vehicleCount" class="batch__input" min="1" max="100000" value="1000" />
-                        <span class="batch__field-hint">最多 100,000 辆</span>
+                <div class="card-section__fields">
+                    <div class="card-section__field">
+                        <label class="card-section__label">车辆数量</label>
+                        <input type="number" name="vehicleCount" id="vehicleCount" class="card-section__input" min="1" max="100000" value="1000" />
+                        <span class="card-section__field-hint">最多 100,000 辆</span>
                     </div>
-                    <div class="batch__field">
-                        <label class="batch__label">车牌号规则</label>
-                        <div class="batch__input-group">
-                            <input type="text" name="vehicleNumberPattern" id="vehicleNumberPattern" class="batch__input" value="京%06d" />
-                            <span class="batch__preview" id="preview-plate">京000001</span>
+                    <div class="card-section__field">
+                        <label class="card-section__label">车牌号规则</label>
+                        <div class="card-section__input-group">
+                            <input type="text" name="vehicleNumberPattern" id="vehicleNumberPattern" class="card-section__input" value="京%06d" />
+                            <span class="card-section__preview" id="preview-plate">京000001</span>
                         </div>
                     </div>
-                    <div class="batch__field">
-                        <label class="batch__label">终端ID规则</label>
-                        <div class="batch__input-group">
-                            <input type="text" name="deviceSnPattern" id="deviceSnPattern" class="batch__input" value="A%06d" />
-                            <span class="batch__preview" id="preview-sn">A000001</span>
+                    <div class="card-section__field">
+                        <label class="card-section__label">终端ID规则</label>
+                        <div class="card-section__input-group">
+                            <input type="text" name="deviceSnPattern" id="deviceSnPattern" class="card-section__input" value="A%06d" />
+                            <span class="card-section__preview" id="preview-sn">A000001</span>
                         </div>
                     </div>
-                    <div class="batch__field">
-                        <label class="batch__label">SIM卡号规则</label>
-                        <div class="batch__input-group">
-                            <input type="text" name="simNumberPattern" id="simNumberPattern" class="batch__input" value="013800%06d" />
-                            <span class="batch__preview" id="preview-sim">013800000001</span>
+                    <div class="card-section__field">
+                        <label class="card-section__label">SIM卡号规则</label>
+                        <div class="card-section__input-group">
+                            <input type="text" name="simNumberPattern" id="simNumberPattern" class="card-section__input" value="013800%06d" />
+                            <span class="card-section__preview" id="preview-sim">013800000001</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- 服务器配置 -->
-            <div class="batch__section">
-                <div class="batch__section-header">
+            <div class="card-section">
+                <div class="card-section-header">
                     <h3>服务器配置</h3>
                 </div>
-                <div class="batch__fields">
-                    <div class="batch__field">
-                        <label class="batch__label">808 网关地址</label>
-                        <input type="text" name="serverAddress" id="serverAddress" class="batch__input" value="${vehicleServerAddr}" />
+                <div class="card-section__fields">
+                    <div class="card-section__field">
+                        <label class="card-section__label">808 网关地址</label>
+                        <input type="text" name="serverAddress" id="serverAddress" class="card-section__input" value="${vehicleServerAddr}" />
                     </div>
-                    <div class="batch__field">
-                        <label class="batch__label">端口</label>
-                        <input type="text" name="serverPort" id="serverPort" class="batch__input" style="max-width: 140px;" value="${vehicleServerPort}" />
+                    <div class="card-section__field">
+                        <label class="card-section__label">端口</label>
+                        <input type="text" name="serverPort" id="serverPort" class="card-section__input" style="max-width: 140px;" value="${vehicleServerPort}" />
                     </div>
                 </div>
             </div>
 
             <!-- 提交 -->
-            <div class="batch__actions">
+            <div class="card-section__actions">
                 <button class="btn btn--blue" id="btn-run" style="min-width: 120px; height: 38px; line-height: 38px; font-size: 14px;">创建任务</button>
                 </div>
             </div>
@@ -105,21 +105,6 @@
 <#include "inc/footer.ftlh">
 <style>
     .batch { max-width: 860px; }
-    .batch__section {
-        background: var(--color-bg-panel);
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-sm);
-        padding: 20px 24px;
-        margin-bottom: 12px;
-    }
-    .batch__section-header {
-        display: flex; align-items: center; justify-content: space-between;
-        margin-bottom: 16px;
-    }
-    .batch__section-header h3 {
-        font-size: 12px; font-weight: 600; margin: 0; color: var(--color-text-secondary);
-        text-transform: uppercase; letter-spacing: .06em;
-    }
 
     .batch__route-toolbar { display: flex; align-items: center; gap: 12px; }
     .batch__toolbar-btn {
@@ -170,30 +155,6 @@
         background: var(--color-bg-muted); padding: 2px 8px; border-radius: var(--radius-sm);
         white-space: nowrap;
     }
-
-    .batch__fields { display: flex; flex-wrap: wrap; gap: 16px 32px; }
-    .batch__field { display: flex; flex-direction: column; gap: 6px; min-width: 200px; flex: 1; }
-    .batch__label { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); }
-    .batch__input {
-        height: 36px; padding: 0 12px; width: 100%;
-        border: 1px solid var(--color-border); border-radius: var(--radius-sm);
-        background: var(--color-bg-panel); color: var(--color-text-primary);
-        box-sizing: border-box; font-size: 13px;
-        transition: border-color var(--transition-fast);
-    }
-    .batch__input:focus {
-        border-color: var(--color-text-primary); outline: none;
-    }
-    .batch__field-hint { font-size: 11px; color: var(--color-text-secondary); margin-top: -2px; }
-    .batch__input-group { display: flex; align-items: center; gap: 12px; }
-    .batch__input-group .batch__input { flex: 1; }
-    .batch__preview {
-        font-size: 12px; color: var(--color-text-secondary); white-space: nowrap;
-        font-family: "SF Mono", Consolas, monospace;
-        background: var(--color-bg-muted);
-        padding: 6px 10px; border-radius: var(--radius-sm); min-width: 100px; text-align: center;
-    }
-    .batch__actions { margin-top: 24px; padding-left: 4px; }
 </style>
 <script type="text/javascript">
     $(document).ready(function()
