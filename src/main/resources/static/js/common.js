@@ -199,7 +199,7 @@ function confirmDialog(text, onOk, onCancel)
             if (e.key === 'Escape' && mask.is(':visible')) closeConfirmDialog(true);
         });
     }
-    mask.find('.confirm-dialog-body').text(text == null ? '' : String(text));
+    mask.find('.confirm__body').text(text == null ? '' : String(text));
     mask.data('onOk', onOk);
     mask.data('onCancel', onCancel);
     mask.fadeIn(120, function()
