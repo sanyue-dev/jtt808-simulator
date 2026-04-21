@@ -16,13 +16,14 @@
             left: 0px;
             width: 400px;
             height: 100%;
-            background-color: #ffffff;
-            border-right: solid 1px #666666;
+            background-color: var(--color-bg-panel);
+            border-right: solid 1px var(--color-border);
             z-index: 20;
             overflow-y: auto;
             box-sizing: border-box;
+            box-shadow: 10px 0 24px rgba(15, 23, 42, 0.08);
         }
-        #panel h4 { height: 30px; line-height: 30px; margin: 20px 0px 10px 0px; padding-left: 10px; font-size: 16px; border-bottom: solid 1px #cccccc; }
+        #panel h4 { height: 30px; line-height: 30px; margin: 20px 0px 10px 0px; padding-left: 10px; font-size: 16px; border-bottom: solid 1px var(--color-border); color: var(--color-text-primary); }
         #panel h4:first-child { margin-top: 0px !important; height: 40px; line-height: 40px; padding-right: 10px; box-sizing: border-box; }
         #panel h4:first-child button { margin-top: 7px; }
         #panel h4 a { float: right; margin-right: 10px; }
@@ -41,8 +42,8 @@
             width: 360px;
             max-height: 360px;
             overflow-y: auto;
-            background-color: #ffffff;
-            border: solid 1px #d8dee9;
+            background-color: var(--color-bg-panel);
+            border: solid 1px var(--color-border);
             border-radius: 10px;
             box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
             padding: 6px;
@@ -53,7 +54,7 @@
         #x-poi-list .poi-empty
         {
             padding: 18px 14px;
-            color: #6b7280;
+            color: var(--color-text-secondary);
             font-size: 13px;
             text-align: center;
         }
@@ -61,7 +62,7 @@
         {
             display: block;
             min-height: 56px;
-            color: #111827;
+            color: var(--color-text-primary);
             padding: 10px 12px;
             border-radius: 8px;
             text-decoration: none;
@@ -69,7 +70,7 @@
         }
         #x-poi-list a:hover
         {
-            background-color: #eff6ff;
+            background-color: var(--color-bg-panel-muted);
         }
         #x-poi-list .poi-text
         {
@@ -79,7 +80,7 @@
         {
             font-size: 14px;
             line-height: 20px;
-            color: #111827;
+            color: var(--color-text-primary);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -89,7 +90,7 @@
             margin-top: 2px;
             font-size: 12px;
             line-height: 18px;
-            color: #6b7280;
+            color: var(--color-text-secondary);
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
@@ -230,6 +231,9 @@
     var poiTimer = null;
     var stationComposing = false;
     var lastSegmentPickAt = 0;
+    var themeStyles = getComputedStyle(document.documentElement);
+    var themePrimary = (themeStyles.getPropertyValue('--color-primary') || '#2f80ed').trim();
+    var themeDanger = (themeStyles.getPropertyValue('--color-danger') || '#d9485f').trim();
 
     function clearMarks()
     {
@@ -246,8 +250,8 @@
             var p = route.points[i];
             L.circleMarker([p.lat, p.lng], {
                 radius: 3,
-                color: '#1E90FF',
-                fillColor: '#1E90FF',
+                color: themePrimary,
+                fillColor: themePrimary,
                 fillOpacity: 0.65,
                 weight: 1,
                 interactive: false
@@ -392,7 +396,7 @@
             latlngs.push([point.lat, point.lng]);
         }
         if (latlngs.length === 0) return;
-        var polyline = L.polyline(latlngs, { color: '#1E90FF', weight: 3 }).addTo(routeLayerGroup);
+        var polyline = L.polyline(latlngs, { color: themePrimary, weight: 3 }).addTo(routeLayerGroup);
         polyline.on('click', function(e)
         {
             if (mode !== 'segment') return;
@@ -449,7 +453,7 @@
             if (latlngs.length > 1)
             {
                 item.polyline = L.polyline(latlngs, {
-                    color: '#ef4444',
+                    color: themeDanger,
                     weight: 6,
                     opacity: 0.95
                 }).addTo(routeLayerGroup);
@@ -544,7 +548,7 @@
                         route.points.push({ lat: lat, lng: lon });
                         latlngs.push([lat, lon]);
                     }
-                    var polyline = L.polyline(latlngs, { color: '#1E90FF', weight: 3 }).addTo(routeLayerGroup);
+                    var polyline = L.polyline(latlngs, { color: themePrimary, weight: 3 }).addTo(routeLayerGroup);
                     polyline.on('click', function(e)
                     {
                         if (mode !== 'segment') return;
@@ -663,7 +667,7 @@
             if (latlngs.length > 1)
             {
                 polyline = L.polyline(latlngs, {
-                    color: '#ef4444',
+                    color: themeDanger,
                     weight: 6,
                     opacity: 0.95
                 }).addTo(routeLayerGroup);

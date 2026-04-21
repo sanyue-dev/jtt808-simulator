@@ -12,7 +12,7 @@
         }
         .x-map
         {
-            background-color: #000000;
+            background-color: var(--color-bg-page);
             width: 100%;
             height: 100%;
         }
@@ -23,9 +23,10 @@
             bottom: 0px;
             width: 100%;
             height: 300px;
-            border-top: solid 1px #cccccc;
+            border-top: solid 1px var(--color-border);
             z-index: 200;
-            background-color: #ffffff;
+            background-color: var(--color-bg-panel);
+            box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08);
         }
         .x-info-panel
         {
@@ -34,10 +35,11 @@
             top: 0px;
             width: 350px;
             height: 100%;
-            border-left: solid 1px #cccccc;
+            border-left: solid 1px var(--color-border);
             z-index: 100;
-            background-color: #ffffff;
+            background-color: var(--color-bg-panel);
             padding-bottom: 300px;
+            box-shadow: -8px 0 24px rgba(15, 23, 42, 0.08);
         }
         .x-panel
         {
@@ -49,7 +51,7 @@
         .x-panel > h3
         {
             height: 40px;
-            border-bottom: solid 1px #cccccc;
+            border-bottom: solid 1px var(--color-border);
             line-height: 40px;
             font-size: 18px;
             margin: 0px;
@@ -58,6 +60,8 @@
             top: 0px;
             left: 0px;
             width: 100%;
+            background-color: var(--color-bg-panel-muted);
+            color: var(--color-text-primary);
         }
         .x-panel > h3 > button
         {
@@ -74,17 +78,17 @@
         .x-panel .x-panel-body hr
         {
             border-width: 1px 0px 0px 0px;
-            border-color: #cccccc;
+            border-color: var(--color-border);
         }
-        .x-panel .x-panel-body .x-col-3, .x-panel .x-panel-body .x-col-7 { height: 24px; line-height: 24px; }
+        .x-panel .x-panel-body .x-col-3, .x-panel .x-panel-body .x-col-7 { height: 24px; line-height: 24px; color: var(--color-text-primary); }
         .x-panel .x-panel-body .x-col-3
         {
-            color: #999999;
+            color: var(--color-text-secondary);
         }
         .anchorBL { display: none !important; }
         .autocar-icon { background: none !important; border: none !important; }
-        .autocar-label { background-color: #00537f !important; color: #efefef !important; border: none !important; padding: 2px 10px !important; text-align: center !important; font-size: 12px !important; }
-        .leaflet-tooltip.autocar-label::before { border-top-color: #00537f !important; }
+        .autocar-label { background-color: var(--color-primary) !important; color: var(--color-text-inverse) !important; border: none !important; padding: 2px 10px !important; text-align: center !important; font-size: 12px !important; box-shadow: 0 6px 16px rgba(47, 128, 237, 0.22); }
+        .leaflet-tooltip.autocar-label::before { border-top-color: var(--color-primary) !important; }
         .x-panel .x-panel-body h4
         {
             height: 30px;
@@ -98,7 +102,7 @@
             font-size: 12px;
             font-weight: normal;
             margin-left: 4px;
-            color: #999999;
+            color: var(--color-text-secondary);
         }
         .x-grids div
         {
@@ -109,20 +113,23 @@
             font-size: 10px;
             font-family: consolas;
             text-align: left;
-            background-color: #cccccc;
-            border: solid 1px #999999;
+            background-color: var(--color-bg-muted);
+            border: solid 1px var(--color-border-strong);
             margin: 0px 4px 4px 0px;
             padding-left: 4px;
+            color: var(--color-text-primary);
+            border-radius: 4px;
         }
         .x-grids div.active
         {
-            background-color: #0099ff;
-            color: #ffffff;
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+            color: var(--color-text-inverse);
         }
         .x-grids div:hover
         {
             cursor: pointer;
-            background-color: #999999;
+            background-color: var(--color-bg-sidebar-hover);
         }
         .x-grids div span
         {
@@ -290,6 +297,8 @@
     var vehicle = null;
     var lastPositionTime = 0;
     var lastLogTime = 0;
+    var themeStyles = getComputedStyle(document.documentElement);
+    var themePrimary = (themeStyles.getPropertyValue('--color-primary') || '#2f80ed').trim();
 
     $(document).ready(function()
     {
@@ -353,7 +362,7 @@
 
             vehicle = new LeafletAutoCar(map, startPoint, {
                 label : info.vehicleNumber,
-                labelColor : '#0099ff',
+                labelColor : themePrimary,
                 enableRotation : true,
                 autoView : true,
                 time : info.reportTime
