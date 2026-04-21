@@ -1,6 +1,5 @@
 <div class="layout__sidebar">
     <div class="layout__logo"></div>
-    <hr />
     <ul class="layout__menu">
         <li x-tag="route" title="线路管理"><i class="fa fa-random"></i> <a href="/route/index">线路管理</a></li>
         <!--<li x-tag="schedule"><i class="fa fa-history"></i> <a href="/schdule/index">计划任务</a></li>-->

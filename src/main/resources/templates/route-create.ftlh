@@ -17,18 +17,17 @@
             width: 400px;
             height: 100%;
             background-color: var(--color-bg-panel);
-            border-right: solid 1px var(--color-border);
+            border-right: solid 1px solid var(--color-border);
             z-index: 20;
             overflow-y: auto;
             box-sizing: border-box;
-            box-shadow: 10px 0 24px rgba(15, 23, 42, 0.08);
         }
-        #panel h4 { height: 30px; line-height: 30px; margin: 20px 0px 10px 0px; padding-left: 10px; font-size: 16px; border-bottom: solid 1px var(--color-border); color: var(--color-text-primary); }
-        #panel h4:first-child { margin-top: 0px !important; height: 40px; line-height: 40px; padding-right: 10px; box-sizing: border-box; }
-        #panel h4:first-child button { margin-top: 7px; }
-        #panel h4 a { float: right; margin-right: 10px; }
+        #panel h4 { height: 30px; line-height: 30px; margin: 20px 0px 10px 0px; padding-left: 12px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--color-text-secondary); border-bottom: solid 1px var(--color-border); }
+        #panel h4:first-child { margin-top: 0px !important; height: 48px; line-height: 48px; padding-right: 12px; box-sizing: border-box; font-size: 15px; color: var(--color-text-primary); text-transform: none; letter-spacing: 0; }
+        #panel h4:first-child button { margin-top: 10px; }
+        #panel h4 a { float: right; margin-right: 12px; }
         #panel h4 button { float: right; }
-        #panel .grid__row { height: 30px; line-height: 30px; }
+        #panel .grid__row { height: 36px; line-height: 36px; font-size: 13px; }
         #panel .grid__col--7 input[type=text] { min-width: 200px; }
         #panel #btn-locate-point { margin-right: 5px; }
         #map { width: 100%; height: 100%; }
@@ -44,9 +43,8 @@
             overflow-y: auto;
             background-color: var(--color-bg-panel);
             border: solid 1px var(--color-border);
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
-            padding: 6px;
+            border-radius: var(--radius-sm);
+            padding: 4px;
             display: none;
             z-index: 9999;
             box-sizing: border-box;
@@ -55,16 +53,16 @@
         {
             padding: 18px 14px;
             color: var(--color-text-secondary);
-            font-size: 13px;
+            font-size: 12px;
             text-align: center;
         }
         #x-poi-list a, #x-poi-list a:visited
         {
             display: block;
-            min-height: 56px;
+            min-height: 48px;
             color: var(--color-text-primary);
-            padding: 10px 12px;
-            border-radius: 8px;
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
             text-decoration: none;
             box-sizing: border-box;
         }
@@ -78,8 +76,8 @@
         }
         #x-poi-list .poi-title
         {
-            font-size: 14px;
-            line-height: 20px;
+            font-size: 13px;
+            line-height: 18px;
             color: var(--color-text-primary);
             white-space: nowrap;
             overflow: hidden;
@@ -88,8 +86,8 @@
         #x-poi-list .poi-subtitle
         {
             margin-top: 2px;
-            font-size: 12px;
-            line-height: 18px;
+            font-size: 11px;
+            line-height: 16px;
             color: var(--color-text-secondary);
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -103,21 +101,21 @@
         }
         .station
         {
-            height: 40px;
-            line-height: 40px;
+            height: 36px;
+            line-height: 36px;
         }
         .station .station-title
         {
             width: 100px;
-            height: 40px;
-            line-height: 40px;
+            height: 36px;
+            line-height: 36px;
             float: left;
         }
         .station .station-value
         {
             width: 210px;
-            height: 40px;
-            line-height: 40px;
+            height: 36px;
+            line-height: 36px;
             float: left;
         }
         .station .station-value input
@@ -128,8 +126,8 @@
         .station .station-action
         {
             width: 80px;
-            height: 40px;
-            line-height: 40px;
+            height: 36px;
+            line-height: 36px;
             text-align: center;
             float: left;
         }

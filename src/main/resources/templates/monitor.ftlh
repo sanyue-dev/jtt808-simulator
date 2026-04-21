@@ -26,7 +26,7 @@
             border-top: solid 1px var(--color-border);
             z-index: 200;
             background-color: var(--color-bg-panel);
-            box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08);
+            box-shadow: none;
         }
         .monitor__info-panel
         {
@@ -39,7 +39,7 @@
             z-index: 100;
             background-color: var(--color-bg-panel);
             padding-bottom: 300px;
-            box-shadow: -8px 0 24px rgba(15, 23, 42, 0.08);
+            box-shadow: none;
         }
         .monitor__panel
         {
@@ -87,7 +87,7 @@
         }
         .anchorBL { display: none !important; }
         .autocar-icon { background: none !important; border: none !important; }
-        .autocar-label { background-color: var(--color-primary) !important; color: var(--color-text-inverse) !important; border: none !important; padding: 2px 10px !important; text-align: center !important; font-size: 12px !important; box-shadow: 0 6px 16px rgba(47, 128, 237, 0.22); }
+        .autocar-label { background-color: var(--color-primary) !important; color: var(--color-text-inverse) !important; border: none !important; padding: 2px 10px !important; text-align: center !important; font-size: 12px !important; }
         .leaflet-tooltip.autocar-label::before { border-top-color: var(--color-primary) !important; }
         .monitor__panel-body h4
         {
@@ -130,6 +130,12 @@
         {
             cursor: pointer;
             background-color: var(--color-bg-sidebar-hover);
+            color: var(--color-text-primary);
+        }
+        .monitor__grids div.active:hover
+        {
+            background-color: var(--color-primary);
+            color: var(--color-text-inverse);
         }
         .monitor__grids div span
         {

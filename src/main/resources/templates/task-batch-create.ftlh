@@ -91,7 +91,7 @@
 
             <!-- 提交 -->
             <div class="batch__actions">
-                <button class="btn btn--blue" id="btn-run" style="min-width: 120px; height: 38px; line-height: 38px; font-size: 15px;">创建任务</button>
+                <button class="btn btn--blue" id="btn-run" style="min-width: 120px; height: 38px; line-height: 38px; font-size: 14px;">创建任务</button>
             </div>
         </div>
     </div>
@@ -99,97 +99,95 @@
 </body>
 <#include "inc/footer.ftlh">
 <style>
-    .batch { padding: 28px 32px; max-width: 860px; }
+    .batch { padding: 32px; max-width: 860px; }
     .batch__title { font-size: 20px; font-weight: 600; margin: 0 0 24px 0; color: var(--color-text-primary); }
     .batch__section {
         background: var(--color-bg-panel);
         border: 1px solid var(--color-border);
-        border-radius: 10px;
+        border-radius: var(--radius-sm);
         padding: 20px 24px;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
     }
     .batch__section-header {
         display: flex; align-items: center; justify-content: space-between;
         margin-bottom: 16px;
     }
     .batch__section-header h3 {
-        font-size: 15px; font-weight: 600; margin: 0; color: var(--color-text-primary);
+        font-size: 12px; font-weight: 600; margin: 0; color: var(--color-text-secondary);
+        text-transform: uppercase; letter-spacing: .06em;
     }
 
-    /* 工具栏 */
     .batch__route-toolbar { display: flex; align-items: center; gap: 12px; }
     .batch__toolbar-btn {
         background: none; border: none; cursor: pointer;
-        font-size: 13px; color: var(--color-primary); padding: 2px 0;
+        font-size: 12px; color: var(--color-text-secondary); padding: 2px 0;
+        transition: color var(--transition-fast);
     }
-    .batch__toolbar-btn:hover { text-decoration: underline; }
+    .batch__toolbar-btn:hover { color: var(--color-text-primary); }
     .batch__selected-count {
-        font-size: 12px; color: var(--color-text-secondary);
-        background: var(--color-bg-muted); padding: 2px 8px; border-radius: 10px;
+        font-size: 11px; color: var(--color-text-secondary);
+        background: var(--color-bg-muted); padding: 2px 8px; border-radius: var(--radius-sm);
     }
 
     .batch__route-hint {
-        font-size: 13px; color: var(--color-text-secondary); margin: 0 0 10px 0;
+        font-size: 12px; color: var(--color-text-secondary); margin: 0 0 12px 0;
     }
 
-    /* 线路列表 */
     .batch__route-list {
-        border: 1px solid var(--color-border); border-radius: 8px;
+        border: 1px solid var(--color-border);
         max-height: 260px; overflow-y: auto; overflow-x: hidden;
     }
     .batch__route-item {
         display: flex; align-items: center; gap: 10px;
-        padding: 9px 14px; cursor: pointer;
+        padding: 10px 14px; cursor: pointer;
         border-bottom: 1px solid var(--color-border);
-        transition: background .12s;
+        transition: background var(--transition-fast);
     }
     .batch__route-item:last-child { border-bottom: none; }
     .batch__route-item:hover { background: var(--color-bg-panel-muted); }
     .batch__route-item input { display: none; }
     .batch__route-checkmark {
-        width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0;
-        border: 2px solid var(--color-border-strong);
-        position: relative; transition: border-color .12s, background .12s;
+        width: 16px; height: 16px; border-radius: 2px; flex-shrink: 0;
+        border: 1.5px solid var(--color-border-strong);
+        position: relative; transition: border-color var(--transition-fast), background var(--transition-fast);
     }
-    .batch__route-item:hover .batch__route-checkmark { border-color: var(--color-primary); }
+    .batch__route-item:hover .batch__route-checkmark { border-color: var(--color-text-primary); }
     .batch__route-item input:checked ~ .batch__route-checkmark {
         background: var(--color-primary); border-color: var(--color-primary);
     }
     .batch__route-item input:checked ~ .batch__route-checkmark::after {
         content: ''; position: absolute; top: 1px; left: 4px;
-        width: 5px; height: 8px; border: solid #fff; border-width: 0 2px 2px 0;
+        width: 5px; height: 8px; border: solid #fff; border-width: 0 1.5px 1.5px 0;
         transform: rotate(45deg);
     }
-    .batch__route-name { flex: 1; font-size: 14px; color: var(--color-text-primary); }
+    .batch__route-name { flex: 1; font-size: 13px; color: var(--color-text-primary); }
     .batch__route-tag {
-        font-size: 12px; color: var(--color-text-secondary);
-        background: var(--color-bg-muted); padding: 2px 8px; border-radius: 4px;
+        font-size: 11px; color: var(--color-text-secondary);
+        background: var(--color-bg-muted); padding: 2px 8px; border-radius: var(--radius-sm);
         white-space: nowrap;
     }
 
-    /* 字段区 */
     .batch__fields { display: flex; flex-wrap: wrap; gap: 16px 32px; }
     .batch__field { display: flex; flex-direction: column; gap: 6px; min-width: 200px; flex: 1; }
-    .batch__label { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); }
+    .batch__label { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); }
     .batch__input {
         height: 36px; padding: 0 12px; width: 100%;
-        border: 1px solid var(--color-border); border-radius: 6px;
+        border: 1px solid var(--color-border); border-radius: var(--radius-sm);
         background: var(--color-bg-panel); color: var(--color-text-primary);
-        box-sizing: border-box; font-size: 14px;
-        transition: border-color .15s, box-shadow .15s;
+        box-sizing: border-box; font-size: 13px;
+        transition: border-color var(--transition-fast);
     }
     .batch__input:focus {
-        border-color: var(--color-primary); outline: none;
-        box-shadow: 0 0 0 2px rgba(47, 128, 237, 0.18);
+        border-color: var(--color-text-primary); outline: none;
     }
-    .batch__field-hint { font-size: 12px; color: var(--color-text-secondary); margin-top: -2px; }
+    .batch__field-hint { font-size: 11px; color: var(--color-text-secondary); margin-top: -2px; }
     .batch__input-group { display: flex; align-items: center; gap: 12px; }
     .batch__input-group .batch__input { flex: 1; }
     .batch__preview {
-        font-size: 13px; color: var(--color-primary); white-space: nowrap;
-        font-family: Consolas, "Courier New", monospace;
-        background: rgba(47, 128, 237, 0.08);
-        padding: 6px 10px; border-radius: 6px; min-width: 100px; text-align: center;
+        font-size: 12px; color: var(--color-text-secondary); white-space: nowrap;
+        font-family: "SF Mono", Consolas, monospace;
+        background: var(--color-bg-muted);
+        padding: 6px 10px; border-radius: var(--radius-sm); min-width: 100px; text-align: center;
     }
     .batch__actions { margin-top: 24px; padding-left: 4px; }
 </style>
