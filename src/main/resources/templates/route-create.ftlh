@@ -4,12 +4,12 @@
     <#include "inc/resource.ftlh">
     <title>${((pageMode!'create') == 'edit')?string('编辑线路', '创建新线路')}</title>
     <style type="text/css">
-        .content
+        .layout__content
         {
             position: relative;
             padding-left: 400px;
         }
-        .content #panel
+        .layout__content #panel
         {
             position: absolute;
             top: 0px;
@@ -28,8 +28,8 @@
         #panel h4:first-child button { margin-top: 7px; }
         #panel h4 a { float: right; margin-right: 10px; }
         #panel h4 button { float: right; }
-        #panel .x-row { height: 30px; line-height: 30px; }
-        #panel .x-col-7 input[type=text] { min-width: 200px; }
+        #panel .grid__row { height: 30px; line-height: 30px; }
+        #panel .grid__col--7 input[type=text] { min-width: 200px; }
         #panel #btn-locate-point { margin-right: 5px; }
         #map { width: 100%; height: 100%; }
         .anchorBL { display: none !important; }
@@ -140,71 +140,64 @@
     </style>
 </head>
 <body>
-<div class="container">
+<div class="layout">
     <#include "inc/sidebar.ftlh">
-    <div class="content">
+    <div class="layout__content">
         <div id="panel">
             <h4>
                 ${((pageMode!'create') == 'edit')?string('编辑线路', '线路设置')}
-                <button id="btn-save" class="btn btn-sm btn-blue">保存</button>
-                <button id="btn-measure" class="btn btn-sm btn-gray">测距</button>
+                <button id="btn-save" class="btn btn--sm btn--blue">保存</button>
+                <button id="btn-measure" class="btn btn--sm btn--gray">测距</button>
             </h4>
-            <div class="x-row">
-                <div class="x-col-3 text-right">线路总里程：</div>
-                <div class="x-col-7">
+            <div class="grid__row">
+                <div class="grid__col--3 text-right">线路总里程：</div>
+                <div class="grid__col--7">
                     <span id="route-distance">-</span>
                 </div>
-                <div class="x-clearfix"></div>
             </div>
-            <div class="x-row">
-                <div class="x-col-3 text-right">行程耗时估计：</div>
-                <div class="x-col-7"><span id="route-duration">-</span></div>
-                <div class="x-clearfix"></div>
+            <div class="grid__row">
+                <div class="grid__col--3 text-right">行程耗时估计：</div>
+                <div class="grid__col--7"><span id="route-duration">-</span></div>
             </div>
-            <div class="x-row">
-                <div class="x-col-3 text-right">名称：</div>
-                <div class="x-col-7"><input type="text" id="name" placeholder="比如：北京~上海 早班线路" value="" /></div>
-                <div class="x-clearfix"></div>
+            <div class="grid__row">
+                <div class="grid__col--3 text-right">名称：</div>
+                <div class="grid__col--7"><input type="text" id="name" placeholder="比如：北京~上海 早班线路" value="" /></div>
             </div>
-            <div class="x-row">
-                <div class="x-col-3 text-right">最低时速：</div>
-                <div class="x-col-7"><input type="text" id="minSpeed" placeholder="公里/小时" value=""/></div>
-                <div class="x-clearfix"></div>
+            <div class="grid__row">
+                <div class="grid__col--3 text-right">最低时速：</div>
+                <div class="grid__col--7"><input type="text" id="minSpeed" placeholder="公里/小时" value=""/></div>
             </div>
-            <div class="x-row">
-                <div class="x-col-3 text-right">最高时速：</div>
-                <div class="x-col-7"><input type="text" id="maxSpeed" placeholder="公里/小时" value=""/></div>
-                <div class="x-clearfix"></div>
+            <div class="grid__row">
+                <div class="grid__col--3 text-right">最高时速：</div>
+                <div class="grid__col--7"><input type="text" id="maxSpeed" placeholder="公里/小时" value=""/></div>
             </div>
 
             <h4>停留点<a href="javascript:;" id="btn-add-point"><i class="fa fa-crosshairs"></i> 添加</a></h4>
-            <div class="x-row text-center">
-                <div class="x-col-2">#</div>
-                <div class="x-col-2">最短</div>
-                <div class="x-col-2">最长</div>
-                <div class="x-col-2">概率</div>
-                <div class="x-col-2">-</div>
-                <div class="x-clearfix"></div>
+            <div class="grid__row text-center">
+                <div class="grid__col--2">#</div>
+                <div class="grid__col--2">最短</div>
+                <div class="grid__col--2">最长</div>
+                <div class="grid__col--2">概率</div>
+                <div class="grid__col--2">-</div>
             </div>
             <div id="x-stay-points"></div>
 
             <h4>问题路段<a href="javascript:;" id="btn-add-segment"><i class="fa fa-wheelchair-alt"></i> 添加</a></h4>
-            <div class="x-row text-center">
-                <div class="x-col-2">#</div>
-                <div class="x-col-4">安全事件</div>
-                <div class="x-col-2">概率</div>
-                <div class="x-col-2">-</div>
-                <div class="x-clearfix"></div>
+            <div class="grid__row text-center">
+                <div class="grid__col--2">#</div>
+                <div class="grid__col--4">安全事件</div>
+                <div class="grid__col--2">概率</div>
+                <div class="grid__col--2">-</div>
             </div>
             <div id="x-trouble-segments"></div>
 
             <h4>
                 行驶线路规划
-                <button id="btn-add-station" class="btn btn-sm btn-blue">添加站点</button>
+                <button id="btn-add-station" class="btn btn--sm btn--blue">添加站点</button>
             </h4>
             <div class="panel-body">
                 <div id="stations"></div>
-                <div class="route-actions"><button id="btn-plan" class="btn btn-blue">线路规划</button></div>
+                <div class="route-actions"><button id="btn-plan" class="btn btn--blue">线路规划</button></div>
             </div>
         </div>
         <div id="map"></div>
@@ -316,7 +309,6 @@
         shtml += '  <div class="station-action">';
         shtml += '      <a href="#" id="btn-remove-station"><i class="fa fa-times"></i></a>';
         shtml += '  </div>';
-        shtml += '  <div class="x-clearfix"></div>';
         shtml += '</div>';
         $('#stations').append(shtml);
     }
@@ -743,15 +735,14 @@
             for (var i = 0; i < this.troubleSegments.length; i++)
             {
                 var item = this.troubleSegments[i];
-                shtml += '<div class="x-row text-center" x-id="' + item.id + '">';
-                shtml += '  <div class="x-col-2">' + item.id + '</div>';
-                shtml += '  <div class="x-col-4">' + this.__generate_event_types(item.eventCode) + '</div>';
-                shtml += '  <div class="x-col-2"><input type="text" id="ratio" value="' + v(item.ratio) + '" placeholder="0~100" /></div>';
-                shtml += '  <div class="x-col-2">';
+                shtml += '<div class="grid__row text-center" x-id="' + item.id + '">';
+                shtml += '  <div class="grid__col--2">' + item.id + '</div>';
+                shtml += '  <div class="grid__col--4">' + this.__generate_event_types(item.eventCode) + '</div>';
+                shtml += '  <div class="grid__col--2"><input type="text" id="ratio" value="' + v(item.ratio) + '" placeholder="0~100" /></div>';
+                shtml += '  <div class="grid__col--2">';
                 shtml += '      <a href="#" id="btn-locate-segment" x-id="' + item.id + '"><i class="fa fa-map-pin"></i></a>';
                 shtml += '      <a href="#" id="btn-remove-segment" x-id="' + item.id + '"><i class="fa fa-times"></i></a>';
                 shtml += '  </div>';
-                shtml += '  <div class="x-clearfix"></div>';
                 shtml += '</div>';
             }
             $('#x-trouble-segments').html(shtml);
@@ -777,16 +768,15 @@
             for (var i = 0; i < this.stayPoints.length; i++)
             {
                 var item = this.stayPoints[i];
-                shtml += '<div class="x-row text-center" x-id="' + item.id + '">';
-                shtml += '  <div class="x-col-2">' + item.id + '</div>';
-                shtml += '  <div class="x-col-2"><input type="text" id="minTime" value="' + v(item.minTime) + '" placeholder="分钟" /></div>';
-                shtml += '  <div class="x-col-2"><input type="text" id="maxTime" value="' + v(item.maxTime) + '" placeholder="分钟" /></div>';
-                shtml += '  <div class="x-col-2"><input type="text" id="ratio" value="' + v(item.ratio) + '" placeholder="0~100" /></div>';
-                shtml += '  <div class="x-col-2">';
+                shtml += '<div class="grid__row text-center" x-id="' + item.id + '">';
+                shtml += '  <div class="grid__col--2">' + item.id + '</div>';
+                shtml += '  <div class="grid__col--2"><input type="text" id="minTime" value="' + v(item.minTime) + '" placeholder="分钟" /></div>';
+                shtml += '  <div class="grid__col--2"><input type="text" id="maxTime" value="' + v(item.maxTime) + '" placeholder="分钟" /></div>';
+                shtml += '  <div class="grid__col--2"><input type="text" id="ratio" value="' + v(item.ratio) + '" placeholder="0~100" /></div>';
+                shtml += '  <div class="grid__col--2">';
                 shtml += '      <a href="javascript:;" id="btn-locate-point" x-id="' + item.id + '"><i class="fa fa-map-pin"></i></a>';
                 shtml += '      <a href="javascript:;" id="btn-remove-point" x-id="' + item.id + '"><i class="fa fa-times"></i></a>';
                 shtml += '  </div>';
-                shtml += '  <div class="x-clearfix"></div>';
                 shtml += '</div>';
             }
             $('#x-stay-points').html(shtml);
@@ -873,7 +863,7 @@
         $(document).on('change', '#x-stay-points input', function()
         {
             var el = $(this);
-            var id = el.parents('.x-row').attr('x-id');
+            var id = el.parents('.grid__row').attr('x-id');
             var val = $.trim(el.val());
             var type = el.attr('id');
             var values = { };
@@ -906,7 +896,7 @@
             var el = $(this);
             var type = el.attr('id');
             var val = $.trim(el.val());
-            var id = el.parents('.x-row').attr('x-id');
+            var id = el.parents('.grid__row').attr('x-id');
             var values = {};
             values[type] = val;
             route.setTroubleSegmentValues(id, values, false);
@@ -916,7 +906,7 @@
         {
             var el = $(this);
             var val = $.trim(el.val());
-            var id = el.parents('.x-row').attr('x-id');
+            var id = el.parents('.grid__row').attr('x-id');
             route.setTroubleSegmentValues(id, { eventCode : val }, false);
         });
 

@@ -5,9 +5,9 @@
     <title>网页标题</title>
 </head>
 <body>
-<div class="container">
+<div class="layout">
     <#include "inc/sidebar.ftlh">
-    <div class="content">
+    <div class="layout__content">
         内容区
     </div>
 </div>

@@ -3,12 +3,12 @@
 <script type="text/javascript">
     function setCurrentMenu(tag)
     {
-        $('.container .sidebar .menu li').each(function()
+        $('.layout__menu > li').each(function()
         {
             var el = $(this);
             if (el.attr('x-tag') == tag)
             {
-                el.addClass('active');
+                el.addClass('layout__menu-item--active');
                 return false;
             }
         });
@@ -16,7 +16,7 @@
 
     $(document).ready(function()
     {
-        $('.container .sidebar .menu li').click(function(e)
+        $('.layout__menu > li').click(function(e)
         {
             if (e.target.tagName == 'A') return;
             var link = $(this).find('a');

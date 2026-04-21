@@ -5,10 +5,10 @@
     <title>线路管理</title>
 </head>
 <body>
-<div class="container">
+<div class="layout">
 <#include "inc/sidebar.ftlh">
-    <div class="content datasheet">
-        <h2>线路管理<a href="/route/create" class="btn btn-sm btn-blue pull-right">创建新线路</a></h2>
+    <div class="layout__content layout__datasheet">
+        <h2>线路管理<a href="/route/create" class="btn btn--sm btn--blue pull-right">创建新线路</a></h2>
         <hr />
         <div id="route-table"></div>
         <ul class="pagination"></ul>
@@ -81,8 +81,8 @@
                     formatter: function (i, v, r)
                     {
                         var html = '';
-                        html += '<a href="/route/edit?id=' + v + '" class="btn btn-sm btn-blue">编辑</a>';
-                        html += '<a href="javascript:;" onclick="remove(\'' + v + '\')" class="btn btn-sm btn-orange">删除</a>';
+                        html += '<a href="/route/edit?id=' + v + '" class="btn btn--sm btn--blue">编辑</a>';
+                        html += '<a href="javascript:;" onclick="remove(\'' + v + '\')" class="btn btn--sm btn--orange">删除</a>';
                         return html;
                     }
                 }

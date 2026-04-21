@@ -73,7 +73,7 @@ $.fn.paginate = function(param)
         {
             if (param.error) param.error(result, param.url, urlParameters);
             else console.log(result, param.url, urlParameters);
-            container.html('<font style="color: red;font-size: 20px">'+result.error.reason+'</font>');
+            container.html('<div class="table-error">'+result.error.reason+'</div>');
             return;
         }
 
@@ -152,8 +152,8 @@ $.fn.paginate = function(param)
 function toastr(type, text, timeout)
 {
     if (!timeout) timeout = 5000;
-    $('.toastr').remove();
-    var el = $('<div class="toastr toastr-' + type + '"><span></span></div>');
+    $('.toast').remove();
+    var el = $('<div class="toast toast--' + type + '"><span></span></div>');
     el.find('span').text(text == null ? '' : String(text));
     $(document.body).append(el);
     el.fadeIn();
@@ -171,20 +171,20 @@ function confirmDialog(text, onOk, onCancel)
     var mask = $('#x-confirm-dialog');
     if (mask.length == 0)
     {
-        mask = $('<div class="confirm-mask" id="x-confirm-dialog">'
-            + '<div class="confirm-dialog" tabindex="-1">'
-            + '<h1>提示</h1>'
-            + '<div class="confirm-dialog-body"></div>'
-            + '<div class="confirm-dialog-buttons">'
-            + '<a href="javascript:;" class="btn btn-sm btn-gray" data-role="cancel">取消</a>'
-            + '<a href="javascript:;" class="btn btn-sm btn-blue" data-role="ok">确定</a>'
+        mask = $('<div class="confirm" id="x-confirm-dialog">'
+            + '<div class="confirm__dialog" tabindex="-1">'
+            + '<h1 class="confirm__title">提示</h1>'
+            + '<div class="confirm__body"></div>'
+            + '<div class="confirm__actions">'
+            + '<a href="javascript:;" class="btn btn--sm btn--gray" data-role="cancel">取消</a>'
+            + '<a href="javascript:;" class="btn btn--sm btn--blue" data-role="ok">确定</a>'
             + '</div>'
             + '</div>'
             + '</div>');
         $(document.body).append(mask);
         mask.on('click', function(e)
         {
-            if ($(e.target).is('.confirm-mask')) closeConfirmDialog(true);
+            if ($(e.target).is('.confirm')) closeConfirmDialog(true);
         });
         mask.on('click', '[data-role=cancel]', function()
         {

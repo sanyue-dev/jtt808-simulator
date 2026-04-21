@@ -5,9 +5,9 @@
     <title>行程任务</title>
 </head>
 <body>
-<div class="container">
+<div class="layout">
 <#include "inc/sidebar.ftlh">
-    <div class="content datasheet">
+    <div class="layout__content layout__datasheet">
         <h2>行程任务</h2>
         <hr />
         <div id="route-table"></div>
@@ -87,7 +87,7 @@
                     formatter: function (i, v, r)
                     {
                         var html = '';
-                        html += '<a href="/monitor/view?id=' + v + '" target="_blank" class="btn btn-sm btn-blue">详情</a>';
+                        html += '<a href="/monitor/view?id=' + v + '" target="_blank" class="btn btn--sm btn--blue">详情</a>';
                         return html;
                     }
                 }

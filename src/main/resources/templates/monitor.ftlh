@@ -5,18 +5,18 @@
     <title>行程任务详情</title>
     <style type="text/css">
         body { overflow: hidden; }
-        .content
+        .layout__content
         {
             padding: 0px 350px 300px 0px;
             position: relative;
         }
-        .x-map
+        .monitor__map
         {
             background-color: var(--color-bg-page);
             width: 100%;
             height: 100%;
         }
-        .x-log-panel
+        .monitor__log-panel
         {
             position: absolute;
             left: 0px;
@@ -28,7 +28,7 @@
             background-color: var(--color-bg-panel);
             box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08);
         }
-        .x-info-panel
+        .monitor__info-panel
         {
             position: absolute;
             right: 0px;
@@ -41,14 +41,14 @@
             padding-bottom: 300px;
             box-shadow: -8px 0 24px rgba(15, 23, 42, 0.08);
         }
-        .x-panel
+        .monitor__panel
         {
             position: relative;
             padding: 50px 10px 10px 10px;
             width: 100%;
             height: 100%;
         }
-        .x-panel > h3
+        .monitor__panel > h3
         {
             height: 40px;
             border-bottom: solid 1px var(--color-border);
@@ -63,25 +63,25 @@
             background-color: var(--color-bg-panel-muted);
             color: var(--color-text-primary);
         }
-        .x-panel > h3 > button
+        .monitor__panel > h3 > button
         {
             float: right;
             margin: 8px 18px 0px 0px;
         }
-        .x-panel .x-panel-body
+        .monitor__panel-body
         {
             width: 100%;
             height: 100%;
             overflow-y: auto;
             overflow-x: hidden;
         }
-        .x-panel .x-panel-body hr
+        .monitor__panel-body hr
         {
             border-width: 1px 0px 0px 0px;
             border-color: var(--color-border);
         }
-        .x-panel .x-panel-body .x-col-3, .x-panel .x-panel-body .x-col-7 { height: 24px; line-height: 24px; color: var(--color-text-primary); }
-        .x-panel .x-panel-body .x-col-3
+        .monitor__panel-body .grid__col--3, .monitor__panel-body .grid__col--7 { height: 24px; line-height: 24px; color: var(--color-text-primary); }
+        .monitor__panel-body .grid__col--3
         {
             color: var(--color-text-secondary);
         }
@@ -89,7 +89,7 @@
         .autocar-icon { background: none !important; border: none !important; }
         .autocar-label { background-color: var(--color-primary) !important; color: var(--color-text-inverse) !important; border: none !important; padding: 2px 10px !important; text-align: center !important; font-size: 12px !important; box-shadow: 0 6px 16px rgba(47, 128, 237, 0.22); }
         .leaflet-tooltip.autocar-label::before { border-top-color: var(--color-primary) !important; }
-        .x-panel .x-panel-body h4
+        .monitor__panel-body h4
         {
             height: 30px;
             line-height: 30px;
@@ -97,14 +97,14 @@
             margin: 0px;
             font-size: 16px;
         }
-        .x-panel .x-panel-body h4 span
+        .monitor__panel-body h4 span
         {
             font-size: 12px;
             font-weight: normal;
             margin-left: 4px;
             color: var(--color-text-secondary);
         }
-        .x-grids div
+        .monitor__grids div
         {
             display: block;
             width: 100%;
@@ -120,32 +120,32 @@
             color: var(--color-text-primary);
             border-radius: 4px;
         }
-        .x-grids div.active
+        .monitor__grids div.active
         {
             background-color: var(--color-primary);
             border-color: var(--color-primary);
             color: var(--color-text-inverse);
         }
-        .x-grids div:hover
+        .monitor__grids div:hover
         {
             cursor: pointer;
             background-color: var(--color-bg-sidebar-hover);
         }
-        .x-grids div span
+        .monitor__grids div span
         {
             margin-left: 4px;
         }
     </style>
 </head>
 <body>
-<div class="container">
+<div class="layout">
 <#include "inc/sidebar.ftlh">
-    <div class="content">
-        <div class="x-map" id="map"></div>
-        <div class="x-log-panel">
-            <div class="x-panel">
+    <div class="layout__content">
+        <div class="monitor__map" id="map"></div>
+        <div class="monitor__log-panel">
+            <div class="monitor__panel">
                 <h3>行程任务日志</h3>
-                <div class="x-panel-body">
+                <div class="monitor__panel-body">
                     <table id="logs" class="table table-bordered table-striped table-condensed table-hover">
                         <thead>
                         <tr>
@@ -160,58 +160,49 @@
                 </div>
             </div>
         </div>
-        <div class="x-info-panel">
-            <div class="x-panel">
-                <h3>行程任务详情<button class="btn btn-sm btn-blue" id="btn-stop">终止</button></h3>
-                <div class="x-panel-body">
-                    <div class="x-row">
-                        <div class="x-col-3 text-right">线路：</div>
-                        <div class="x-col-7" id="routeName">--</div>
-                        <div class="x-clearfix"></div>
+        <div class="monitor__info-panel">
+            <div class="monitor__panel">
+                <h3>行程任务详情<button class="btn btn--sm btn--blue" id="btn-stop">终止</button></h3>
+                <div class="monitor__panel-body">
+                    <div class="grid__row">
+                        <div class="grid__col--3 text-right">线路：</div>
+                        <div class="grid__col--7" id="routeName">--</div>
                     </div>
-                    <div class="x-row">
-                        <div class="x-col-3 text-right">线路里程：</div>
-                        <div class="x-col-7" id="routeMileages">--</div>
-                        <div class="x-clearfix"></div>
+                    <div class="grid__row">
+                        <div class="grid__col--3 text-right">线路里程：</div>
+                        <div class="grid__col--7" id="routeMileages">--</div>
                     </div>
-                    <div class="x-row">
-                        <div class="x-col-3 text-right">车牌号：</div>
-                        <div class="x-col-7" id="vehicleNumber">--</div>
-                        <div class="x-clearfix"></div>
+                    <div class="grid__row">
+                        <div class="grid__col--3 text-right">车牌号：</div>
+                        <div class="grid__col--7" id="vehicleNumber">--</div>
                     </div>
-                    <div class="x-row">
-                        <div class="x-col-3 text-right">终端ID：</div>
-                        <div class="x-col-7" id="deviceSn">--</div>
-                        <div class="x-clearfix"></div>
+                    <div class="grid__row">
+                        <div class="grid__col--3 text-right">终端ID：</div>
+                        <div class="grid__col--7" id="deviceSn">--</div>
                     </div>
-                    <div class="x-row">
-                        <div class="x-col-3 text-right">SIM卡号：</div>
-                        <div class="x-col-7" id="simNumber">--</div>
-                        <div class="x-clearfix"></div>
+                    <div class="grid__row">
+                        <div class="grid__col--3 text-right">SIM卡号：</div>
+                        <div class="grid__col--7" id="simNumber">--</div>
                     </div>
-                    <div class="x-row">
-                        <div class="x-col-3 text-right">启动时间：</div>
-                        <div class="x-col-7" id="startTime">--</div>
-                        <div class="x-clearfix"></div>
+                    <div class="grid__row">
+                        <div class="grid__col--3 text-right">启动时间：</div>
+                        <div class="grid__col--7" id="startTime">--</div>
                     </div>
-                    <div class="x-row">
-                        <div class="x-col-3 text-right">最后上报：</div>
-                        <div class="x-col-7" id="reportTime">--</div>
-                        <div class="x-clearfix"></div>
+                    <div class="grid__row">
+                        <div class="grid__col--3 text-right">最后上报：</div>
+                        <div class="grid__col--7" id="reportTime">--</div>
                     </div>
-                    <div class="x-row">
-                        <div class="x-col-3 text-right">当前位置：</div>
-                        <div class="x-col-7" id="lng">--</div>
-                        <div class="x-clearfix"></div>
+                    <div class="grid__row">
+                        <div class="grid__col--3 text-right">当前位置：</div>
+                        <div class="grid__col--7" id="lng">--</div>
                     </div>
-                    <div class="x-row">
-                        <div class="x-col-3 text-right">&nbsp;</div>
-                        <div class="x-col-7" id="lat">--</div>
-                        <div class="x-clearfix"></div>
+                    <div class="grid__row">
+                        <div class="grid__col--3 text-right">&nbsp;</div>
+                        <div class="grid__col--7" id="lat">--</div>
                     </div>
                     <hr />
                     <h4>报警标志<span>点击置位，高亮表示相应位为1</span></h4>
-                    <div class="x-grids" id="warning-flags">
+                    <div class="monitor__grids" id="warning-flags">
                         <div>00<span>紧急报警</span></div>
                         <div>01<span>超速报警</span></div>
                         <div>02<span>疲劳驾驶</span></div>
@@ -246,7 +237,7 @@
                         <div>31<span>非法开门报警</span></div>
                     </div>
                     <h4>状态位<span>点击置位，高亮表示相应位为1</span></h4>
-                    <div class="x-grids" id="state-flags">
+                    <div class="monitor__grids" id="state-flags">
                         <div>00<span>ACC状态</span></div>
                         <div>01<span>定位</span></div>
                         <div>02<span>纬度</span></div>

@@ -3,27 +3,16 @@
 <head>
     <#include "inc/resource.ftlh">
     <title>创建临时行程</title>
-    <style type="text/css">
-        .container .content .x-row
-        {
-            height: 40px;
-            line-height: 40px;
-        }
-        .container .content
-        {
-            padding: 20px 20px 20px 20px;
-        }
-    </style>
 </head>
 <body>
-<div class="container">
+<div class="layout">
     <#include "inc/sidebar.ftlh">
-    <div class="content">
+    <div class="layout__content form">
         <h2>创建临时行程任务</h2>
         <hr />
-        <div class="x-row">
-            <div class="x-col-2 text-right">行驶线路：</div>
-            <div class="x-col-6">
+        <div class="grid__row">
+            <div class="grid__col--2 text-right">行驶线路：</div>
+            <div class="grid__col--6">
                 <select name="routeId" id="routeId" class="">
                     <option value="0">- 请选择行驶线路 -</option>
                     <#list routes as item>
@@ -31,46 +20,38 @@
                     </#list>
                 </select>
             </div>
-            <div class="x-clearfix"></div>
         </div>
-        <div class="x-row">
-            <div class="x-col-2 text-right">车牌号：</div>
-            <div class="x-col-6"><input type="text" name="vehicleNumber" id="vehicleNumber" /></div>
-            <div class="x-clearfix"></div>
+        <div class="grid__row">
+            <div class="grid__col--2 text-right">车牌号：</div>
+            <div class="grid__col--6"><input type="text" name="vehicleNumber" id="vehicleNumber" /></div>
         </div>
-        <div class="x-row">
-            <div class="x-col-2 text-right">终端ID：</div>
-            <div class="x-col-6"><input type="text" name="deviceSn" id="deviceSn" /></div>
-            <div class="x-clearfix"></div>
+        <div class="grid__row">
+            <div class="grid__col--2 text-right">终端ID：</div>
+            <div class="grid__col--6"><input type="text" name="deviceSn" id="deviceSn" /></div>
         </div>
-        <div class="x-row">
-            <div class="x-col-2 text-right">终端SIM卡号：</div>
-            <div class="x-col-6"><input type="text" name="simNumber" id="simNumber" /></div>
-            <div class="x-clearfix"></div>
+        <div class="grid__row">
+            <div class="grid__col--2 text-right">终端SIM卡号：</div>
+            <div class="grid__col--6"><input type="text" name="simNumber" id="simNumber" /></div>
         </div>
 
-        <div class="x-row">
-            <div class="x-col-2 text-right">初始里程数：</div>
-            <div class="x-col-6"><input type="text" name="mileages" id="mileages" placeholder="单位公里，默认为0" /></div>
-            <div class="x-clearfix"></div>
+        <div class="grid__row">
+            <div class="grid__col--2 text-right">初始里程数：</div>
+            <div class="grid__col--6"><input type="text" name="mileages" id="mileages" placeholder="单位公里，默认为0" /></div>
         </div>
 
-        <div class="x-row">
-            <div class="x-col-2 text-right">808网关服务器：</div>
-            <div class="x-col-6"><input type="text" name="serverAddress" id="serverAddress" value="${vehicleServerAddr}" /></div>
-            <div class="x-clearfix"></div>
+        <div class="grid__row">
+            <div class="grid__col--2 text-right">808网关服务器：</div>
+            <div class="grid__col--6"><input type="text" name="serverAddress" id="serverAddress" value="${vehicleServerAddr}" /></div>
         </div>
-        <div class="x-row">
-            <div class="x-col-2 text-right">808网关服务器端口：</div>
-            <div class="x-col-6"><input type="text" name="serverPort" id="serverPort" value="${vehicleServerPort}" /></div>
-            <div class="x-clearfix"></div>
+        <div class="grid__row">
+            <div class="grid__col--2 text-right">808网关服务器端口：</div>
+            <div class="grid__col--6"><input type="text" name="serverPort" id="serverPort" value="${vehicleServerPort}" /></div>
         </div>
-        <div class="x-row">
-            <div class="x-col-2 text-right">&nbsp;</div>
-            <div class="x-col-6">
-                <button class="btn btn-blue" id="btn-run">启动</button>
+        <div class="grid__row">
+            <div class="grid__col--2 text-right">&nbsp;</div>
+            <div class="grid__col--6">
+                <button class="btn btn--blue" id="btn-run">启动</button>
             </div>
-            <div class="x-clearfix"></div>
         </div>
     </div>
 </div>
