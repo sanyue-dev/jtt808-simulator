@@ -791,15 +791,14 @@
     $(document).ready(function()
     {
         setCurrentMenu('route');
-        map = L.map('map');
+        map = L.map('map', { zoomControl: true, attributionControl: false });
         map.setView([35.86166, 104.195397], 5);
         $(window).on('resize', function()
         {
             if (map) map.invalidateSize();
         });
-        var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; OpenStreetMap contributors'
+        var baseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            maxZoom: 19
         }).addTo(map);
         routeLayerGroup = L.layerGroup().addTo(map);
         markLayerGroup = L.layerGroup().addTo(map);
