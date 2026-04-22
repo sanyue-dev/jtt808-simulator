@@ -430,7 +430,7 @@
                 if (vehicle) {
                     var target = L.latLng(result.data.latitude, result.data.longitude);
                     target.arrivalTime = result.data.reportTime;
-                    vehicle.moveTo(target, result.data.reportTime);
+                    vehicle.moveTo(target, result.data.reportTime, result.data.direction);
                 }
             }
 

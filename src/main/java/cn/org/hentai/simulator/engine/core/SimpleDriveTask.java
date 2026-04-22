@@ -236,6 +236,8 @@ public class SimpleDriveTask extends AbstractDriveTask
             public void execute(AbstractDriveTask driveTask) {
                 int direction = lastPosition == null ? 0 : LBSUtils.caculateAngle(lastPosition.getLongitude(), lastPosition.getLatitude(), point.getLongitude(), point.getLatitude());
 
+                point.setDirection(direction);
+
                 double longitude = point.getLongitude();
                 double latitude = point.getLatitude();
 

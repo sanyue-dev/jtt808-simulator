@@ -6,17 +6,16 @@
         this._id = ++_seq;
         this._map = map;
         this._opts = opts || {};
-        this._path = [latlng];
+        this._lastPos = latlng;
         this._angle = 0;
         this._visible = true;
         this._marker = null;
         this._label = null;
-        this._animating = false;
     }
 
     AutoCar.prototype.show = function () {
         if (this._marker) return;
-        var pos = this._path[0];
+        var pos = this._lastPos;
         var icon = this._createIcon();
         this._marker = L.marker(pos, { icon: icon, rotationAngle: 0 });
         this._marker.addTo(this._map);
@@ -26,9 +25,25 @@
         }
     };
 
-    AutoCar.prototype.moveTo = function (latlng, arrivalTime) {
-        this._path.push(latlng);
-        this._moveNext();
+    AutoCar.prototype.moveTo = function (latlng, arrivalTime, direction) {
+        if (!this._marker) return;
+
+        this._lastPos = latlng;
+        this._marker.setLatLng(latlng);
+
+        if (this._opts.enableRotation !== false && direction != null && direction >= 0) {
+            var imgEl = this._marker._icon ? this._marker._icon.querySelector('img') : null;
+            if (imgEl) {
+                imgEl.style.transform = 'rotate(' + (direction + 90) + 'deg)';
+            }
+        }
+
+        if (this._opts.autoView) {
+            var bounds = this._map.getBounds();
+            if (!bounds.contains(latlng)) {
+                this._map.setView(latlng, this._map.getZoom());
+            }
+        }
     };
 
     AutoCar.prototype.setVisibility = function (visible) {
@@ -79,7 +94,6 @@
             offset: [0, -38],
             className: 'autocar-label'
         });
-        // style the label after binding
         var el = this._marker.getTooltip();
         if (el && el._container) {
             el._container.style.backgroundColor = color || '#00537f';
@@ -88,89 +102,6 @@
             el._container.style.padding = '2px 10px';
             el._container.style.textAlign = 'center';
         }
-    };
-
-    AutoCar.prototype._moveNext = function () {
-        if (this._path.length < 2 || this._animating) return;
-        var from = this._path.shift();
-        var to = this._path[0];
-        this._animateMove(from, to);
-    };
-
-    AutoCar.prototype._animateMove = function (from, to) {
-        var self = this;
-        var marker = this._marker;
-        if (!marker) return;
-
-        this._animating = true;
-
-        var p1 = this._map.latLngToContainerPoint(from);
-        var p2 = this._map.latLngToContainerPoint(to);
-        var dx = p2.x - p1.x;
-        var dy = p2.y - p1.y;
-        var pixelDist = Math.sqrt(dx * dx + dy * dy);
-
-        // calculate angle for rotation
-        var angle = 0;
-        if (pixelDist > 0) {
-            angle = Math.atan2(dx, -dy) * 180 / Math.PI + 90;
-        }
-
-        // animation timing
-        var duration = 2000; // default 2s
-        if (to.arrivalTime && from.arrivalTime) {
-            var dt = to.arrivalTime - from.arrivalTime;
-            if (dt > 0 && dt < 30000) duration = dt;
-        }
-        var frames = Math.max(1, Math.round(pixelDist / 2));
-        if (frames > 300) frames = 300;
-
-        var startTime = null;
-
-        function step(timestamp) {
-            if (!startTime) startTime = timestamp;
-            var elapsed = timestamp - startTime;
-            var progress = Math.min(elapsed / duration, 1);
-
-            var lat = from.lat + (to.lat - from.lat) * progress;
-            var lng = from.lng + (to.lng - from.lng) * progress;
-            var latlng = L.latLng(lat, lng);
-
-            marker.setLatLng(latlng);
-
-            // update rotation
-            if (self._opts.enableRotation !== false && pixelDist > 1) {
-                var imgEl = marker._icon ? marker._icon.querySelector('img') : null;
-                if (imgEl) {
-                    imgEl.style.transform = 'rotate(' + angle + 'deg)';
-                }
-            }
-
-            // auto follow
-            if (self._opts.autoView) {
-                var bounds = self._map.getBounds();
-                if (!bounds.contains(latlng)) {
-                    self._map.setView(latlng, self._map.getZoom());
-                }
-            }
-
-            if (progress < 1) {
-                requestAnimationFrame(step);
-            } else {
-                self._animating = false;
-                self._moveNext();
-            }
-        }
-
-        // set initial rotation
-        if (this._opts.enableRotation !== false && pixelDist > 1) {
-            var imgEl = marker._icon ? marker._icon.querySelector('img') : null;
-            if (imgEl) {
-                imgEl.style.transform = 'rotate(' + angle + 'deg)';
-            }
-        }
-
-        requestAnimationFrame(step);
     };
 
     window.LeafletAutoCar = AutoCar;
