@@ -20,12 +20,18 @@
                 <div class="card-section__header">
                     <h3>行驶线路</h3>
                 </div>
-                <select name="routeId" id="routeId" class="task__select">
-                    <option value="0">- 请选择行驶线路 -</option>
-                    <#list routes as item>
-                        <option value="${item.id}">${item.name} - ${item.kilometers!'NaN'}公里</option>
-                    </#list>
-                </select>
+                <div class="task__dropdown" id="routeDropdown" data-name="routeId">
+                    <div class="task__dropdown-trigger" id="routeDropdownTrigger">
+                        <span class="task__dropdown-text">请选择行驶线路</span>
+                        <span class="task__dropdown-arrow"><i class="fa fa-angle-down"></i></span>
+                    </div>
+                    <div class="task__dropdown-menu" id="routeDropdownMenu">
+                        <#list routes as item>
+                        <div class="task__dropdown-option" data-value="${item.id}">${item.name} - ${item.kilometers!'NaN'}公里</div>
+                        </#list>
+                    </div>
+                    <input type="hidden" name="routeId" id="routeId" value="0" />
+                </div>
             </div>
 
             <!-- 车辆信息 -->
@@ -94,18 +100,59 @@
 <#include "inc/footer.ftlh">
 <style>
     .task { max-width: 860px; }
-    .task__select {
-        height: 40px; width: 100%; padding: 0 30px 0 14px;
+    /* ── custom dropdown ── */
+    .task__dropdown { position: relative; width: 100%; }
+    .task__dropdown-trigger {
+        height: 40px; width: 100%; padding: 0 36px 0 14px;
         box-sizing: border-box;
         border: 1px solid var(--color-border); border-radius: var(--radius-sm);
-        background-color: var(--color-bg-panel); color: var(--color-text-primary);
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-        background-repeat: no-repeat; background-position: right 12px center;
+        background: var(--color-bg-panel); color: var(--color-text-primary);
         font-size: 13px; cursor: pointer;
-        transition: border-color var(--transition-fast);
+        display: flex; align-items: center;
+        transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
     }
-    .task__select:focus { border-color: var(--color-text-primary); outline: none; }
+    .task__dropdown-trigger:hover { border-color: var(--color-border-strong); }
+    .task__dropdown.is-open .task__dropdown-trigger {
+        border-color: var(--color-text-primary);
+        border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    }
+    .task__dropdown-text {
+        flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .task__dropdown.is-unselected .task__dropdown-text { color: var(--color-text-secondary); opacity: .6; }
+    .task__dropdown-arrow {
+        position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+        color: var(--color-text-secondary); font-size: 12px;
+        transition: transform var(--transition-fast);
+        pointer-events: none;
+    }
+    .task__dropdown.is-open .task__dropdown-arrow { transform: translateY(-50%) rotate(180deg); }
+
+    .task__dropdown-menu {
+        position: absolute; left: 0; right: 0; top: 100%;
+        opacity: 0; visibility: hidden;
+        max-height: 240px; overflow-y: auto;
+        background: var(--color-bg-panel);
+        border: 1px solid var(--color-text-primary); border-top: none;
+        box-sizing: border-box;
+        border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+        z-index: 100;
+        box-shadow: 0 4px 12px rgba(0,0,0,.08);
+        transition: opacity .15s ease, visibility .15s ease;
+    }
+    .task__dropdown.is-open .task__dropdown-menu {
+        opacity: 1; visibility: visible;
+    }
+    .task__dropdown-option {
+        padding: 9px 14px; font-size: 13px; color: var(--color-text-primary);
+        cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        transition: background var(--transition-fast), color var(--transition-fast);
+    }
+    .task__dropdown-option:hover { background: var(--color-bg-sidebar-hover); }
+    .task__dropdown-option.is-selected {
+        background: var(--color-bg-sidebar-active); color: var(--color-text-inverse);
+    }
+    .task__dropdown-option.is-selected:hover { background: var(--color-primary-hover); }
 
     .task__input-row { display: flex; align-items: center; }
     .task__input-row .card-section__input { flex: 1; border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
@@ -133,6 +180,84 @@
     $(document).ready(function()
     {
         setCurrentMenu("task");
+
+        // ── custom dropdown logic ──
+        (function()
+        {
+            var $dd = $('#routeDropdown');
+            var $trigger = $('#routeDropdownTrigger');
+            var $menu = $('#routeDropdownMenu');
+            var $input = $dd.find('input[name="routeId"]');
+            var $text = $dd.find('.task__dropdown-text');
+
+            $dd.addClass('is-unselected');
+
+            function open()
+            {
+                $dd.addClass('is-open');
+                $menu.find('.task__dropdown-option').first().focus();
+            }
+            function close()
+            {
+                $dd.removeClass('is-open');
+            }
+            function selectOption($opt)
+            {
+                $menu.find('.task__dropdown-option').removeClass('is-selected');
+                $opt.addClass('is-selected');
+                $input.val($opt.data('value'));
+                $text.text($opt.text());
+                $dd.removeClass('is-unselected');
+                close();
+            }
+
+            $trigger.on('click', function(e)
+            {
+                e.stopPropagation();
+                if ($dd.hasClass('is-open')) close(); else open();
+            });
+
+            $menu.on('click', '.task__dropdown-option', function(e)
+            {
+                e.stopPropagation();
+                selectOption($(this));
+            });
+
+            $(document).on('click', function() { close(); });
+
+            // keyboard support
+            $dd.on('keydown', function(e)
+            {
+                var $opts = $menu.find('.task__dropdown-option:visible');
+                var idx = $opts.index($opts.filter('.is-selected'));
+                if (e.key === 'Escape') { close(); return; }
+                if (!$dd.hasClass('is-open'))
+                {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+                    return;
+                }
+                if (e.key === 'ArrowDown')
+                {
+                    e.preventDefault();
+                    idx = idx < $opts.length - 1 ? idx + 1 : 0;
+                    selectOption($opts.eq(idx));
+                }
+                else if (e.key === 'ArrowUp')
+                {
+                    e.preventDefault();
+                    idx = idx > 0 ? idx - 1 : $opts.length - 1;
+                    selectOption($opts.eq(idx));
+                }
+                else if (e.key === 'Enter' || e.key === ' ')
+                {
+                    e.preventDefault();
+                    close();
+                }
+            });
+
+            // make dropdown focusable
+            $dd.attr('tabindex', '0');
+        })();
 
         function randHex(len)
         {

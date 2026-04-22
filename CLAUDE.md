@@ -126,6 +126,8 @@ public void onCameraCaptureCommand(JTT808Message msg) { ... }
 - 配置集中在 `application.yml`，包括数据库、车辆服务器地址
 - `simulator.mode` 配置模拟模式（当前为 `stress`）
 - 修改 `static/` 下的 JS/CSS 后浏览器可能缓存旧文件，验证时需强制刷新（DevTools: `ignoreCache` 或 Ctrl+Shift+R）
+- TaskController 创建页面模板名为 `task-create.ftlh`，URL 路径是 `/task/index`（非 `/task/create`）
+- 自定义下拉框（`.task__dropdown`）替代原生 `<select>`，使用 `opacity`+`visibility` 动画（避免 `max-height` 收缩卡顿），面板需 `box-sizing: border-box` 确保与触发器等宽
 
 ### 地图监控（monitor）
 
