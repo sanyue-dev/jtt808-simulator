@@ -24,25 +24,56 @@ java -jar target/jtt808-simulator-1.0-SNAPSHOT.jar
 
 JT/T 808 部标协议终端模拟器。模拟车辆通过 Netty TCP 连接到部标服务器，上报位置、处理下发指令。目标是 10 万辆车并发在线的压力测试。
 
-### Core Simulation Engine（cn.org.hentai.simulator.task）
+### 包结构（DAG 分层）
+
+```
+cn.org.hentai.simulator
+├── domain/                # 领域层（纯数据，无业务逻辑，零依赖）
+│   ├── entity/            # 数据库实体（Route, RoutePoint, StayPoint 等）
+│   ├── model/             # 内存业务模型（DrivePlan, Point, TaskInfo, XRoute 等）
+│   └── enums/             # 枚举（TaskState, TaskStatus, LogType）
+├── infrastructure/        # 基础设施层
+│   ├── persistence/       # 数据持久化
+│   │   ├── mapper/        # MyBatis Mapper 接口
+│   │   └── example/       # MyBatis Example 查询类
+│   └── util/              # 工具类
+├── service/               # 服务层（业务逻辑）
+│   ├── RouteManager       # 线路缓存与行驶计划生成
+│   ├── TaskManager        # 任务生命周期管理
+│   ├── ScheduleTaskManager # 定时任务管理
+│   └── *Service           # CRUD 服务
+├── web/                   # Web 接口层
+│   ├── controller/        # Spring MVC 控制器
+│   └── vo/                # 视图对象（Page, Result）
+├── engine/                # 模拟引擎
+│   ├── core/              # AbstractDriveTask, SimpleDriveTask
+│   ├── event/             # 事件系统（EventDispatcher, @Listen）
+│   ├── net/               # Netty 连接池（ConnectionPool）
+│   ├── runner/            # 线程池（RunnerManager）
+│   └── log/               # 引擎日志
+└── app/                   # 启动入口（SimulatorApp）
+```
+
+DAG 依赖方向：`domain ← infrastructure ← engine ← service ← web`
+
+### Core Simulation Engine（engine）
 
 事件驱动 + EventLoop 线程模型：
 
 - **AbstractDriveTask** — 模拟任务抽象基类，生命周期方法 `init()` → `startup()`，状态机 idle → driving → parking → terminated
 - **SimpleDriveTask** — 具体实现：JTT808 协议通信、设备注册/鉴权、位置上报（T0200，5 秒间隔）
-- **TaskManager** — 管理所有运行中的任务实例
 - **EventDispatcher** + `@Listen` 注解 — 事件路由与分发，支持 attachment 参数按消息 ID 二次路由
 - **RunnerManager** — ScheduledExecutorService 线程池调度，执行事件回调与定时/延时任务
-- **ConnectionPool**（task/net/）— Netty 客户端连接池，处理 JTT808 编解码
+- **ConnectionPool** — Netty 客户端连接池，处理 JTT808 编解码
 - **TaskState**: idle → driving → parking → terminated
 
-### Route & Track（cn.org.hentai.simulator.manager）
+### Route & Track（service）
 
 - **RouteManager** — 线路加载、缓存、行驶计划（DrivePlan）生成，轨迹随机化（每次行驶轨迹不同但路线相同）
 - 路线数据：轨迹点（RoutePoint）+ 停留点（StayPoint）+ 问题路段（TroubleSegment）
 - 坐标系：项目全程使用 WGS84 坐标系
 
-### Web Layer（cn.org.hentai.simulator.web）
+### Web Layer（web）
 
 Spring Boot + MyBatis + FreeMarker 模板，前端基于 jQuery/Bootstrap + Leaflet/OpenStreetMap。
 
@@ -54,7 +85,7 @@ Spring Boot + MyBatis + FreeMarker 模板，前端基于 jQuery/Bootstrap + Leaf
 | MonitorController | /monitor/list/* | 实时任务状态监控 |
 | MapMonitorController | /monitor/* | 地图页实时轨迹 |
 
-数据库实体使用 MyBatis Generator 生成的 Example 模式（RouteExample 等），Mapper XML 在 `resources/cn/org/hentai/simulator/web/mapper/`。
+数据库实体使用 MyBatis Generator 生成的 Example 模式（RouteExample 等），Mapper XML 在 `resources/cn/org/hentai/simulator/infrastructure/persistence/mapper/`。
 
 ### Database Tables
 

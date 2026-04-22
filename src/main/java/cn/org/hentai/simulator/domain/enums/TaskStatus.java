@@ -1,0 +1,7 @@
+package cn.org.hentai.simulator.domain.enums;
+
+public enum TaskStatus {
+    REGISTRATION_SUCCESSFUL, REGISTRATION_FAILED, AUTHENTICATING, AUTHENTICATION_SUCCESSFUL, AUTHENTICATION_FAILED
+    // 鉴权成功
+
+}

@@ -1,10 +1,10 @@
 package cn.org.hentai.simulator.web.controller;
 
-import cn.org.hentai.simulator.entity.TaskInfo;
-import cn.org.hentai.simulator.manager.RouteManager;
-import cn.org.hentai.simulator.task.TaskManager;
-import cn.org.hentai.simulator.web.entity.Route;
-import cn.org.hentai.simulator.web.service.RouteService;
+import cn.org.hentai.simulator.domain.model.TaskInfo;
+import cn.org.hentai.simulator.service.RouteManager;
+import cn.org.hentai.simulator.service.TaskManager;
+import cn.org.hentai.simulator.domain.entity.Route;
+import cn.org.hentai.simulator.service.RouteService;
 import cn.org.hentai.simulator.web.vo.Page;
 import cn.org.hentai.simulator.web.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;

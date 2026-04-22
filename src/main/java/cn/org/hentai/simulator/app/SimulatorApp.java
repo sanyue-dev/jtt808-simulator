@@ -1,12 +1,12 @@
 package cn.org.hentai.simulator.app;
 
-import cn.org.hentai.simulator.manager.RouteManager;
-import cn.org.hentai.simulator.task.TaskManager;
-import cn.org.hentai.simulator.task.event.EventDispatcher;
-import cn.org.hentai.simulator.task.runner.RunnerManager;
-import cn.org.hentai.simulator.task.net.ConnectionPool;
-import cn.org.hentai.simulator.util.BeanUtils;
-import cn.org.hentai.simulator.util.Configs;
+import cn.org.hentai.simulator.service.RouteManager;
+import cn.org.hentai.simulator.service.TaskManager;
+import cn.org.hentai.simulator.engine.event.EventDispatcher;
+import cn.org.hentai.simulator.engine.runner.RunnerManager;
+import cn.org.hentai.simulator.engine.net.ConnectionPool;
+import cn.org.hentai.simulator.infrastructure.util.BeanUtils;
+import cn.org.hentai.simulator.infrastructure.util.Configs;
 import org.mybatis.spring.annotation.MapperScan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,8 +20,8 @@ import java.util.TimeZone;
 /**
  * Created by matrixy when 2019/8/13.
  */
-@MapperScan(basePackages = "cn.org.hentai.simulator.web.mapper")
-@SpringBootApplication(scanBasePackages = {"cn.org.hentai.simulator.web"})
+@MapperScan(basePackages = "cn.org.hentai.simulator.infrastructure.persistence.mapper")
+@SpringBootApplication(scanBasePackages = {"cn.org.hentai.simulator"})
 public class SimulatorApp
 {
     static Logger logger = LoggerFactory.getLogger(SimulatorApp.class);

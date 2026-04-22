@@ -18,7 +18,7 @@ vehicle-server:
   addr: 127.0.0.1
   port: '20021'
 mybatis:
-  type-aliases-package: cn.org.hentai.simulator.web.entity.Mapper
+  type-aliases-package: cn.org.hentai.simulator.domain.entity
 file:
   upload:
     path: /opt/upload/
