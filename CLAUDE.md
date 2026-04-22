@@ -69,7 +69,7 @@ DAG 依赖方向：`domain ← infrastructure ← engine ← service ← web`
 
 ### Route & Track（service）
 
-- **RouteManager** — 线路加载、缓存、行驶计划（DrivePlan）生成，轨迹随机化（每次行驶轨迹不同但路线相同）
+- **RouteManager** — 线路加载、缓存、行驶计划（DrivePlan）生成，轨迹随机化（每次行驶轨迹不同但路线相同，不应通过 OSRM 等路由引擎强制所有设备走完全相同的路线）
 - 路线数据：轨迹点（RoutePoint）+ 停留点（StayPoint）+ 问题路段（TroubleSegment）
 - 坐标系：项目全程使用 WGS84 坐标系
 
@@ -126,3 +126,10 @@ public void onCameraCaptureCommand(JTT808Message msg) { ... }
 - 配置集中在 `application.yml`，包括数据库、车辆服务器地址
 - `simulator.mode` 配置模拟模式（当前为 `stress`）
 - 修改 `static/` 下的 JS/CSS 后浏览器可能缓存旧文件，验证时需强制刷新（DevTools: `ignoreCache` 或 Ctrl+Shift+R）
+
+### 地图监控（monitor）
+
+- 地图使用 Leaflet + CartoDB Voyager 瓦片，车辆动画库为 `static/js/LeafletAutoCar.js`（`BMapLib.AutoCar.js` 为旧版百度地图，未使用）
+- 车辆图标（`static/img/vehicle.png`）车头朝上，后端 `LBSUtils.caculateAngle` 返回正北为 0° 的罗盘角，前端直接 `rotate(direction)`
+- 后端在 `SimpleDriveTask.reportLocation()` 中通过 `Point.setDirection()` 写入方向角，前端经 `/monitor/position` 获取
+- 当前位置更新为直接跳变（无平滑动画），如需恢复需在 `LeafletAutoCar.moveTo` 中重新实现

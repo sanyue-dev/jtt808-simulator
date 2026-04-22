@@ -34,7 +34,7 @@
         if (this._opts.enableRotation !== false && direction != null && direction >= 0) {
             var imgEl = this._marker._icon ? this._marker._icon.querySelector('img') : null;
             if (imgEl) {
-                imgEl.style.transform = 'rotate(' + (direction + 90) + 'deg)';
+                imgEl.style.transform = 'rotate(' + direction + 'deg)';
             }
         }
 
