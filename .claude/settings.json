@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(mvn compile -q)",
+      "mcp__ace-tool__search_context"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=\"$CLAUDE_FILE_PATH\"; if [[ \"$file\" == *.java ]]; then cd \"$CLAUDE_PROJECT_DIR\" && mvn compile -q 2>&1 | tail -5; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

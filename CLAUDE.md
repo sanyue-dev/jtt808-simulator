@@ -119,28 +119,10 @@ public void onCameraCaptureCommand(JTT808Message msg) { ... }
 
 ## Key Conventions
 
-- 前端页面为 FreeMarker 模板（`.ftlh`），公共组件在 `templates/inc/`（resource.ftlh / sidebar.ftlh / footer.ftlh）
-- 静态资源在 `static/proton/` 下，使用 jQuery 2.1.1 + Bootstrap
-- `static/js/common.js` 含全局函数：`confirmDialog(text, onOk, onCancel)`、`toastr(type, msg)`、`setCurrentMenu(id)`、`$.fn.paginate()`。弹窗/提示 UI 统一走这些函数，CSS class 遵循 BEM（`.confirm__body`、`.toast--success`），JS 选择器必须与 BEM class 精确匹配
-- CSS 共享样式（`.card-section__*`、`.page-header`、`.page-body`）在 `static/css/common.css`，页面特有样式写在各 `.ftlh` 的内联 `<style>` 块
-- 全站表格使用 `.data-table` class（定义在 `common.css`），不要使用旧 Bootstrap class（`table-bordered` / `table-striped` 等）
-- `$.fn.paginate`（`common.js`）是列表页的表格+分页渲染插件，默认生成 `.data-table` 表格，表头用 `<th>` 标签；新列表页直接调用即可
-- `monitor.ftlh` 日志表格不走 paginate 插件，是手写 `<table class="data-table">` + JS prepend 行
+- 前端页面为 FreeMarker 模板（`.ftlh`）
 - 配置集中在 `application.yml`，包括数据库、车辆服务器地址
 - `simulator.mode` 配置模拟模式（当前为 `stress`）
 - 修改 `static/` 下的 JS/CSS 后浏览器可能缓存旧文件，验证时需强制刷新（DevTools: `ignoreCache` 或 Ctrl+Shift+R）
 - TaskController 创建页面模板名为 `task-create.ftlh`，URL 路径是 `/task/index`（非 `/task/create`）
-- `/route/create` 与 `/route/edit?id=...` 共用 `route-create.ftlh`，改该模板会同时影响创建页和编辑页
-- 线路创建最小闭环：填写名称/速度 → 添加并选中至少 2 个站点候选 → 点击“线路规划”生成 `route.points` → 保存；只填站点文本不点候选不会形成有效轨迹
-- 线路页保存时若未设置停留点/问题路段，会依次触发两次 `confirmDialog` 确认后才真正提交
-- 自定义下拉框（`.task__dropdown`）替代原生 `<select>`，使用 `opacity`+`visibility` 动画（避免 `max-height` 收缩卡顿），面板需 `box-sizing: border-box` 确保与触发器等宽
-- 侧边栏收起/展开由 `html.sidebar-collapsed` 类控制（JS 在 footer.ftlh），所有过渡属性需同步 0.2s ease。文字隐藏用 `opacity: 0; max-width: 0` 过渡，不能用 `display: none`（不可动画）；收起态图标居中靠 `padding-left: 14px` 而非 `text-align: center`；菜单 `<li>` 须 `white-space: nowrap; overflow: hidden`
-- 侧边栏菜单图标（FontAwesome 4）须设固定 `width` + `text-align: center`（FA 图标天然宽度不一致，不固定则文字无法左对齐）
-
-### 地图监控（monitor）
-
-- 地图使用 Leaflet + CartoDB Voyager 瓦片，车辆动画库为 `static/js/LeafletAutoCar.js`（`BMapLib.AutoCar.js` 为旧版百度地图，未使用）
-- `route-create.ftlh` 与 `monitor.ftlh` 现已统一使用 Leaflet + CartoDB Voyager 底图；不要再按线路页 OSM 标准底图的旧状态判断
-- 车辆图标（`static/img/vehicle.png`）车头朝上，后端 `LBSUtils.caculateAngle` 返回正北为 0° 的罗盘角，前端直接 `rotate(direction)`
-- 后端在 `SimpleDriveTask.reportLocation()` 中通过 `Point.setDirection()` 写入方向角，前端经 `/monitor/position` 获取
-- 当前位置更新为直接跳变（无平滑动画），如需恢复需在 `LeafletAutoCar.moveTo` 中重新实现
+- @.claude/rules/frontend/ui-components.md
+- @.claude/rules/frontend/map-pages.md
