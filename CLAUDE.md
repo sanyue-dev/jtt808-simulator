@@ -128,6 +128,8 @@ public void onCameraCaptureCommand(JTT808Message msg) { ... }
 - 修改 `static/` 下的 JS/CSS 后浏览器可能缓存旧文件，验证时需强制刷新（DevTools: `ignoreCache` 或 Ctrl+Shift+R）
 - TaskController 创建页面模板名为 `task-create.ftlh`，URL 路径是 `/task/index`（非 `/task/create`）
 - 自定义下拉框（`.task__dropdown`）替代原生 `<select>`，使用 `opacity`+`visibility` 动画（避免 `max-height` 收缩卡顿），面板需 `box-sizing: border-box` 确保与触发器等宽
+- 侧边栏收起/展开由 `html.sidebar-collapsed` 类控制（JS 在 footer.ftlh），所有过渡属性需同步 0.2s ease。文字隐藏用 `opacity: 0; max-width: 0` 过渡，不能用 `display: none`（不可动画）；收起态图标居中靠 `padding-left: 14px` 而非 `text-align: center`；菜单 `<li>` 须 `white-space: nowrap; overflow: hidden`
+- 侧边栏菜单图标（FontAwesome 4）须设固定 `width` + `text-align: center`（FA 图标天然宽度不一致，不固定则文字无法左对齐）
 
 ### 地图监控（monitor）
 
