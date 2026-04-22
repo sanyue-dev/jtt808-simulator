@@ -152,7 +152,7 @@
             <div class="monitor__panel">
                 <h3>行程任务日志</h3>
                 <div class="monitor__panel-body">
-                    <table id="logs" class="table table-bordered table-striped table-condensed table-hover">
+                    <table id="logs" class="data-table">
                         <thead>
                         <tr>
                             <th align="center">类型</th>

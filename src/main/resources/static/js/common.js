@@ -38,7 +38,7 @@ $.fn.paginate = function(param)
         // 是否不生成thead标题行
         nothead : false,
         // 表格样式
-        tableStyle : 'table-bordered table-striped table-condensed table-hover',
+        tableStyle : 'data-table',
         // 页码参数名称
         pageIndexName : 'pageIndex',
         // 分页元素容器
@@ -84,20 +84,17 @@ $.fn.paginate = function(param)
         }
         else
         {
-            shtml = '<table class="table ' + param.tableStyle + '">';
+            shtml = '<table class="' + param.tableStyle + '">';
             if (param.nothead == false) shtml += '<thead><tr>';
             for (var i = 0; param.nothead == false && i < param.fields.length; i++)
             {
                 var field = param.fields[i];
                 field.align = field.align == null ? 'left' : field.align;
-                // shtml += '<th ' + (field.width == null ? '' : 'width="' + field.width + '"') + ' class="text-' + field.align + '">' + field.title + '</th>';
-
-                shtml += '<td ' + (field.width == null ? '' : 'style="width:' + field.width + '"') + ' class="text-' + field.align + '">' + field.title + '</td>';
+                shtml += '<th ' + (field.width == null ? '' : 'style="width:' + field.width + '"') + ' class="text-' + field.align + '">' + field.title + '</th>';
             }
             if (param.nothead == false) shtml += '</tr></thead>';
 
             shtml += '<tbody>';
-
 
             for (var i = 0; result.data.list && i < result.data.list.length; i++)
             {
@@ -110,7 +107,7 @@ $.fn.paginate = function(param)
                     field.align = field.align == null ? 'left' : field.align;
                     var content = row[field.name];
                     if (typeof(field.formatter) == 'function') content = field.formatter(i, content, row);
-                    shtml += '<td ' + (field.width == null ? '' : 'style="width:' + field.width + '"') + ' valign="middle" align="' + field.align + '">' + content + '</td>';
+                    shtml += '<td ' + (field.width == null ? '' : 'style="width:' + field.width + '"') + ' class="text-' + field.align + '">' + content + '</td>';
                 }
                 shtml += '</tr>';
             }
