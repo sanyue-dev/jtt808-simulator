@@ -2,18 +2,21 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
-      "Bash(mvn compile -q)",
-      "mcp__ace-tool__search_context"
+      "Bash(mvn compile*)",
+      "Bash(mvn test-compile*)",
+      "Bash(mvn test*)",
+      "Bash(mvn verify*)",
+      "Bash(./mvnw*)",
+      "Bash(./gradlew*)"
     ]
   },
   "hooks": {
-    "PostToolUse": [
+    "Stop": [
       {
-        "matcher": "Edit|Write",
         "hooks": [
           {
             "type": "command",
-            "command": "file=\"$CLAUDE_FILE_PATH\"; if [[ \"$file\" == *.java ]]; then cd \"$CLAUDE_PROJECT_DIR\" && mvn compile -q 2>&1 | tail -5; fi"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/java-verify.sh"
           }
         ]
       }
