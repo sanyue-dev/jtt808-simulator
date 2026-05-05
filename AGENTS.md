@@ -146,6 +146,8 @@ Recent history uses Conventional Commit-style messages, often in Chinese, for ex
 
 Pull requests should include a short summary, affected modules or pages, validation commands run, linked issues when available, and screenshots for visible UI changes.
 
+When a PR should trigger Codex automatic review, create it directly as a non-draft / ready-for-review PR. Draft PRs may not trigger `chatgpt-codex-connector[bot]` automatic review or reaction. If a PR must start as draft, confirm that Codex review was triggered after marking it ready; if it was not, close it and reopen a non-draft PR for the same branch.
+
 ## Agent-Specific Instructions
 
 Do not add silent fallback paths, mock success behavior, or arbitrary guardrails just to make execution pass. Surface failures clearly with explicit errors, logs, or failing tests so root causes can be fixed.
