@@ -50,14 +50,21 @@ public class IdentityBatchGenerator
 
     private String normalizeDeviceSn(String deviceSn)
     {
-        if (deviceSn.length() < 7) return ("00000000000000000" + deviceSn).replaceAll("^0+(\\w{7})$", "$1");
-        return deviceSn;
+        if (deviceSn.length() > 7) throw new IllegalArgumentException("终端ID长度不能超过 7 位: " + deviceSn);
+        return leftPad(deviceSn, 7);
     }
 
     private String normalizeSimNumber(String simNumber)
     {
-        if (simNumber.length() < 12) return ("00000000000000000000" + simNumber).replaceAll("^0+(\\d{12})$", "$1");
-        return simNumber;
+        if (simNumber.matches("\\d+") == false) throw new IllegalArgumentException("SIM卡号必须为数字: " + simNumber);
+        if (simNumber.length() > 12) throw new IllegalArgumentException("SIM卡号长度不能超过 12 位: " + simNumber);
+        return leftPad(simNumber, 12);
+    }
+
+    private String leftPad(String value, int length)
+    {
+        if (value.length() >= length) return value;
+        return "0".repeat(length - value.length()) + value;
     }
 
     private void requireUnique(String name, String value, Set<String> values)

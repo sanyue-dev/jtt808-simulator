@@ -41,4 +41,40 @@ class IdentityBatchGeneratorTest
 
         assertTrue(ex.getMessage().startsWith("车牌号规则无法格式化 index=1"));
     }
+
+    @Test
+    void leftPadsShortDeviceSnEvenWhenItContainsPunctuation()
+    {
+        List<TerminalIdentity> identities = generator.generate(1, 1, "京%06d", "D-%03d", "%03d");
+
+        assertEquals("00D-001", identities.get(0).getDeviceSn());
+        assertEquals("000000000001", identities.get(0).getSimNumber());
+    }
+
+    @Test
+    void failsWhenDeviceSnIsTooLong()
+    {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> generator.generate(1, 1, "京%06d", "DEVICE-%06d", "013800%06d"));
+
+        assertEquals("终端ID长度不能超过 7 位: DEVICE-000001", ex.getMessage());
+    }
+
+    @Test
+    void failsWhenSimNumberContainsNonDigits()
+    {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> generator.generate(1, 1, "京%06d", "A%06d", "SIM%03d"));
+
+        assertEquals("SIM卡号必须为数字: SIM001", ex.getMessage());
+    }
+
+    @Test
+    void failsWhenSimNumberIsTooLong()
+    {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> generator.generate(1, 1, "京%06d", "A%06d", "013800000000%06d"));
+
+        assertEquals("SIM卡号长度不能超过 12 位: 013800000000000001", ex.getMessage());
+    }
 }
