@@ -185,7 +185,8 @@ public class AcceptanceRun implements TaskLifecycleObserver
     public void onDisconnected(TaskInfo taskInfo)
     {
         disconnected.incrementAndGet();
-        record(taskInfo).setStage("disconnected");
+        TerminalAcceptanceRecord record = record(taskInfo);
+        if ("terminated".equals(record.getStage()) == false) record.setStage("disconnected");
     }
 
     @Override

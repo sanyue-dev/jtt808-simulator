@@ -63,6 +63,24 @@ class AcceptanceRunTest
     }
 
     @Test
+    void preservesTerminatedStageWhenDisconnectedArrivesLater()
+    {
+        AcceptanceRun run = new AcceptanceRun(new AcceptanceConfig());
+        run.addRecord(new TerminalAcceptanceRecord(new TerminalIdentity("京000001", "A000001", "013800000001"), 1L));
+        TaskInfo taskInfo = new TaskInfo().withId(1L);
+
+        run.onTerminated(taskInfo);
+        run.onDisconnected(taskInfo);
+
+        AcceptanceRun.AcceptanceSummary summary = run.getSummary();
+        TerminalAcceptanceRecord record = run.getRecords().iterator().next();
+
+        assertEquals(1, summary.getTerminated());
+        assertEquals(1, summary.getDisconnected());
+        assertEquals("terminated", record.getStage());
+    }
+
+    @Test
     void reportsAllRecordedTasksTerminatedOnlyAfterEveryRecordTerminates()
     {
         AcceptanceRun run = new AcceptanceRun(new AcceptanceConfig());
