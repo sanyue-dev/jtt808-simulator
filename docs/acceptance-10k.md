@@ -1,6 +1,6 @@
-# 1k 终端阶段验收 Harness
+# 10k 终端阶段验收 Harness
 
-本 harness 用于验证 1,000 个真实 JT/T 808 模拟终端连接指定服务端，完成 TCP 连接、注册、鉴权和周期位置上报。它不提供 mock 成功路径；连接、协议、发送和身份生成失败会进入验收记录。
+本 harness 用于验证 10,000 个真实 JT/T 808 模拟终端连接指定服务端，完成 TCP 连接、注册、鉴权和周期位置上报。它不提供 mock 成功路径；连接、协议、发送和身份生成失败会进入验收记录。
 
 ## 启动命令
 
@@ -10,15 +10,16 @@
 ./mvnw spring-boot:run
 ```
 
-发起 1k 验收：
+发起 10k 验收：
 
 ```bash
-curl -X POST 'http://127.0.0.1:18888/acceptance/1k/run' \
-  -d terminalCount=1000 \
+curl -X POST 'http://127.0.0.1:18888/acceptance/10k/run' \
   -d serverAddress=127.0.0.1 \
   -d serverPort=20021 \
   -d reportIntervalSeconds=5 \
   -d runDurationSeconds=300 \
+  -d rampUpBatchSize=100 \
+  -d rampUpIntervalMillis=1000 \
   --data-urlencode 'vehicleNumberPattern=京%06d' \
   --data-urlencode 'deviceSnPattern=A%06d' \
   --data-urlencode 'simNumberPattern=013800%06d'
@@ -27,33 +28,32 @@ curl -X POST 'http://127.0.0.1:18888/acceptance/1k/run' \
 接口会返回 `runId`、本次配置和初始指标。轮询验收记录：
 
 ```bash
-curl 'http://127.0.0.1:18888/acceptance/1k/{runId}'
+curl 'http://127.0.0.1:18888/acceptance/10k/{runId}'
 ```
 
 如需限制线路，可重复传入 `routeIds`：
 
 ```bash
-curl -X POST 'http://127.0.0.1:18888/acceptance/1k/run' \
-  -d terminalCount=1000 \
+curl -X POST 'http://127.0.0.1:18888/acceptance/10k/run' \
   -d routeIds=1 \
   -d routeIds=2
 ```
 
 ## 配置来源
 
-- `terminalCount`：终端数量，1k 阶段固定要求为 `1000`，其他值会显式失败。
+- `terminalCount`：10k 阶段固定为 `10000`，由入口显式指定。
 - `serverAddress` / `serverPort`：目标 JT/T 808 服务端；未传时使用 `application.yml` 的 `vehicle-server.addr` 和 `vehicle-server.port`。
 - `reportIntervalSeconds`：位置上报间隔，传给线路行程计划生成。
 - `runDurationSeconds`：验收运行时长，到期后 harness 终止本次创建的任务。
-- `rampUpBatchSize` / `rampUpIntervalMillis`：1k 阶段默认按单批立即启动，避免人为制造启动风暴。
+- `rampUpBatchSize` / `rampUpIntervalMillis`：终端逐步启动节奏，配置错误时请求直接失败。
 - `vehicleNumberPattern` / `deviceSnPattern` / `simNumberPattern`：身份格式，按 Java `String.format` 生成。
 - `routeIds`：可选线路 ID 列表；不传时使用全部线路轮询分配。
 
-身份生成会先完整生成 1,000 组车牌号、终端 ID 和 SIM 卡号，并检查三类身份各自唯一。格式无法生成或生成重复时，请求直接失败。
+身份生成会先完整生成 10,000 组车牌号、终端 ID 和 SIM 卡号，并检查三类身份各自唯一。格式无法生成或生成重复时，请求直接失败。
 
 ## 验收指标
 
-`GET /acceptance/1k/{runId}` 返回：
+`GET /acceptance/10k/{runId}` 返回：
 
 - `connectionSucceeded` / `connectionFailed`
 - `registrationSucceeded` / `registrationFailed`
@@ -84,9 +84,9 @@ curl -X POST 'http://127.0.0.1:18888/acceptance/1k/run' \
 
 通过条件：
 
-- 1,000 个终端均连接成功。
-- 注册成功数为 1,000。
-- 鉴权成功数为 1,000。
+- 10,000 个终端均连接成功。
+- 注册成功数为 10,000。
+- 鉴权成功数为 10,000。
 - `locationReportSent` 随运行时间持续增长，服务端能看到对应位置上报。
 - `connectionFailed`、`registrationFailed`、`authenticationFailed`、`sendFailed`、`protocolExceptions` 为 0。
 

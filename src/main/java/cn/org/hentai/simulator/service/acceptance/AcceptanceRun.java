@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -32,6 +33,7 @@ public class AcceptanceRun implements TaskLifecycleObserver
     private final AtomicLong terminated = new AtomicLong();
     private final AtomicLong sendFailed = new AtomicLong();
     private final AtomicLong protocolExceptions = new AtomicLong();
+    private final AtomicBoolean finishing = new AtomicBoolean(false);
 
     public AcceptanceRun(AcceptanceConfig config)
     {
@@ -108,6 +110,7 @@ public class AcceptanceRun implements TaskLifecycleObserver
 
     public void finish()
     {
+        finishing.set(true);
         state = "finished";
         finishedAt = Instant.now();
     }
@@ -119,9 +122,25 @@ public class AcceptanceRun implements TaskLifecycleObserver
 
     public void finishFailed(String reason)
     {
+        finishing.set(true);
         state = "finish_failed";
         finishFailureReason = reason;
         finishedAt = Instant.now();
+    }
+
+    public boolean beginFinishing()
+    {
+        if (finishing.compareAndSet(false, true))
+        {
+            state = "finishing";
+            return true;
+        }
+        return false;
+    }
+
+    public boolean canLaunch()
+    {
+        return "running".equals(state);
     }
 
     public boolean allRecordedTasksTerminated()

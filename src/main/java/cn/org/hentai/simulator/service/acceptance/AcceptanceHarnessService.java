@@ -59,8 +59,30 @@ public class AcceptanceHarnessService
     private void launchTasks(AcceptanceConfig config, List<Route> routes, List<TerminalIdentity> identities, AcceptanceRun run)
     {
         TaskManager taskManager = TaskManager.getInstance();
-        for (int i = 0; i < identities.size(); i++)
+        for (LaunchWindow window : buildLaunchWindows(config.getTerminalCount(), config.getRampUpBatchSize(), config.getRampUpIntervalMillis()))
         {
+            scheduler.schedule(() -> {
+                if (run.canLaunch() == false) return;
+                try
+                {
+                    launchWindow(config, routes, identities, run, taskManager, window);
+                }
+                catch(RuntimeException ex)
+                {
+                    logger.error("验收启动批次失败: runId={}, startIndex={}, endIndex={}, delayMillis={}",
+                            run.getId(), window.getStartIndex(), window.getEndIndex(), window.getDelayMillis(), ex);
+                    requestFinish(run, "启动失败: " + ex.getClass().getSimpleName() + ": " + ex.getMessage());
+                }
+            }, window.getDelayMillis(), TimeUnit.MILLISECONDS);
+        }
+    }
+
+    void launchWindow(AcceptanceConfig config, List<Route> routes, List<TerminalIdentity> identities, AcceptanceRun run, TaskManager taskManager, LaunchWindow window)
+    {
+        for (int i = window.getStartIndex(); i < window.getEndIndex(); i++)
+        {
+            if (run.canLaunch() == false) return;
+
             TerminalIdentity identity = identities.get(i);
             Route route = routes.get(i % routes.size());
             Map<String, String> params = new HashMap<>();
@@ -96,7 +118,7 @@ public class AcceptanceHarnessService
 
     private void requestFinish(AcceptanceRun run, String failureReason)
     {
-        run.finishing();
+        if (run.beginFinishing() == false) return;
         RuntimeException failure = null;
         for (TerminalAcceptanceRecord record : run.getRecords())
         {
@@ -129,11 +151,14 @@ public class AcceptanceHarnessService
         scheduler.schedule(() -> awaitFinish(run, failureReason), 100, TimeUnit.MILLISECONDS);
     }
 
-    private void validate(AcceptanceConfig config)
+    void validate(AcceptanceConfig config)
     {
-        if (config.getTerminalCount() != 1000) throw new IllegalArgumentException("1k 阶段验收必须启动 1000 个终端");
+        if (config.getTerminalCount() != 1000 && config.getTerminalCount() != 10000)
+            throw new IllegalArgumentException("验收阶段仅支持 1000 或 10000 个终端");
         if (config.getReportIntervalSeconds() < 1) throw new IllegalArgumentException("位置上报间隔必须大于 0 秒");
         if (config.getRunDurationSeconds() < 1) throw new IllegalArgumentException("运行时长必须大于 0 秒");
+        if (config.getRampUpBatchSize() < 1) throw new IllegalArgumentException("ramp-up 批次大小必须大于 0");
+        if (config.getRampUpIntervalMillis() < 1) throw new IllegalArgumentException("ramp-up 间隔必须大于 0 毫秒");
         if (config.getServerAddress() == null || config.getServerAddress().isBlank()) throw new IllegalArgumentException("目标服务端地址不能为空");
         if (config.getServerPort() < 1 || config.getServerPort() > 65535) throw new IllegalArgumentException("目标服务端端口非法: " + config.getServerPort());
     }
@@ -156,5 +181,45 @@ public class AcceptanceHarnessService
         }
         if (routes.isEmpty()) throw new IllegalArgumentException("没有可用于验收的线路");
         return routes;
+    }
+
+    List<LaunchWindow> buildLaunchWindows(int terminalCount, int batchSize, long intervalMillis)
+    {
+        List<LaunchWindow> windows = new ArrayList<>();
+        for (int start = 0, batchIndex = 0; start < terminalCount; start += batchSize, batchIndex++)
+        {
+            int end = Math.min(start + batchSize, terminalCount);
+            windows.add(new LaunchWindow(start, end, batchIndex * intervalMillis));
+        }
+        return windows;
+    }
+
+    static final class LaunchWindow
+    {
+        private final int startIndex;
+        private final int endIndex;
+        private final long delayMillis;
+
+        LaunchWindow(int startIndex, int endIndex, long delayMillis)
+        {
+            this.startIndex = startIndex;
+            this.endIndex = endIndex;
+            this.delayMillis = delayMillis;
+        }
+
+        int getStartIndex()
+        {
+            return startIndex;
+        }
+
+        int getEndIndex()
+        {
+            return endIndex;
+        }
+
+        long getDelayMillis()
+        {
+            return delayMillis;
+        }
     }
 }

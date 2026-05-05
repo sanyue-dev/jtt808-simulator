@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/acceptance/1k")
-public class AcceptanceController
+@RequestMapping("/acceptance/10k")
+public class Acceptance10kController
 {
     @Autowired
     AcceptanceHarnessService acceptanceHarnessService;
@@ -29,9 +29,10 @@ public class AcceptanceController
     int vehicleServerPort;
 
     @PostMapping("/run")
-    public Result run(@RequestParam(defaultValue = "1000") int terminalCount,
-                      @RequestParam(defaultValue = "5") int reportIntervalSeconds,
+    public Result run(@RequestParam(defaultValue = "5") int reportIntervalSeconds,
                       @RequestParam(defaultValue = "300") int runDurationSeconds,
+                      @RequestParam(defaultValue = "100") int rampUpBatchSize,
+                      @RequestParam(defaultValue = "1000") int rampUpIntervalMillis,
                       @RequestParam(required = false) String serverAddress,
                       @RequestParam(required = false) Integer serverPort,
                       @RequestParam(defaultValue = "京%06d") String vehicleNumberPattern,
@@ -42,11 +43,11 @@ public class AcceptanceController
         try
         {
             AcceptanceConfig config = new AcceptanceConfig();
-            config.setTerminalCount(terminalCount);
+            config.setTerminalCount(10000);
             config.setReportIntervalSeconds(reportIntervalSeconds);
             config.setRunDurationSeconds(runDurationSeconds);
-            config.setRampUpBatchSize(terminalCount);
-            config.setRampUpIntervalMillis(1);
+            config.setRampUpBatchSize(rampUpBatchSize);
+            config.setRampUpIntervalMillis(rampUpIntervalMillis);
             config.setServerAddress(serverAddress == null || serverAddress.isBlank() ? vehicleServerAddr : serverAddress);
             config.setServerPort(serverPort == null ? vehicleServerPort : serverPort);
             config.setVehicleNumberPattern(vehicleNumberPattern);
