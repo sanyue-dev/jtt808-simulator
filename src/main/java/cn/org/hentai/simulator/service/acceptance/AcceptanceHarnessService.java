@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -27,6 +28,7 @@ public class AcceptanceHarnessService
     private final IdentityBatchGenerator identityBatchGenerator = new IdentityBatchGenerator();
     private final Map<String, AcceptanceRun> runs = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService launchScheduler = Executors.newSingleThreadScheduledExecutor();
 
     @Autowired
     public AcceptanceHarnessService(RouteService routeService)
@@ -49,7 +51,7 @@ public class AcceptanceHarnessService
         catch(RuntimeException ex)
         {
             requestFinish(run, "启动失败: " + ex.getClass().getSimpleName() + ": " + ex.getMessage());
-            throw new RuntimeException("1k 验收启动失败，runId=" + run.getId() + "，已请求终止已启动任务", ex);
+            throw new RuntimeException("验收启动失败，runId=" + run.getId() + "，已请求终止已启动任务", ex);
         }
 
         scheduler.schedule(() -> requestFinish(run, null), config.getRunDurationSeconds(), TimeUnit.SECONDS);
@@ -61,7 +63,7 @@ public class AcceptanceHarnessService
         TaskManager taskManager = TaskManager.getInstance();
         for (LaunchWindow window : buildLaunchWindows(config.getTerminalCount(), config.getRampUpBatchSize(), config.getRampUpIntervalMillis()))
         {
-            scheduler.schedule(() -> {
+            ScheduledFuture<?> launchFuture = launchScheduler.schedule(() -> {
                 if (run.canLaunch() == false) return;
                 try
                 {
@@ -74,6 +76,7 @@ public class AcceptanceHarnessService
                     requestFinish(run, "启动失败: " + ex.getClass().getSimpleName() + ": " + ex.getMessage());
                 }
             }, window.getDelayMillis(), TimeUnit.MILLISECONDS);
+            run.addLaunchFuture(launchFuture);
         }
     }
 
@@ -119,6 +122,7 @@ public class AcceptanceHarnessService
     private void requestFinish(AcceptanceRun run, String failureReason)
     {
         if (run.beginFinishing() == false) return;
+        run.cancelPendingLaunches();
         RuntimeException failure = null;
         for (TerminalAcceptanceRecord record : run.getRecords())
         {

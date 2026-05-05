@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class AcceptanceRun implements TaskLifecycleObserver
@@ -34,6 +36,7 @@ public class AcceptanceRun implements TaskLifecycleObserver
     private final AtomicLong sendFailed = new AtomicLong();
     private final AtomicLong protocolExceptions = new AtomicLong();
     private final AtomicBoolean finishing = new AtomicBoolean(false);
+    private final CopyOnWriteArrayList<ScheduledFuture<?>> launchFutures = new CopyOnWriteArrayList<>();
 
     public AcceptanceRun(AcceptanceConfig config)
     {
@@ -78,6 +81,20 @@ public class AcceptanceRun implements TaskLifecycleObserver
     public void removeRecord(long taskId)
     {
         records.remove(taskId);
+    }
+
+    void addLaunchFuture(ScheduledFuture<?> launchFuture)
+    {
+        launchFutures.add(launchFuture);
+    }
+
+    void cancelPendingLaunches()
+    {
+        for (ScheduledFuture<?> launchFuture : launchFutures)
+        {
+            if (launchFuture.isDone() == false) launchFuture.cancel(false);
+        }
+        launchFutures.clear();
     }
 
     public int getRecordCount()

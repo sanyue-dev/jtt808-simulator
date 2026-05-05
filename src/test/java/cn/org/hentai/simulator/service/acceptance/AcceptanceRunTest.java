@@ -6,6 +6,11 @@ import org.junit.jupiter.api.Test;
 import org.yzh.protocol.commons.JT808;
 import org.yzh.protocol.t808.T0200;
 
+import java.util.concurrent.Delayed;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -123,5 +128,74 @@ class AcceptanceRunTest
         run.onTerminated(new TaskInfo().withId(1L));
 
         assertFalse(run.allRecordedTasksTerminated());
+    }
+
+    @Test
+    void cancelsPendingLaunchFutures()
+    {
+        AcceptanceRun run = new AcceptanceRun(new AcceptanceConfig());
+        TestScheduledFuture pendingLaunch = new TestScheduledFuture(false);
+        TestScheduledFuture completedLaunch = new TestScheduledFuture(true);
+        run.addLaunchFuture(pendingLaunch);
+        run.addLaunchFuture(completedLaunch);
+
+        run.cancelPendingLaunches();
+
+        assertTrue(pendingLaunch.cancelled.get());
+        assertFalse(completedLaunch.cancelled.get());
+    }
+
+    private static class TestScheduledFuture implements ScheduledFuture<Object>
+    {
+        private final boolean done;
+        private final AtomicBoolean cancelled = new AtomicBoolean(false);
+
+        private TestScheduledFuture(boolean done)
+        {
+            this.done = done;
+        }
+
+        @Override
+        public long getDelay(TimeUnit unit)
+        {
+            return 0;
+        }
+
+        @Override
+        public int compareTo(Delayed other)
+        {
+            return 0;
+        }
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning)
+        {
+            cancelled.set(true);
+            return true;
+        }
+
+        @Override
+        public boolean isCancelled()
+        {
+            return cancelled.get();
+        }
+
+        @Override
+        public boolean isDone()
+        {
+            return done;
+        }
+
+        @Override
+        public Object get()
+        {
+            return null;
+        }
+
+        @Override
+        public Object get(long timeout, TimeUnit unit)
+        {
+            return null;
+        }
     }
 }
