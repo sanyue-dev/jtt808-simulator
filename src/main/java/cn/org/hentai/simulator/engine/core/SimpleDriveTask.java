@@ -1,7 +1,9 @@
 package cn.org.hentai.simulator.engine.core;
 
 import cn.org.hentai.simulator.domain.enums.TaskStatus;
+import cn.org.hentai.simulator.domain.enums.TaskState;
 import cn.org.hentai.simulator.domain.model.Point;
+import cn.org.hentai.simulator.domain.model.TaskLifecycleObserver;
 import cn.org.hentai.simulator.engine.event.EventDispatcher;
 import cn.org.hentai.simulator.engine.event.EventEnum;
 import cn.org.hentai.simulator.engine.event.Listen;
@@ -11,6 +13,7 @@ import cn.org.hentai.simulator.engine.runner.Executable;
 
 import cn.org.hentai.simulator.infrastructure.util.LBSUtils;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yzh.protocol.basics.JTMessage;
@@ -89,7 +92,14 @@ public class SimpleDriveTask extends AbstractDriveTask
     // 新增：处理连接失败的回调
     public void onConnectFailure(Throwable cause) {
         logger.error("onConnectFailure", cause);
+        TaskLifecycleObserver observer = getLifecycleObserver();
+        if (observer != null) observer.onConnectionFailed(getInfo(), cause);
         this.terminate(); // 例如，失败了就直接终止任务
+    }
+
+    public void onProtocolException(Throwable cause) {
+        TaskLifecycleObserver observer = getLifecycleObserver();
+        if (observer != null) observer.onProtocolException(getInfo(), cause);
     }
 
     // 通用下行消息回调，先执行这个方法，后再按消息ID进行路由，所以最好不要在这里做应答
@@ -103,6 +113,8 @@ public class SimpleDriveTask extends AbstractDriveTask
     public void onConnected()
     {
         log(LogType.INFO, "connected");
+        TaskLifecycleObserver observer = getLifecycleObserver();
+        if (observer != null) observer.onConnected(getInfo());
         // 连接成功时，发送注册消息
         String sn = getParameter("device.sn");
 
@@ -122,10 +134,13 @@ public class SimpleDriveTask extends AbstractDriveTask
     @Listen(when = EventEnum.message_received, attachment = "8001")
     public void onGenericResponse(T0001 msg) {
         if (status == TaskStatus.AUTHENTICATING) {
+            TaskLifecycleObserver observer = getLifecycleObserver();
             if (msg.isSuccess()) {
                 status = TaskStatus.AUTHENTICATION_SUCCESSFUL;
+                if (observer != null) observer.onAuthenticationSucceeded(getInfo());
             } else {
                 status = TaskStatus.AUTHENTICATION_FAILED;
+                if (observer != null) observer.onAuthenticationFailed(getInfo(), "resultCode=" + msg.getResultCode());
             }
         }
         next();
@@ -139,9 +154,13 @@ public class SimpleDriveTask extends AbstractDriveTask
             status = TaskStatus.REGISTRATION_SUCCESSFUL;
             token = msg.getToken();
             log(LogType.INFO, "registered");
+            TaskLifecycleObserver observer = getLifecycleObserver();
+            if (observer != null) observer.onRegistrationSucceeded(getInfo());
         } else {
             status = TaskStatus.REGISTRATION_FAILED;
             log(LogType.EXCEPTION, "register failed");
+            TaskLifecycleObserver observer = getLifecycleObserver();
+            if (observer != null) observer.onRegistrationFailed(getInfo(), "resultCode=" + result);
         }
         next();
     }
@@ -150,6 +169,8 @@ public class SimpleDriveTask extends AbstractDriveTask
     public void onDisconnected()
     {
         log(LogType.EXCEPTION, "disconnected");
+        TaskLifecycleObserver observer = getLifecycleObserver();
+        if (observer != null) observer.onDisconnected(getInfo());
         terminate();
     }
 
@@ -218,6 +239,7 @@ public class SimpleDriveTask extends AbstractDriveTask
     }
 
     public void reportLocation() {
+        if (getState() == TaskState.terminated) return;
         lastPosition = getCurrentPosition();
         final Point point = getNextPoint();
         if (point == null) {
@@ -234,6 +256,7 @@ public class SimpleDriveTask extends AbstractDriveTask
         executeAfter(new Executable() {
             @Override
             public void execute(AbstractDriveTask driveTask) {
+                if (getState() == TaskState.terminated) return;
                 int direction = lastPosition == null ? 0 : LBSUtils.caculateAngle(lastPosition.getLongitude(), lastPosition.getLatitude(), point.getLongitude(), point.getLatitude());
 
                 point.setDirection(direction);
@@ -281,14 +304,22 @@ public class SimpleDriveTask extends AbstractDriveTask
         try {
             msg.setClientId(getParameter("device.sim"));
             msg.setSerialNo((sequence++) & 0xffff);
-            pool.send(connectionId, msg);
+            ChannelFuture future = pool.send(connectionId, msg);
 
             lastSentMessageId = msg.getSerialNo();
 
 //            logger.info("send: {} -> {} : {}", msg.getClientId(), msg.getSerialNo(), String.format("%04x", msg.getMessageId()));
 
             log(LogType.MESSAGE_OUT, msg.toString());
+            future.addListener(channelFuture -> {
+                TaskLifecycleObserver observer = getLifecycleObserver();
+                if (observer == null) return;
+                if (channelFuture.isSuccess()) observer.onLocationReported(getInfo(), msg);
+                else observer.onSendFailed(getInfo(), msg, channelFuture.cause());
+            });
         } catch (Exception e) {
+            TaskLifecycleObserver observer = getLifecycleObserver();
+            if (observer != null) observer.onSendFailed(getInfo(), msg, e);
             throw new RuntimeException(e);
         }
     }

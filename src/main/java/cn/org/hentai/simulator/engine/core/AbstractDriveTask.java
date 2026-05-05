@@ -3,6 +3,7 @@ package cn.org.hentai.simulator.engine.core;
 import cn.org.hentai.simulator.domain.model.DrivePlan;
 import cn.org.hentai.simulator.domain.model.Point;
 import cn.org.hentai.simulator.domain.model.TaskInfo;
+import cn.org.hentai.simulator.domain.model.TaskLifecycleObserver;
 import cn.org.hentai.simulator.domain.enums.TaskState;
 import cn.org.hentai.simulator.engine.log.Log;
 import cn.org.hentai.simulator.domain.enums.LogType;
@@ -14,6 +15,7 @@ import org.yzh.protocol.basics.JTMessage;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by matrixy when 2020/5/8.
@@ -36,6 +38,8 @@ public abstract class AbstractDriveTask implements Driveable
     // 车辆当前状态：就绪、启动、停车、熄火、
     private TaskState state;
 
+    private final AtomicBoolean terminated = new AtomicBoolean(false);
+
     private DrivePlan drivePlan;
 
     private Point currentPosition;
@@ -52,6 +56,8 @@ public abstract class AbstractDriveTask implements Driveable
     TaskInfo info;
 
     Map<String, String> parameters;
+
+    private TaskLifecycleObserver lifecycleObserver;
 
     public AbstractDriveTask(long id, long routeId)
     {
@@ -104,9 +110,15 @@ public abstract class AbstractDriveTask implements Driveable
      */
     public final void init(Map<String, String> settings, DrivePlan plan)
     {
+        init(settings, plan, null);
+    }
+
+    public final void init(Map<String, String> settings, DrivePlan plan, TaskLifecycleObserver lifecycleObserver)
+    {
         // 复制一份
         this.drivePlan = plan;
         this.parameters = new HashMap<>(settings);
+        this.lifecycleObserver = lifecycleObserver;
         this.mode = getParameter("mode");
 
         this.state = TaskState.idle;
@@ -180,6 +192,11 @@ public abstract class AbstractDriveTask implements Driveable
         return null == this.parameters.get(name) ? null : String.valueOf(this.parameters.get(name));
     }
 
+    protected TaskLifecycleObserver getLifecycleObserver()
+    {
+        return lifecycleObserver;
+    }
+
     public TaskState getState()
     {
         return this.state;
@@ -188,8 +205,10 @@ public abstract class AbstractDriveTask implements Driveable
     @Override
     public void terminate()
     {
+        if (terminated.compareAndSet(false, true) == false) return;
         log(LogType.INFO, "terminated");
         this.state = TaskState.terminated;
+        if (lifecycleObserver != null) lifecycleObserver.onTerminated(getInfo());
     }
 
     public TaskInfo getInfo()

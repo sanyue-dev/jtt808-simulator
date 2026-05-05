@@ -3,6 +3,7 @@ package cn.org.hentai.simulator.service;
 import cn.org.hentai.simulator.domain.model.DrivePlan;
 import cn.org.hentai.simulator.domain.model.Point;
 import cn.org.hentai.simulator.domain.model.TaskInfo;
+import cn.org.hentai.simulator.domain.model.TaskLifecycleObserver;
 import cn.org.hentai.simulator.engine.core.AbstractDriveTask;
 import cn.org.hentai.simulator.engine.core.SimpleDriveTask;
 import cn.org.hentai.simulator.engine.log.Log;
@@ -54,16 +55,38 @@ public final class TaskManager
      * @param params
      * @param routeId
      */
-    public void run(Map params, Long routeId)
+    public long run(Map params, Long routeId)
+    {
+        return run(params, routeId, 5, null);
+    }
+
+    public long run(Map params, Long routeId, int reportIntervalSeconds, TaskLifecycleObserver lifecycleObserver)
+    {
+        long taskId = nextTaskId();
+        run(taskId, params, routeId, reportIntervalSeconds, lifecycleObserver);
+        return taskId;
+    }
+
+    public void run(long taskId, Map params, Long routeId, int reportIntervalSeconds, TaskLifecycleObserver lifecycleObserver)
     {
         // TODO: 需要检查一下是不是有冲突（终端ID及SIM卡号不能重复）
-        DrivePlan plan = RouteManager.getInstance().generate(routeId, new Date(), 5);
+        DrivePlan plan = RouteManager.getInstance().generate(routeId, new Date(), reportIntervalSeconds);
 
-        AbstractDriveTask task = new SimpleDriveTask(this.sequence.addAndGet(1L), routeId);
-        task.init(params, plan);
+        AbstractDriveTask task = new SimpleDriveTask(taskId, routeId);
+        task.init(params, plan, lifecycleObserver);
         task.startup();
-
         tasks.put(task.getId(), task);
+    }
+
+    public long reserveIndexes(int count)
+    {
+        if (count < 1) throw new IllegalArgumentException("数量必须大于 0");
+        return this.index.getAndAdd(count) + 1;
+    }
+
+    public long nextTaskId()
+    {
+        return this.sequence.addAndGet(1L);
     }
 
     public long nextIndex()

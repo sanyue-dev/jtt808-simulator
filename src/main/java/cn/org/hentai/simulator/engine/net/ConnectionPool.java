@@ -99,6 +99,7 @@ public class ConnectionPool
                 // 在 EventLoop 线程中安全地执行后续操作
                 connections.put(chl.id().asLongText(), new Connection(chl, watcher));
                 watcher.onConnectSuccess(chl);
+                notify("connected", chl.id().asLongText(), null, null);
             } else {
                 // 连接失败，通知 watcher
                 watcher.onConnectFailure(future.cause());
@@ -114,12 +115,12 @@ public class ConnectionPool
     }
 
     // 发送消息
-    public void send(String channelId, Object data) throws Exception
+    public ChannelFuture send(String channelId, Object data) throws Exception
     {
         Connection conn = connections.get(channelId);
         if (conn != null)
         {
-            conn.channel.writeAndFlush(data);
+            return conn.channel.writeAndFlush(data);
         }
         else throw new SocketException("connection closed");
     }
@@ -173,7 +174,7 @@ public class ConnectionPool
         @Override
         public void channelActive(ChannelHandlerContext ctx) throws Exception
         {
-            instance.notify("connected", ctx.channel().id().asLongText(), null, null);
+            super.channelActive(ctx);
         }
 
         @Override
@@ -195,7 +196,12 @@ public class ConnectionPool
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception
         {
-            cause.printStackTrace();
+            Connection conn = instance.connections.get(ctx.channel().id().asLongText());
+            if (conn != null && conn.watcher instanceof SimpleDriveTask task)
+            {
+                task.onProtocolException(cause);
+            }
+            logger.error("protocol exception", cause);
             ctx.close();
         }
     }
