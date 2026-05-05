@@ -8,6 +8,7 @@ import org.yzh.protocol.t808.T0200;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AcceptanceRunTest
@@ -91,5 +92,18 @@ class AcceptanceRunTest
 
         assertEquals(1, run.getRecordCount());
         assertTrue(run.allRecordedTasksTerminated());
+    }
+
+    @Test
+    void ignoresTerminationCounterWhenRecordIsMissing()
+    {
+        AcceptanceRun run = new AcceptanceRun(new AcceptanceConfig());
+        run.addRecord(new TerminalAcceptanceRecord(new TerminalIdentity("京000001", "A000001", "013800000001"), 1L));
+        run.addRecord(new TerminalAcceptanceRecord(new TerminalIdentity("京000002", "A000002", "013800000002"), 2L));
+
+        assertThrows(IllegalStateException.class, () -> run.onTerminated(new TaskInfo().withId(3L)));
+        run.onTerminated(new TaskInfo().withId(1L));
+
+        assertFalse(run.allRecordedTasksTerminated());
     }
 }

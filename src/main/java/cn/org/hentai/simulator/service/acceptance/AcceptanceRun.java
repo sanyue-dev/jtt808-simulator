@@ -191,8 +191,8 @@ public class AcceptanceRun implements TaskLifecycleObserver
     @Override
     public void onTerminated(TaskInfo taskInfo)
     {
-        terminated.incrementAndGet();
         TerminalAcceptanceRecord record = record(taskInfo);
+        terminated.incrementAndGet();
         if (record.hasFailure() == false) record.setStage("terminated");
     }
 
