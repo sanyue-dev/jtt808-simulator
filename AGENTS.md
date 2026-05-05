@@ -50,3 +50,17 @@ Pull requests should include a short summary, affected modules or pages, validat
 ## Agent-Specific Instructions
 
 Do not add silent fallback paths, mock success behavior, or arbitrary guardrails just to make execution pass. Surface failures clearly with explicit errors, logs, or failing tests so root causes can be fixed.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs live in this repo's GitHub Issues. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Use the default triage label vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This is a single-context repo: read root `CONTEXT.md` and `docs/adr/` when present. See `docs/agents/domain.md`.
