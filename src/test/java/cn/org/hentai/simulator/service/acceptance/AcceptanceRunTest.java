@@ -136,13 +136,25 @@ class AcceptanceRunTest
         AcceptanceRun run = new AcceptanceRun(new AcceptanceConfig());
         TestScheduledFuture pendingLaunch = new TestScheduledFuture(false);
         TestScheduledFuture completedLaunch = new TestScheduledFuture(true);
-        run.addLaunchFuture(pendingLaunch);
-        run.addLaunchFuture(completedLaunch);
+        assertTrue(run.addLaunchFuture(pendingLaunch));
+        assertTrue(run.addLaunchFuture(completedLaunch));
 
         run.cancelPendingLaunches();
 
         assertTrue(pendingLaunch.cancelled.get());
         assertFalse(completedLaunch.cancelled.get());
+    }
+
+    @Test
+    void cancelsNewLaunchFutureAfterFinishingBegins()
+    {
+        AcceptanceRun run = new AcceptanceRun(new AcceptanceConfig());
+        TestScheduledFuture launch = new TestScheduledFuture(false);
+
+        assertTrue(run.beginFinishing());
+
+        assertFalse(run.addLaunchFuture(launch));
+        assertTrue(launch.cancelled.get());
     }
 
     @Test

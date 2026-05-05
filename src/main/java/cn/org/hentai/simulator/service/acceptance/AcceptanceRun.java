@@ -102,18 +102,30 @@ public class AcceptanceRun implements TaskLifecycleObserver
         }
     }
 
-    void addLaunchFuture(ScheduledFuture<?> launchFuture)
+    boolean addLaunchFuture(ScheduledFuture<?> launchFuture)
     {
-        launchFutures.add(launchFuture);
+        synchronized(this)
+        {
+            if (canLaunch() == false)
+            {
+                launchFuture.cancel(false);
+                return false;
+            }
+            launchFutures.add(launchFuture);
+            return true;
+        }
     }
 
     void cancelPendingLaunches()
     {
-        for (ScheduledFuture<?> launchFuture : launchFutures)
+        synchronized(this)
         {
-            if (launchFuture.isDone() == false) launchFuture.cancel(false);
+            for (ScheduledFuture<?> launchFuture : launchFutures)
+            {
+                if (launchFuture.isDone() == false) launchFuture.cancel(false);
+            }
+            launchFutures.clear();
         }
-        launchFutures.clear();
     }
 
     public int getRecordCount()

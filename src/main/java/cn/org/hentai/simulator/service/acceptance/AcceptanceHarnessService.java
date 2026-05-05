@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -28,7 +29,7 @@ public class AcceptanceHarnessService
     private final IdentityBatchGenerator identityBatchGenerator = new IdentityBatchGenerator();
     private final Map<String, AcceptanceRun> runs = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private final ScheduledExecutorService launchScheduler = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledThreadPoolExecutor launchScheduler = newLaunchScheduler();
 
     @Autowired
     public AcceptanceHarnessService(RouteService routeService)
@@ -58,11 +59,19 @@ public class AcceptanceHarnessService
         return run;
     }
 
+    private ScheduledThreadPoolExecutor newLaunchScheduler()
+    {
+        ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
+        executor.setRemoveOnCancelPolicy(true);
+        return executor;
+    }
+
     private void launchTasks(AcceptanceConfig config, List<Route> routes, List<TerminalIdentity> identities, AcceptanceRun run)
     {
         TaskManager taskManager = TaskManager.getInstance();
         for (LaunchWindow window : buildLaunchWindows(config.getTerminalCount(), config.getRampUpBatchSize(), config.getRampUpIntervalMillis()))
         {
+            if (run.canLaunch() == false) return;
             ScheduledFuture<?> launchFuture = launchScheduler.schedule(() -> {
                 if (run.canLaunch() == false) return;
                 try
@@ -76,7 +85,7 @@ public class AcceptanceHarnessService
                     requestFinish(run, "启动失败: " + ex.getClass().getSimpleName() + ": " + ex.getMessage());
                 }
             }, window.getDelayMillis(), TimeUnit.MILLISECONDS);
-            run.addLaunchFuture(launchFuture);
+            if (run.addLaunchFuture(launchFuture) == false) return;
         }
     }
 
