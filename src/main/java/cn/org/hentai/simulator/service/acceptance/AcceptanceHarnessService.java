@@ -42,26 +42,9 @@ public class AcceptanceHarnessService
         AcceptanceRun run = new AcceptanceRun(config);
         runs.put(run.getId(), run);
 
-        TaskManager taskManager = TaskManager.getInstance();
         try
         {
-            for (int i = 0; i < identities.size(); i++)
-            {
-                TerminalIdentity identity = identities.get(i);
-                Route route = routes.get(i % routes.size());
-                Map<String, String> params = new HashMap<>();
-                params.put("server.address", config.getServerAddress());
-                params.put("server.port", String.valueOf(config.getServerPort()));
-                params.put("mode", "stress");
-                params.put("vehicle.number", identity.getVehicleNumber());
-                params.put("device.sn", identity.getDeviceSn());
-                params.put("device.sim", identity.getSimNumber());
-                params.put("mileages", "0");
-
-                long taskId = taskManager.nextTaskId();
-                run.addRecord(new TerminalAcceptanceRecord(identity, taskId));
-                taskManager.run(taskId, params, route.getId(), config.getReportIntervalSeconds(), run);
-            }
+            launchTasks(config, routes, identities, run);
         }
         catch(RuntimeException ex)
         {
@@ -71,6 +54,28 @@ public class AcceptanceHarnessService
 
         scheduler.schedule(() -> requestFinish(run, null), config.getRunDurationSeconds(), TimeUnit.SECONDS);
         return run;
+    }
+
+    private void launchTasks(AcceptanceConfig config, List<Route> routes, List<TerminalIdentity> identities, AcceptanceRun run)
+    {
+        TaskManager taskManager = TaskManager.getInstance();
+        for (int i = 0; i < identities.size(); i++)
+        {
+            TerminalIdentity identity = identities.get(i);
+            Route route = routes.get(i % routes.size());
+            Map<String, String> params = new HashMap<>();
+            params.put("server.address", config.getServerAddress());
+            params.put("server.port", String.valueOf(config.getServerPort()));
+            params.put("mode", "stress");
+            params.put("vehicle.number", identity.getVehicleNumber());
+            params.put("device.sn", identity.getDeviceSn());
+            params.put("device.sim", identity.getSimNumber());
+            params.put("mileages", "0");
+
+            long taskId = taskManager.nextTaskId();
+            run.addRecord(new TerminalAcceptanceRecord(identity, taskId));
+            taskManager.run(taskId, params, route.getId(), config.getReportIntervalSeconds(), run);
+        }
     }
 
     public AcceptanceRun get(String runId)
