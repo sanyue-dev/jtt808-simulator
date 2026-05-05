@@ -15,6 +15,7 @@ import org.yzh.protocol.basics.JTMessage;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by matrixy when 2020/5/8.
@@ -36,6 +37,8 @@ public abstract class AbstractDriveTask implements Driveable
 
     // 车辆当前状态：就绪、启动、停车、熄火、
     private TaskState state;
+
+    private final AtomicBoolean terminated = new AtomicBoolean(false);
 
     private DrivePlan drivePlan;
 
@@ -202,7 +205,7 @@ public abstract class AbstractDriveTask implements Driveable
     @Override
     public void terminate()
     {
-        if (this.state == TaskState.terminated) return;
+        if (terminated.compareAndSet(false, true) == false) return;
         log(LogType.INFO, "terminated");
         this.state = TaskState.terminated;
         if (lifecycleObserver != null) lifecycleObserver.onTerminated(getInfo());
