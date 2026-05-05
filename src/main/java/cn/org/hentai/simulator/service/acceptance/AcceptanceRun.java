@@ -83,6 +83,25 @@ public class AcceptanceRun implements TaskLifecycleObserver
         records.remove(taskId);
     }
 
+    boolean launchIfRunning(TerminalAcceptanceRecord record, LaunchAction launchAction)
+    {
+        synchronized(this)
+        {
+            if (canLaunch() == false) return false;
+            records.put(record.getTaskId(), record);
+            try
+            {
+                launchAction.launch();
+            }
+            catch(RuntimeException ex)
+            {
+                records.remove(record.getTaskId());
+                throw ex;
+            }
+            return true;
+        }
+    }
+
     void addLaunchFuture(ScheduledFuture<?> launchFuture)
     {
         launchFutures.add(launchFuture);
@@ -145,7 +164,7 @@ public class AcceptanceRun implements TaskLifecycleObserver
         finishedAt = Instant.now();
     }
 
-    public boolean beginFinishing()
+    public synchronized boolean beginFinishing()
     {
         if (finishing.compareAndSet(false, true))
         {
@@ -259,6 +278,11 @@ public class AcceptanceRun implements TaskLifecycleObserver
     {
         if (cause == null) return "unknown";
         return cause.getClass().getSimpleName() + ": " + cause.getMessage();
+    }
+
+    interface LaunchAction
+    {
+        void launch();
     }
 
     public static class AcceptanceSummary

@@ -99,16 +99,8 @@ public class AcceptanceHarnessService
 
             long taskId = taskManager.nextTaskId();
             TerminalAcceptanceRecord record = new TerminalAcceptanceRecord(identity, taskId);
-            run.addRecord(record);
-            try
-            {
-                taskManager.run(taskId, params, route.getId(), config.getReportIntervalSeconds(), run);
-            }
-            catch(RuntimeException ex)
-            {
-                run.removeRecord(taskId);
-                throw ex;
-            }
+            boolean launched = run.launchIfRunning(record, () -> taskManager.run(taskId, params, route.getId(), config.getReportIntervalSeconds(), run));
+            if (launched == false) return;
         }
     }
 

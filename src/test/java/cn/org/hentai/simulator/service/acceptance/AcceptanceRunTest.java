@@ -145,6 +145,35 @@ class AcceptanceRunTest
         assertFalse(completedLaunch.cancelled.get());
     }
 
+    @Test
+    void skipsLaunchRecordAfterFinishingBegins()
+    {
+        AcceptanceRun run = new AcceptanceRun(new AcceptanceConfig());
+        AtomicBoolean launched = new AtomicBoolean(false);
+
+        assertTrue(run.beginFinishing());
+        boolean accepted = run.launchIfRunning(new TerminalAcceptanceRecord(new TerminalIdentity("京000001", "A000001", "013800000001"), 1L), () -> launched.set(true));
+
+        assertFalse(accepted);
+        assertFalse(launched.get());
+        assertEquals(0, run.getRecordCount());
+    }
+
+    @Test
+    void removesLaunchRecordWhenTaskLaunchFails()
+    {
+        AcceptanceRun run = new AcceptanceRun(new AcceptanceConfig());
+        RuntimeException failure = new RuntimeException("boom");
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> run.launchIfRunning(
+                new TerminalAcceptanceRecord(new TerminalIdentity("京000001", "A000001", "013800000001"), 1L),
+                () -> { throw failure; }
+        ));
+
+        assertEquals(failure, ex);
+        assertEquals(0, run.getRecordCount());
+    }
+
     private static class TestScheduledFuture implements ScheduledFuture<Object>
     {
         private final boolean done;
