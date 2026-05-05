@@ -3,6 +3,7 @@ package cn.org.hentai.simulator.engine.core;
 import cn.org.hentai.simulator.domain.model.DrivePlan;
 import cn.org.hentai.simulator.domain.model.Point;
 import cn.org.hentai.simulator.domain.model.TaskInfo;
+import cn.org.hentai.simulator.domain.model.TaskLifecycleObserver;
 import cn.org.hentai.simulator.domain.enums.TaskState;
 import cn.org.hentai.simulator.engine.log.Log;
 import cn.org.hentai.simulator.domain.enums.LogType;
@@ -52,6 +53,8 @@ public abstract class AbstractDriveTask implements Driveable
     TaskInfo info;
 
     Map<String, String> parameters;
+
+    private TaskLifecycleObserver lifecycleObserver;
 
     public AbstractDriveTask(long id, long routeId)
     {
@@ -104,9 +107,15 @@ public abstract class AbstractDriveTask implements Driveable
      */
     public final void init(Map<String, String> settings, DrivePlan plan)
     {
+        init(settings, plan, null);
+    }
+
+    public final void init(Map<String, String> settings, DrivePlan plan, TaskLifecycleObserver lifecycleObserver)
+    {
         // 复制一份
         this.drivePlan = plan;
         this.parameters = new HashMap<>(settings);
+        this.lifecycleObserver = lifecycleObserver;
         this.mode = getParameter("mode");
 
         this.state = TaskState.idle;
@@ -180,6 +189,11 @@ public abstract class AbstractDriveTask implements Driveable
         return null == this.parameters.get(name) ? null : String.valueOf(this.parameters.get(name));
     }
 
+    protected TaskLifecycleObserver getLifecycleObserver()
+    {
+        return lifecycleObserver;
+    }
+
     public TaskState getState()
     {
         return this.state;
@@ -188,8 +202,10 @@ public abstract class AbstractDriveTask implements Driveable
     @Override
     public void terminate()
     {
+        if (this.state == TaskState.terminated) return;
         log(LogType.INFO, "terminated");
         this.state = TaskState.terminated;
+        if (lifecycleObserver != null) lifecycleObserver.onTerminated(getInfo());
     }
 
     public TaskInfo getInfo()
