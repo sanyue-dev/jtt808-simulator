@@ -41,6 +41,8 @@ public class AcceptanceController
     {
         try
         {
+            if (terminalCount != 1000) throw new IllegalArgumentException("1k 阶段验收必须启动 1000 个终端");
+
             AcceptanceConfig config = new AcceptanceConfig();
             config.setTerminalCount(terminalCount);
             config.setReportIntervalSeconds(reportIntervalSeconds);
