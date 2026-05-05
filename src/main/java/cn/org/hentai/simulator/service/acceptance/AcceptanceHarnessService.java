@@ -73,8 +73,17 @@ public class AcceptanceHarnessService
             params.put("mileages", "0");
 
             long taskId = taskManager.nextTaskId();
-            run.addRecord(new TerminalAcceptanceRecord(identity, taskId));
-            taskManager.run(taskId, params, route.getId(), config.getReportIntervalSeconds(), run);
+            TerminalAcceptanceRecord record = new TerminalAcceptanceRecord(identity, taskId);
+            run.addRecord(record);
+            try
+            {
+                taskManager.run(taskId, params, route.getId(), config.getReportIntervalSeconds(), run);
+            }
+            catch(RuntimeException ex)
+            {
+                run.removeRecord(taskId);
+                throw ex;
+            }
         }
     }
 

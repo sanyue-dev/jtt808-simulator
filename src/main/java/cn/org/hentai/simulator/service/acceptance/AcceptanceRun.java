@@ -73,6 +73,11 @@ public class AcceptanceRun implements TaskLifecycleObserver
         records.put(record.getTaskId(), record);
     }
 
+    public void removeRecord(long taskId)
+    {
+        records.remove(taskId);
+    }
+
     public int getRecordCount()
     {
         return records.size();

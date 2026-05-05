@@ -78,4 +78,18 @@ class AcceptanceRunTest
 
         assertTrue(run.allRecordedTasksTerminated());
     }
+
+    @Test
+    void removingUnstartedRecordKeepsTerminationWaitBoundedToStartedTasks()
+    {
+        AcceptanceRun run = new AcceptanceRun(new AcceptanceConfig());
+        run.addRecord(new TerminalAcceptanceRecord(new TerminalIdentity("京000001", "A000001", "013800000001"), 1L));
+        run.addRecord(new TerminalAcceptanceRecord(new TerminalIdentity("京000002", "A000002", "013800000002"), 2L));
+
+        run.removeRecord(2L);
+        run.onTerminated(new TaskInfo().withId(1L));
+
+        assertEquals(1, run.getRecordCount());
+        assertTrue(run.allRecordedTasksTerminated());
+    }
 }
