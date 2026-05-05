@@ -73,6 +73,11 @@ public class AcceptanceRun implements TaskLifecycleObserver
         records.put(record.getTaskId(), record);
     }
 
+    public int getRecordCount()
+    {
+        return records.size();
+    }
+
     public Collection<TerminalAcceptanceRecord> getRecords()
     {
         return records.values();
@@ -102,11 +107,21 @@ public class AcceptanceRun implements TaskLifecycleObserver
         finishedAt = Instant.now();
     }
 
+    public void finishing()
+    {
+        state = "finishing";
+    }
+
     public void finishFailed(String reason)
     {
         state = "finish_failed";
         finishFailureReason = reason;
         finishedAt = Instant.now();
+    }
+
+    public boolean allRecordedTasksTerminated()
+    {
+        return terminated.get() >= records.size();
     }
 
     @Override

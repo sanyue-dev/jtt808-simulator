@@ -7,6 +7,8 @@ import org.yzh.protocol.commons.JT808;
 import org.yzh.protocol.t808.T0200;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AcceptanceRunTest
 {
@@ -57,5 +59,23 @@ class AcceptanceRunTest
         assertEquals(1, summary.getTerminated());
         assertEquals("authentication_failed", record.getStage());
         assertEquals("resultCode=1", record.getFailureReason());
+    }
+
+    @Test
+    void reportsAllRecordedTasksTerminatedOnlyAfterEveryRecordTerminates()
+    {
+        AcceptanceRun run = new AcceptanceRun(new AcceptanceConfig());
+        run.addRecord(new TerminalAcceptanceRecord(new TerminalIdentity("京000001", "A000001", "013800000001"), 1L));
+        run.addRecord(new TerminalAcceptanceRecord(new TerminalIdentity("京000002", "A000002", "013800000002"), 2L));
+
+        run.finishing();
+        run.onTerminated(new TaskInfo().withId(1L));
+
+        assertEquals("finishing", run.getState());
+        assertFalse(run.allRecordedTasksTerminated());
+
+        run.onTerminated(new TaskInfo().withId(2L));
+
+        assertTrue(run.allRecordedTasksTerminated());
     }
 }

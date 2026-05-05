@@ -43,25 +43,33 @@ public class AcceptanceHarnessService
         runs.put(run.getId(), run);
 
         TaskManager taskManager = TaskManager.getInstance();
-        for (int i = 0; i < identities.size(); i++)
+        try
         {
-            TerminalIdentity identity = identities.get(i);
-            Route route = routes.get(i % routes.size());
-            Map<String, String> params = new HashMap<>();
-            params.put("server.address", config.getServerAddress());
-            params.put("server.port", String.valueOf(config.getServerPort()));
-            params.put("mode", "stress");
-            params.put("vehicle.number", identity.getVehicleNumber());
-            params.put("device.sn", identity.getDeviceSn());
-            params.put("device.sim", identity.getSimNumber());
-            params.put("mileages", "0");
+            for (int i = 0; i < identities.size(); i++)
+            {
+                TerminalIdentity identity = identities.get(i);
+                Route route = routes.get(i % routes.size());
+                Map<String, String> params = new HashMap<>();
+                params.put("server.address", config.getServerAddress());
+                params.put("server.port", String.valueOf(config.getServerPort()));
+                params.put("mode", "stress");
+                params.put("vehicle.number", identity.getVehicleNumber());
+                params.put("device.sn", identity.getDeviceSn());
+                params.put("device.sim", identity.getSimNumber());
+                params.put("mileages", "0");
 
-            long taskId = taskManager.nextTaskId();
-            run.addRecord(new TerminalAcceptanceRecord(identity, taskId));
-            taskManager.run(taskId, params, route.getId(), config.getReportIntervalSeconds(), run);
+                long taskId = taskManager.nextTaskId();
+                run.addRecord(new TerminalAcceptanceRecord(identity, taskId));
+                taskManager.run(taskId, params, route.getId(), config.getReportIntervalSeconds(), run);
+            }
+        }
+        catch(RuntimeException ex)
+        {
+            requestFinish(run, "启动失败: " + ex.getClass().getSimpleName() + ": " + ex.getMessage());
+            throw new RuntimeException("1k 验收启动失败，runId=" + run.getId() + "，已请求终止已启动任务", ex);
         }
 
-        scheduler.schedule(() -> finish(run), config.getRunDurationSeconds(), TimeUnit.SECONDS);
+        scheduler.schedule(() -> requestFinish(run, null), config.getRunDurationSeconds(), TimeUnit.SECONDS);
         return run;
     }
 
@@ -72,8 +80,9 @@ public class AcceptanceHarnessService
         return run;
     }
 
-    private void finish(AcceptanceRun run)
+    private void requestFinish(AcceptanceRun run, String failureReason)
     {
+        run.finishing();
         RuntimeException failure = null;
         for (TerminalAcceptanceRecord record : run.getRecords())
         {
@@ -87,8 +96,23 @@ public class AcceptanceHarnessService
                 if (failure == null) failure = ex;
             }
         }
-        if (failure == null) run.finish();
-        else run.finishFailed(failure.getClass().getSimpleName() + ": " + failure.getMessage());
+        if (failure != null)
+        {
+            String reason = failure.getClass().getSimpleName() + ": " + failure.getMessage();
+            failureReason = failureReason == null ? reason : failureReason + "; 终止失败: " + reason;
+        }
+        awaitFinish(run, failureReason);
+    }
+
+    private void awaitFinish(AcceptanceRun run, String failureReason)
+    {
+        if (run.allRecordedTasksTerminated())
+        {
+            if (failureReason == null) run.finish();
+            else run.finishFailed(failureReason);
+            return;
+        }
+        scheduler.schedule(() -> awaitFinish(run, failureReason), 100, TimeUnit.MILLISECONDS);
     }
 
     private void validate(AcceptanceConfig config)
