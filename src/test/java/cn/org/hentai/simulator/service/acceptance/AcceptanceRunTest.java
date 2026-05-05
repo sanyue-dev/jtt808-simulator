@@ -48,11 +48,13 @@ class AcceptanceRunTest
         run.addRecord(new TerminalAcceptanceRecord(new TerminalIdentity("京000001", "A000001", "013800000001"), 1L));
 
         run.onAuthenticationFailed(new TaskInfo().withId(1L), "resultCode=1");
+        run.onTerminated(new TaskInfo().withId(1L));
 
         AcceptanceRun.AcceptanceSummary summary = run.getSummary();
         TerminalAcceptanceRecord record = run.getRecords().iterator().next();
 
         assertEquals(1, summary.getAuthenticationFailed());
+        assertEquals(1, summary.getTerminated());
         assertEquals("authentication_failed", record.getStage());
         assertEquals("resultCode=1", record.getFailureReason());
     }

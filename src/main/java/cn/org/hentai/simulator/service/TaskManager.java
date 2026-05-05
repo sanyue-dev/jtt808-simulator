@@ -74,8 +74,8 @@ public final class TaskManager
 
         AbstractDriveTask task = new SimpleDriveTask(taskId, routeId);
         task.init(params, plan, lifecycleObserver);
-        tasks.put(task.getId(), task);
         task.startup();
+        tasks.put(task.getId(), task);
     }
 
     public long reserveIndexes(int count)

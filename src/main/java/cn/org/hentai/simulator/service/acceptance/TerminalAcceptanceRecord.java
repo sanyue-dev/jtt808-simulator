@@ -35,6 +35,7 @@ public class TerminalAcceptanceRecord
 
     public void setStage(String stage)
     {
+        if (hasFailure()) return;
         this.stage = stage;
     }
 
@@ -47,6 +48,11 @@ public class TerminalAcceptanceRecord
     {
         this.stage = stage;
         this.failureReason = reason;
+    }
+
+    public boolean hasFailure()
+    {
+        return failureReason != null;
     }
 
     public long getLocationReportSent()
