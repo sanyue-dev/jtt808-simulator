@@ -24,6 +24,7 @@ import org.yzh.protocol.codec.JTMessageAdapter;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -38,10 +39,12 @@ public class ConnectionPool
     EventLoopGroup group = null;
     Bootstrap bootstrap = null;
     ConcurrentHashMap<String, Connection> connections = null;
+    Set<String> intentionallyClosedChannels = null;
 
     private ConnectionPool()
     {
         connections = new ConcurrentHashMap<>(1024);
+        intentionallyClosedChannels = ConcurrentHashMap.newKeySet();
         start();
     }
 
@@ -111,7 +114,11 @@ public class ConnectionPool
     public void close(String channelId)
     {
         Connection conn = connections.remove(channelId);
-        if (conn != null) conn.channel.close();
+        if (conn != null)
+        {
+            intentionallyClosedChannels.add(channelId);
+            conn.channel.close();
+        }
     }
 
     // 发送消息
@@ -136,6 +143,7 @@ public class ConnectionPool
         }
         else
         {
+            if ("disconnected".equals(tag) && intentionallyClosedChannels.remove(channelId)) return;
             logger.error("no channel found for: " + channelId);
         }
     }
