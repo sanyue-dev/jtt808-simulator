@@ -144,6 +144,7 @@ public class ConnectionPool
         else
         {
             if ("disconnected".equals(tag) && intentionallyClosedChannels.remove(channelId)) return;
+            if (intentionallyClosedChannels.contains(channelId)) return;
             logger.error("no channel found for: " + channelId);
         }
     }
