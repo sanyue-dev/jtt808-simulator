@@ -21,6 +21,17 @@ public class TaskGroupSummary
     private final long stopSucceeded;
     private final long stopFailed;
     private final List<TaskStopResult.TaskStopFailure> stopFailures;
+    private final long connectionSucceeded;
+    private final long connectionFailed;
+    private final long registrationSucceeded;
+    private final long registrationFailed;
+    private final long authenticationSucceeded;
+    private final long authenticationFailed;
+    private final long locationReportSent;
+    private final double locationReportRate;
+    private final long disconnected;
+    private final long sendFailed;
+    private final long protocolExceptions;
 
     TaskGroupSummary(String taskGroupId,
                      String displayName,
@@ -36,7 +47,18 @@ public class TaskGroupSummary
                      String failureReason,
                      long stopSucceeded,
                      long stopFailed,
-                     List<TaskStopResult.TaskStopFailure> stopFailures)
+                     List<TaskStopResult.TaskStopFailure> stopFailures,
+                     long connectionSucceeded,
+                     long connectionFailed,
+                     long registrationSucceeded,
+                     long registrationFailed,
+                     long authenticationSucceeded,
+                     long authenticationFailed,
+                     long locationReportSent,
+                     double locationReportRate,
+                     long disconnected,
+                     long sendFailed,
+                     long protocolExceptions)
     {
         this.taskGroupId = taskGroupId;
         this.displayName = displayName;
@@ -53,6 +75,17 @@ public class TaskGroupSummary
         this.stopSucceeded = stopSucceeded;
         this.stopFailed = stopFailed;
         this.stopFailures = stopFailures;
+        this.connectionSucceeded = connectionSucceeded;
+        this.connectionFailed = connectionFailed;
+        this.registrationSucceeded = registrationSucceeded;
+        this.registrationFailed = registrationFailed;
+        this.authenticationSucceeded = authenticationSucceeded;
+        this.authenticationFailed = authenticationFailed;
+        this.locationReportSent = locationReportSent;
+        this.locationReportRate = locationReportRate;
+        this.disconnected = disconnected;
+        this.sendFailed = sendFailed;
+        this.protocolExceptions = protocolExceptions;
     }
 
     public String getTaskGroupId() { return taskGroupId; }
@@ -70,4 +103,15 @@ public class TaskGroupSummary
     public long getStopSucceeded() { return stopSucceeded; }
     public long getStopFailed() { return stopFailed; }
     public List<TaskStopResult.TaskStopFailure> getStopFailures() { return stopFailures; }
+    public long getConnectionSucceeded() { return connectionSucceeded; }
+    public long getConnectionFailed() { return connectionFailed; }
+    public long getRegistrationSucceeded() { return registrationSucceeded; }
+    public long getRegistrationFailed() { return registrationFailed; }
+    public long getAuthenticationSucceeded() { return authenticationSucceeded; }
+    public long getAuthenticationFailed() { return authenticationFailed; }
+    public long getLocationReportSent() { return locationReportSent; }
+    public double getLocationReportRate() { return locationReportRate; }
+    public long getDisconnected() { return disconnected; }
+    public long getSendFailed() { return sendFailed; }
+    public long getProtocolExceptions() { return protocolExceptions; }
 }

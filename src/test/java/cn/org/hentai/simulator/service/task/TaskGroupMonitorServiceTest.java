@@ -5,10 +5,13 @@ import cn.org.hentai.simulator.domain.model.TaskLifecycleObserver;
 import cn.org.hentai.simulator.service.monitor.TaskRuntimeSummary;
 import cn.org.hentai.simulator.service.monitor.TaskStopResult;
 import org.junit.jupiter.api.Test;
+import org.yzh.protocol.commons.JT808;
+import org.yzh.protocol.t808.T0200;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -73,6 +76,59 @@ class TaskGroupMonitorServiceTest
         assertEquals(101L, assigner.taskId);
         assertEquals(creation.getTaskGroupId(), assigner.taskGroupId);
         assertEquals(creation.getTaskGroupDisplayName(), assigner.taskGroupDisplayName);
+    }
+
+    @Test
+    void taskGroupSummaryAggregatesLifecycleMetrics()
+    {
+        TaskGroupMonitorService service = service();
+        TaskCreationResult creation = service.createGroup(TaskGroupSource.BATCH, 2);
+        TaskLifecycleObserver observer = service.observer(creation.getTaskGroupId());
+        TaskInfo taskInfo = new TaskInfo().withId(101L);
+        T0200 locationReport = new T0200();
+        locationReport.setMessageId(JT808.位置信息汇报);
+
+        observer.onConnected(taskInfo);
+        observer.onConnectionFailed(taskInfo, new RuntimeException("connect refused"));
+        observer.onRegistrationSucceeded(taskInfo);
+        observer.onRegistrationFailed(taskInfo, "duplicate terminal");
+        observer.onAuthenticationSucceeded(taskInfo);
+        observer.onAuthenticationFailed(taskInfo, "bad token");
+        observer.onLocationReported(taskInfo, locationReport);
+        observer.onDisconnected(taskInfo);
+        observer.onSendFailed(taskInfo, null, new RuntimeException("write failed"));
+        observer.onProtocolException(taskInfo, new RuntimeException("decode failed"));
+
+        TaskGroupSummary group = service.snapshot().getTaskGroups().get(0);
+        assertEquals(1L, group.getConnectionSucceeded());
+        assertEquals(1L, group.getConnectionFailed());
+        assertEquals(1L, group.getRegistrationSucceeded());
+        assertEquals(1L, group.getRegistrationFailed());
+        assertEquals(1L, group.getAuthenticationSucceeded());
+        assertEquals(1L, group.getAuthenticationFailed());
+        assertEquals(1L, group.getLocationReportSent());
+        assertEquals(1L, group.getDisconnected());
+        assertEquals(1L, group.getSendFailed());
+        assertEquals(1L, group.getProtocolExceptions());
+    }
+
+    @Test
+    void taskGroupSummaryCalculatesLocationReportRate()
+    {
+        AtomicLong now = new AtomicLong(1_000L);
+        TaskGroupMonitorService service = service(now::get);
+        TaskCreationResult creation = service.createGroup(TaskGroupSource.BATCH, 1);
+        TaskLifecycleObserver observer = service.observer(creation.getTaskGroupId());
+        T0200 locationReport = new T0200();
+        locationReport.setMessageId(JT808.位置信息汇报);
+
+        observer.onLocationReported(new TaskInfo().withId(101L), locationReport);
+        observer.onLocationReported(new TaskInfo().withId(101L), locationReport);
+        now.set(3_000L);
+
+        TaskGroupSummary group = service.snapshot().getTaskGroups().get(0);
+        assertEquals(2L, group.getLocationReportSent());
+        assertEquals(1.0D, group.getLocationReportRate());
     }
 
     @Test
@@ -151,6 +207,11 @@ class TaskGroupMonitorServiceTest
     private static TaskGroupMonitorService service()
     {
         return service(taskIds -> new TaskStopResult());
+    }
+
+    private static TaskGroupMonitorService service(java.util.function.LongSupplier clock)
+    {
+        return new TaskGroupMonitorService(new FixedRuntimeSummaryProvider(), taskIds -> new TaskStopResult(), (taskId, taskGroupId, taskGroupDisplayName) -> {}, clock);
     }
 
     private static TaskGroupMonitorService service(TaskGroupMonitorService.TaskStopper stopper)

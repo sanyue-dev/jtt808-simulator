@@ -23,6 +23,27 @@ class TaskGroupMonitorTemplateTest
     }
 
     @Test
+    void monitorShowsGlobalAndTaskGroupRuntimeMetricsWithoutTripTaskRows() throws Exception
+    {
+        String template = read("/templates/task-group-monitor.ftlh");
+
+        assertThat(template).contains("data-field=\"runtimeSummary.registrationSucceeded\"");
+        assertThat(template).contains("data-field=\"runtimeSummary.registrationFailed\"");
+        assertThat(template).contains("data-field=\"runtimeSummary.authenticationFailed\"");
+        assertThat(template).contains("data-field=\"runtimeSummary.locationReportSent\"");
+        assertThat(template).contains("data-field=\"runtimeSummary.sendFailed\"");
+        assertThat(template).contains("data-field=\"runtimeSummary.protocolExceptions\"");
+        assertThat(template).contains("连接成功：' + (group.connectionSucceeded || 0)");
+        assertThat(template).contains("注册失败：' + (group.registrationFailed || 0)");
+        assertThat(template).contains("鉴权失败：' + (group.authenticationFailed || 0)");
+        assertThat(template).contains("位置上报：' + (group.locationReportSent || 0)");
+        assertThat(template).contains("上报速率/s：' + formatRate(group.locationReportRate)");
+        assertThat(template).contains("发送失败：' + (group.sendFailed || 0)");
+        assertThat(template).contains("协议异常：' + (group.protocolExceptions || 0)");
+        assertThat(template).doesNotContain("taskGroup.tripTasks");
+    }
+
+    @Test
     void creationPagesNavigateToTaskGroupMonitorAfterSuccess() throws Exception
     {
         String taskCreate = read("/templates/task-create.ftlh");

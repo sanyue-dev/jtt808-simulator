@@ -6,6 +6,8 @@ import cn.org.hentai.simulator.service.TaskManager;
 import cn.org.hentai.simulator.service.monitor.TaskRuntimeSummary;
 import cn.org.hentai.simulator.service.monitor.TaskStopResult;
 import org.springframework.stereotype.Service;
+import org.yzh.protocol.basics.JTMessage;
+import org.yzh.protocol.commons.JT808;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.LongSupplier;
 
 @Service
 public class TaskGroupMonitorService
@@ -25,6 +28,7 @@ public class TaskGroupMonitorService
     private final RuntimeSummaryProvider runtimeSummaryProvider;
     private final TaskStopper taskStopper;
     private final TaskGroupAssigner taskGroupAssigner;
+    private final LongSupplier clock;
     private final AtomicLong sequence = new AtomicLong();
     private final Map<String, TaskGroup> groups = new LinkedHashMap<>();
     private final Map<String, LaunchStopper> launchStoppers = new ConcurrentHashMap<>();
@@ -50,9 +54,15 @@ public class TaskGroupMonitorService
 
     public TaskGroupMonitorService(RuntimeSummaryProvider runtimeSummaryProvider, TaskStopper taskStopper, TaskGroupAssigner taskGroupAssigner)
     {
+        this(runtimeSummaryProvider, taskStopper, taskGroupAssigner, System::currentTimeMillis);
+    }
+
+    public TaskGroupMonitorService(RuntimeSummaryProvider runtimeSummaryProvider, TaskStopper taskStopper, TaskGroupAssigner taskGroupAssigner, LongSupplier clock)
+    {
         this.runtimeSummaryProvider = runtimeSummaryProvider;
         this.taskStopper = taskStopper;
         this.taskGroupAssigner = taskGroupAssigner;
+        this.clock = clock;
     }
 
     public synchronized TaskCreationResult createGroup(TaskGroupSource source, int targetTasks)
@@ -64,7 +74,7 @@ public class TaskGroupMonitorService
     {
         long index = sequence.incrementAndGet();
         String id = "TG-" + index;
-        TaskGroup group = new TaskGroup(id, displayName(source, targetTasks, index), source, targetTasks, rampUpWindowCount);
+        TaskGroup group = new TaskGroup(id, displayName(source, targetTasks, index), source, targetTasks, rampUpWindowCount, clock);
         groups.put(id, group);
         return new TaskCreationResult(id, group.displayName, source.getValue(), targetTasks);
     }
@@ -111,6 +121,67 @@ public class TaskGroupMonitorService
     {
         return new TaskLifecycleObserver()
         {
+            @Override
+            public void onConnected(TaskInfo taskInfo)
+            {
+                group(taskGroupId).recordConnected();
+            }
+
+            @Override
+            public void onConnectionFailed(TaskInfo taskInfo, Throwable cause)
+            {
+                group(taskGroupId).recordConnectionFailed();
+            }
+
+            @Override
+            public void onRegistrationSucceeded(TaskInfo taskInfo)
+            {
+                group(taskGroupId).recordRegistrationSucceeded();
+            }
+
+            @Override
+            public void onRegistrationFailed(TaskInfo taskInfo, String reason)
+            {
+                group(taskGroupId).recordRegistrationFailed();
+            }
+
+            @Override
+            public void onAuthenticationSucceeded(TaskInfo taskInfo)
+            {
+                group(taskGroupId).recordAuthenticationSucceeded();
+            }
+
+            @Override
+            public void onAuthenticationFailed(TaskInfo taskInfo, String reason)
+            {
+                group(taskGroupId).recordAuthenticationFailed();
+            }
+
+            @Override
+            public void onLocationReported(TaskInfo taskInfo, JTMessage message)
+            {
+                if (message == null || (message.getMessageId() & 0xffff) != JT808.位置信息汇报) return;
+                group(taskGroupId).recordLocationReported();
+            }
+
+            @Override
+            public void onDisconnected(TaskInfo taskInfo)
+            {
+                group(taskGroupId).recordDisconnected();
+            }
+
+            @Override
+            public void onSendFailed(TaskInfo taskInfo, JTMessage message, Throwable cause)
+            {
+                group(taskGroupId).recordSendFailed();
+            }
+
+            @Override
+            public void onProtocolException(TaskInfo taskInfo, Throwable cause)
+            {
+                group(taskGroupId).recordProtocolException();
+            }
+
             @Override
             public void onTerminated(TaskInfo taskInfo)
             {
@@ -178,17 +249,31 @@ public class TaskGroupMonitorService
         private final Set<Long> terminatedTaskIds = ConcurrentHashMap.newKeySet();
         private final AtomicReference<String> state = new AtomicReference<>("creating");
         private final AtomicReference<String> failureReason = new AtomicReference<>();
+        private final AtomicLong connectionSucceeded = new AtomicLong();
+        private final AtomicLong connectionFailed = new AtomicLong();
+        private final AtomicLong registrationSucceeded = new AtomicLong();
+        private final AtomicLong registrationFailed = new AtomicLong();
+        private final AtomicLong authenticationSucceeded = new AtomicLong();
+        private final AtomicLong authenticationFailed = new AtomicLong();
+        private final AtomicLong locationReportSent = new AtomicLong();
+        private final AtomicLong disconnected = new AtomicLong();
+        private final AtomicLong sendFailed = new AtomicLong();
+        private final AtomicLong protocolExceptions = new AtomicLong();
+        private final LongSupplier clock;
+        private final long startedAtMillis;
         private long stopSucceeded;
         private long stopFailed;
         private List<TaskStopResult.TaskStopFailure> stopFailures = Collections.emptyList();
 
-        private TaskGroup(String id, String displayName, TaskGroupSource source, int targetTasks, int rampUpWindowCount)
+        private TaskGroup(String id, String displayName, TaskGroupSource source, int targetTasks, int rampUpWindowCount, LongSupplier clock)
         {
             this.id = id;
             this.displayName = displayName;
             this.source = source;
             this.targetTasks = targetTasks;
             this.rampUpWindowCount = rampUpWindowCount;
+            this.clock = clock;
+            this.startedAtMillis = clock.getAsLong();
         }
 
         private synchronized void recordTaskStarted(long taskId)
@@ -246,6 +331,17 @@ public class TaskGroupMonitorService
             completeIfAllStartedTasksTerminated();
         }
 
+        private void recordConnected() { connectionSucceeded.incrementAndGet(); }
+        private void recordConnectionFailed() { connectionFailed.incrementAndGet(); }
+        private void recordRegistrationSucceeded() { registrationSucceeded.incrementAndGet(); }
+        private void recordRegistrationFailed() { registrationFailed.incrementAndGet(); }
+        private void recordAuthenticationSucceeded() { authenticationSucceeded.incrementAndGet(); }
+        private void recordAuthenticationFailed() { authenticationFailed.incrementAndGet(); }
+        private void recordLocationReported() { locationReportSent.incrementAndGet(); }
+        private void recordDisconnected() { disconnected.incrementAndGet(); }
+        private void recordSendFailed() { sendFailed.incrementAndGet(); }
+        private void recordProtocolException() { protocolExceptions.incrementAndGet(); }
+
         private void completeIfAllStartedTasksTerminated()
         {
             if (activeTaskIds.isEmpty() && "stopping".equals(state.get())) state.set("completed");
@@ -269,8 +365,25 @@ public class TaskGroupMonitorService
                     failureReason.get(),
                     stopSucceeded,
                     stopFailed,
-                    stopFailures
+                    stopFailures,
+                    connectionSucceeded.get(),
+                    connectionFailed.get(),
+                    registrationSucceeded.get(),
+                    registrationFailed.get(),
+                    authenticationSucceeded.get(),
+                    authenticationFailed.get(),
+                    locationReportSent.get(),
+                    locationReportRate(),
+                    disconnected.get(),
+                    sendFailed.get(),
+                    protocolExceptions.get()
             );
+        }
+
+        private double locationReportRate()
+        {
+            long elapsedMillis = Math.max(clock.getAsLong() - startedAtMillis, 1L);
+            return locationReportSent.get() * 1000D / elapsedMillis;
         }
     }
 }
