@@ -122,6 +122,7 @@ public class AcceptanceHarnessService
 
     private void requestFinish(AcceptanceRun run, String failureReason)
     {
+        run.recordFinishFailure(failureReason);
         if (run.beginFinishing() == false) return;
         run.cancelPendingLaunches();
         RuntimeException failure = null;
@@ -140,20 +141,19 @@ public class AcceptanceHarnessService
         if (failure != null)
         {
             String reason = failure.getClass().getSimpleName() + ": " + failure.getMessage();
-            failureReason = failureReason == null ? reason : failureReason + "; 终止失败: " + reason;
+            run.recordFinishFailure("终止失败: " + reason);
         }
-        awaitFinish(run, failureReason);
+        awaitFinish(run);
     }
 
-    private void awaitFinish(AcceptanceRun run, String failureReason)
+    private void awaitFinish(AcceptanceRun run)
     {
         if (run.allRecordedTasksTerminated())
         {
-            if (failureReason == null) run.finish();
-            else run.finishFailed(failureReason);
+            run.finish();
             return;
         }
-        scheduler.schedule(() -> awaitFinish(run, failureReason), 100, TimeUnit.MILLISECONDS);
+        scheduler.schedule(() -> awaitFinish(run), 100, TimeUnit.MILLISECONDS);
     }
 
     void validate(AcceptanceConfig config)

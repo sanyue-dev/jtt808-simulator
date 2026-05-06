@@ -186,6 +186,31 @@ class AcceptanceRunTest
         assertEquals(0, run.getRecordCount());
     }
 
+    @Test
+    void preservesFinishFailureRecordedAfterFinishingBegins()
+    {
+        AcceptanceRun run = new AcceptanceRun(new AcceptanceConfig());
+
+        assertTrue(run.beginFinishing());
+        run.recordFinishFailure("启动失败: RuntimeException: boom");
+        run.finish();
+
+        assertEquals("finish_failed", run.getState());
+        assertEquals("启动失败: RuntimeException: boom", run.getFinishFailureReason());
+    }
+
+    @Test
+    void exposesFinishFailureRecordedAfterFinishedState()
+    {
+        AcceptanceRun run = new AcceptanceRun(new AcceptanceConfig());
+
+        run.finish();
+        run.recordFinishFailure("启动失败: RuntimeException: boom");
+
+        assertEquals("finish_failed", run.getState());
+        assertEquals("启动失败: RuntimeException: boom", run.getFinishFailureReason());
+    }
+
     private static class TestScheduledFuture implements ScheduledFuture<Object>
     {
         private final boolean done;

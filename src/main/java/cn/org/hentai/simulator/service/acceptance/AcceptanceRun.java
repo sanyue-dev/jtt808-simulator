@@ -73,6 +73,13 @@ public class AcceptanceRun implements TaskLifecycleObserver
         return finishFailureReason;
     }
 
+    public synchronized void recordFinishFailure(String reason)
+    {
+        if (reason == null) return;
+        finishFailureReason = finishFailureReason == null ? reason : finishFailureReason + "; " + reason;
+        if ("finished".equals(state)) state = "finish_failed";
+    }
+
     public void addRecord(TerminalAcceptanceRecord record)
     {
         records.put(record.getTaskId(), record);
@@ -156,10 +163,10 @@ public class AcceptanceRun implements TaskLifecycleObserver
         );
     }
 
-    public void finish()
+    public synchronized void finish()
     {
         finishing.set(true);
-        state = "finished";
+        state = finishFailureReason == null ? "finished" : "finish_failed";
         finishedAt = Instant.now();
     }
 
@@ -168,11 +175,11 @@ public class AcceptanceRun implements TaskLifecycleObserver
         state = "finishing";
     }
 
-    public void finishFailed(String reason)
+    public synchronized void finishFailed(String reason)
     {
+        recordFinishFailure(reason);
         finishing.set(true);
         state = "finish_failed";
-        finishFailureReason = reason;
         finishedAt = Instant.now();
     }
 
