@@ -40,6 +40,7 @@
                 </div>
 
                 <form class="monitor-toolbar" id="monitor-filter">
+                    <input type="hidden" name="taskGroupId" value="" />
                     <div class="task__dropdown monitor-toolbar__dropdown is-unselected" id="stateDropdown">
                         <input type="hidden" name="state" value="" />
                         <div class="task__dropdown-trigger" id="stateDropdownTrigger">
@@ -196,6 +197,8 @@
     $(document).ready(function()
     {
         setCurrentMenu('list-monitor');
+        var initialTaskGroupId = new URLSearchParams(window.location.search).get('taskGroupId') || '';
+        $('#monitor-filter input[name="taskGroupId"]').val(initialTaskGroupId);
 
         function loadSummary()
         {
@@ -319,6 +322,15 @@
                     align: 'center',
                 },
                 {
+                    name: 'taskGroupDisplayName',
+                    title: '任务组',
+                    align: 'left',
+                    formatter: function(i, v, r)
+                    {
+                        return v ? escapeHtml(v) : '--';
+                    }
+                },
+                {
                     name: 'routeName',
                     title: '线路名称',
                     align: 'left',
@@ -411,6 +423,7 @@
         $('#btn-clear-filter').click(function()
         {
             $('#monitor-filter').get(0).reset();
+            $('#monitor-filter input[name="taskGroupId"]').val('');
             resetStateDropdown();
             reloadTable();
         });

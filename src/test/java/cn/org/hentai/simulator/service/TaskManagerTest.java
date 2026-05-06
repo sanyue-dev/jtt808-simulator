@@ -73,6 +73,31 @@ class TaskManagerTest
         assertEquals(2L, page.getList().get(0).getId());
     }
 
+    @Test
+    void filtersPagedTasksByTaskGroupBeforePagination()
+    {
+        TestDriveTask first = initializedTask(1L, "京A00001", "SN00001", "013800000001");
+        TestDriveTask second = initializedTask(2L, "京A00002", "SN00002", "013800000002");
+        TestDriveTask third = initializedTask(3L, "京A00003", "SN00003", "013800000003");
+        first.getInfo().setTaskGroupId("TG-1");
+        first.getInfo().setTaskGroupDisplayName("批量创建 2 台 #1");
+        second.getInfo().setTaskGroupId("TG-2");
+        second.getInfo().setTaskGroupDisplayName("单车创建 #2");
+        third.getInfo().setTaskGroupId("TG-1");
+        third.getInfo().setTaskGroupDisplayName("批量创建 2 台 #1");
+
+        taskManager.tasks.put(first.getId(), first);
+        taskManager.tasks.put(second.getId(), second);
+        taskManager.tasks.put(third.getId(), third);
+
+        Page<TaskInfo> page = taskManager.find(2, 1, null, null, "TG-1");
+
+        assertEquals(2L, page.getRecordCount());
+        assertEquals(3L, page.getList().get(0).getId());
+        assertEquals("TG-1", page.getList().get(0).getTaskGroupId());
+        assertEquals("批量创建 2 台 #1", page.getList().get(0).getTaskGroupDisplayName());
+    }
+
     private TestDriveTask initializedTask(long id)
     {
         return initializedTask(id, null, null, null);

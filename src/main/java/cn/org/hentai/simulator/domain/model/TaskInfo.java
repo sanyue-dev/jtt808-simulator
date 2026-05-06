@@ -26,6 +26,8 @@ public class TaskInfo
     private int warningFlags;
     private String failureStage;
     private String failureReason;
+    private String taskGroupId;
+    private String taskGroupDisplayName;
 
     public TaskInfo withSimNumber(String sim)
     {
@@ -149,6 +151,26 @@ public class TaskInfo
     public void setFailureReason(String failureReason)
     {
         this.failureReason = failureReason;
+    }
+
+    public String getTaskGroupId()
+    {
+        return taskGroupId;
+    }
+
+    public void setTaskGroupId(String taskGroupId)
+    {
+        this.taskGroupId = taskGroupId;
+    }
+
+    public String getTaskGroupDisplayName()
+    {
+        return taskGroupDisplayName;
+    }
+
+    public void setTaskGroupDisplayName(String taskGroupDisplayName)
+    {
+        this.taskGroupDisplayName = taskGroupDisplayName;
     }
 
     public long getReportTime()
@@ -291,6 +313,8 @@ public class TaskInfo
                 ", warningFlags=" + warningFlags +
                 ", failureStage='" + failureStage + '\'' +
                 ", failureReason='" + failureReason + '\'' +
+                ", taskGroupId='" + taskGroupId + '\'' +
+                ", taskGroupDisplayName='" + taskGroupDisplayName + '\'' +
                 '}';
     }
 }

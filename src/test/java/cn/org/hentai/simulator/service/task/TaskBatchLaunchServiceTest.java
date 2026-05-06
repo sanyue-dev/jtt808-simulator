@@ -25,7 +25,7 @@ class TaskBatchLaunchServiceTest
     private final RecordingScheduler launchScheduler = new RecordingScheduler();
     private final RecordingScheduler stopScheduler = new RecordingScheduler();
     private final RecordingCapacityProbe capacityProbe = new RecordingCapacityProbe();
-    private final TaskGroupMonitorService taskGroupMonitorService = new TaskGroupMonitorService(() -> null, taskGateway::terminateTasks);
+    private final TaskGroupMonitorService taskGroupMonitorService = new TaskGroupMonitorService(() -> null, taskGateway::terminateTasks, (taskId, taskGroupId, taskGroupDisplayName) -> {});
     private final TaskBatchLaunchService service = new TaskBatchLaunchService(new FakeRouteService(), taskGateway, launchScheduler, stopScheduler, capacityProbe, taskGroupMonitorService);
 
     @Test

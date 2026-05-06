@@ -153,6 +153,7 @@
             {
                 var expanded = !!expandedTaskGroupIds[group.taskGroupId];
                 var actions = '<button type="button" class="task-group-table__btn" data-action="toggle">' + (expanded ? '收起' : '展开') + '</button>';
+                actions += ' <button type="button" class="task-group-table__btn" data-action="view-tasks">查看行程任务</button>';
                 if (canStop(group))
                 {
                     actions += ' <button type="button" class="task-group-table__btn task-group-table__btn--danger" data-action="stop">停止任务组</button>';
@@ -209,6 +210,12 @@
                 if (result.error && result.error.code) return toastr('error', result.error.reason);
                 loadSnapshot();
             });
+        });
+
+        $('#task-group-list').on('click', '[data-action="view-tasks"]', function()
+        {
+            var id = $(this).closest('tr').attr('data-task-group-id');
+            window.location.href = '/monitor/list/index?taskGroupId=' + encodeURIComponent(id);
         });
 
         function canStop(group)

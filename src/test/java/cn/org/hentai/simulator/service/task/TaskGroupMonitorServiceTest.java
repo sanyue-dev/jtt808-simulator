@@ -17,7 +17,7 @@ class TaskGroupMonitorServiceTest
     @Test
     void singleTaskGroupAppearsInMonitorSnapshotAndRemainsAfterCompletion()
     {
-        TaskGroupMonitorService service = new TaskGroupMonitorService(new FixedRuntimeSummaryProvider());
+        TaskGroupMonitorService service = service();
 
         TaskCreationResult creation = service.createGroup(TaskGroupSource.SINGLE, 1);
         service.recordTaskStarted(creation.getTaskGroupId(), 101L);
@@ -47,7 +47,7 @@ class TaskGroupMonitorServiceTest
     @Test
     void taskGroupHandlesTerminationBeforeStartRecord()
     {
-        TaskGroupMonitorService service = new TaskGroupMonitorService(new FixedRuntimeSummaryProvider());
+        TaskGroupMonitorService service = service();
         TaskCreationResult creation = service.createGroup(TaskGroupSource.SINGLE, 1);
 
         TaskLifecycleObserver observer = service.observer(creation.getTaskGroupId());
@@ -62,10 +62,24 @@ class TaskGroupMonitorServiceTest
     }
 
     @Test
+    void recordingStartedTaskAssignsTaskGroupIdentity()
+    {
+        RecordingTaskGroupAssigner assigner = new RecordingTaskGroupAssigner();
+        TaskGroupMonitorService service = new TaskGroupMonitorService(new FixedRuntimeSummaryProvider(), taskIds -> new TaskStopResult(), assigner);
+
+        TaskCreationResult creation = service.createGroup(TaskGroupSource.BATCH, 2);
+        service.recordTaskStarted(creation.getTaskGroupId(), 101L);
+
+        assertEquals(101L, assigner.taskId);
+        assertEquals(creation.getTaskGroupId(), assigner.taskGroupId);
+        assertEquals(creation.getTaskGroupDisplayName(), assigner.taskGroupDisplayName);
+    }
+
+    @Test
     void stoppingTaskGroupStopsOnlyActiveTasksAndSkipsAlreadyTerminatedTasks()
     {
         RecordingTaskStopper stopper = new RecordingTaskStopper();
-        TaskGroupMonitorService service = new TaskGroupMonitorService(new FixedRuntimeSummaryProvider(), stopper);
+        TaskGroupMonitorService service = service(stopper);
         TaskCreationResult creation = service.createGroup(TaskGroupSource.BATCH, 3);
         service.recordTaskStarted(creation.getTaskGroupId(), 101L);
         service.recordTaskStarted(creation.getTaskGroupId(), 102L);
@@ -84,7 +98,7 @@ class TaskGroupMonitorServiceTest
     {
         RecordingTaskStopper stopper = new RecordingTaskStopper();
         stopper.failedTaskId = 103L;
-        TaskGroupMonitorService service = new TaskGroupMonitorService(new FixedRuntimeSummaryProvider(), stopper);
+        TaskGroupMonitorService service = service(stopper);
         TaskCreationResult creation = service.createGroup(TaskGroupSource.BATCH, 2);
         service.recordTaskStarted(creation.getTaskGroupId(), 101L);
         service.recordTaskStarted(creation.getTaskGroupId(), 103L);
@@ -105,7 +119,7 @@ class TaskGroupMonitorServiceTest
     void stoppingTaskGroupCompletesAfterAllStoppedTasksTerminate()
     {
         RecordingTaskStopper stopper = new RecordingTaskStopper();
-        TaskGroupMonitorService service = new TaskGroupMonitorService(new FixedRuntimeSummaryProvider(), stopper);
+        TaskGroupMonitorService service = service(stopper);
         TaskCreationResult creation = service.createGroup(TaskGroupSource.BATCH, 2);
         service.recordTaskStarted(creation.getTaskGroupId(), 101L);
         service.recordTaskStarted(creation.getTaskGroupId(), 102L);
@@ -134,6 +148,16 @@ class TaskGroupMonitorServiceTest
         }
     }
 
+    private static TaskGroupMonitorService service()
+    {
+        return service(taskIds -> new TaskStopResult());
+    }
+
+    private static TaskGroupMonitorService service(TaskGroupMonitorService.TaskStopper stopper)
+    {
+        return new TaskGroupMonitorService(new FixedRuntimeSummaryProvider(), stopper, (taskId, taskGroupId, taskGroupDisplayName) -> {});
+    }
+
     private static class RecordingTaskStopper implements TaskGroupMonitorService.TaskStopper
     {
         private final List<Long> requestedTaskIds = new ArrayList<>();
@@ -149,6 +173,21 @@ class TaskGroupMonitorServiceTest
                 else result.recordSuccess();
             });
             return result;
+        }
+    }
+
+    private static class RecordingTaskGroupAssigner implements TaskGroupMonitorService.TaskGroupAssigner
+    {
+        private long taskId;
+        private String taskGroupId;
+        private String taskGroupDisplayName;
+
+        @Override
+        public void assignTaskGroup(long taskId, String taskGroupId, String taskGroupDisplayName)
+        {
+            this.taskId = taskId;
+            this.taskGroupId = taskGroupId;
+            this.taskGroupDisplayName = taskGroupDisplayName;
         }
     }
 }
