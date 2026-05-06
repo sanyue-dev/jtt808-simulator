@@ -1,4 +1,4 @@
-package cn.org.hentai.simulator.service.acceptance;
+package cn.org.hentai.simulator.service.task;
 
 import cn.org.hentai.simulator.domain.model.TerminalIdentity;
 import org.junit.jupiter.api.Test;
@@ -9,9 +9,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class IdentityBatchGeneratorTest
+class TaskIdentityBatchGeneratorTest
 {
-    private final IdentityBatchGenerator generator = new IdentityBatchGenerator();
+    private final TaskIdentityBatchGenerator generator = new TaskIdentityBatchGenerator();
 
     @Test
     void generatesUniqueTerminalIdentities()

@@ -26,7 +26,7 @@
                     </div>
                 </div>
 
-                <p class="batch__route-hint">不选则由系统从所有线路中随机分配，选中则从所选线路中随机分配</p>
+                <p class="batch__route-hint">不选则由系统从所有线路中轮询分配，选中则从所选线路中轮询分配</p>
 
                 <!-- 线路列表 -->
                 <div class="batch__route-list" id="route-list">
@@ -89,6 +89,33 @@
                     <div class="card-section__field">
                         <label class="card-section__label">端口</label>
                         <input type="text" name="serverPort" id="serverPort" class="card-section__input" style="max-width: 140px;" value="${vehicleServerPort}" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- 启动控制 -->
+            <div class="card-section">
+                <div class="card-section-header">
+                    <h3>启动控制</h3>
+                </div>
+                <div class="card-section__fields">
+                    <div class="card-section__field">
+                        <label class="card-section__label">位置上报间隔（秒）</label>
+                        <input type="number" name="reportIntervalSeconds" id="reportIntervalSeconds" class="card-section__input" min="1" value="5" />
+                    </div>
+                    <div class="card-section__field">
+                        <label class="card-section__label">运行时长（秒）</label>
+                        <input type="number" name="runDurationSeconds" id="runDurationSeconds" class="card-section__input" min="0" value="0" />
+                        <span class="card-section__field-hint">0 表示不自动停止</span>
+                    </div>
+                    <div class="card-section__field">
+                        <label class="card-section__label">ramp-up 批次大小</label>
+                        <input type="number" name="rampUpBatchSize" id="rampUpBatchSize" class="card-section__input" min="0" value="0" />
+                        <span class="card-section__field-hint">0 表示一次性提交</span>
+                    </div>
+                    <div class="card-section__field">
+                        <label class="card-section__label">ramp-up 间隔（毫秒）</label>
+                        <input type="number" name="rampUpIntervalMillis" id="rampUpIntervalMillis" class="card-section__input" min="1" value="1" />
                     </div>
                 </div>
             </div>
@@ -213,7 +240,11 @@
                 deviceSnPattern : $('#deviceSnPattern').val(),
                 simNumberPattern : $('#simNumberPattern').val(),
                 serverAddress : $('#serverAddress').val(),
-                serverPort : $('#serverPort').val()
+                serverPort : $('#serverPort').val(),
+                reportIntervalSeconds : $('#reportIntervalSeconds').val(),
+                runDurationSeconds : $('#runDurationSeconds').val(),
+                rampUpBatchSize : $('#rampUpBatchSize').val(),
+                rampUpIntervalMillis : $('#rampUpIntervalMillis').val()
             };
             $.post('./run', params, function(result)
             {

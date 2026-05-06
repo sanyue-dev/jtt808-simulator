@@ -1,17 +1,18 @@
-package cn.org.hentai.simulator.service.acceptance;
+package cn.org.hentai.simulator.service.task;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class AcceptanceConfig
+public class BatchTaskLaunchRequest
 {
-    private int terminalCount = 1000;
+    private int terminalCount;
     private int reportIntervalSeconds = 5;
-    private int runDurationSeconds = 300;
-    private int rampUpBatchSize = 100;
-    private int rampUpIntervalMillis = 1000;
+    private int runDurationSeconds;
+    private int rampUpBatchSize;
+    private int rampUpIntervalMillis = 1;
     private String serverAddress;
     private int serverPort;
+    private String mode = "stress";
     private String vehicleNumberPattern = "京%06d";
     private String deviceSnPattern = "A%06d";
     private String simNumberPattern = "013800%06d";
@@ -87,6 +88,16 @@ public class AcceptanceConfig
         this.serverPort = serverPort;
     }
 
+    public String getMode()
+    {
+        return mode;
+    }
+
+    public void setMode(String mode)
+    {
+        this.mode = mode;
+    }
+
     public String getVehicleNumberPattern()
     {
         return vehicleNumberPattern;
@@ -124,6 +135,6 @@ public class AcceptanceConfig
 
     public void setRouteIds(List<Long> routeIds)
     {
-        this.routeIds = routeIds == null ? new ArrayList<>() : new ArrayList<>(routeIds);
+        this.routeIds = routeIds == null ? new ArrayList<>() : routeIds;
     }
 }
