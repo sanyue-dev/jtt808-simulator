@@ -7,6 +7,8 @@ import org.yzh.protocol.commons.JT808;
 
 import java.time.Instant;
 import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -36,7 +38,7 @@ public class AcceptanceRun implements TaskLifecycleObserver
     private final AtomicLong sendFailed = new AtomicLong();
     private final AtomicLong protocolExceptions = new AtomicLong();
     private final AtomicBoolean finishing = new AtomicBoolean(false);
-    private final CopyOnWriteArrayList<ScheduledFuture<?>> launchFutures = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<LaunchTicket> launchTickets = new CopyOnWriteArrayList<>();
 
     public AcceptanceRun(AcceptanceConfig config)
     {
@@ -109,7 +111,7 @@ public class AcceptanceRun implements TaskLifecycleObserver
         }
     }
 
-    boolean addLaunchFuture(ScheduledFuture<?> launchFuture)
+    boolean addLaunchFuture(AcceptanceHarnessService.LaunchWindow launchWindow, ScheduledFuture<?> launchFuture)
     {
         synchronized(this)
         {
@@ -118,21 +120,32 @@ public class AcceptanceRun implements TaskLifecycleObserver
                 launchFuture.cancel(false);
                 return false;
             }
-            launchFutures.add(launchFuture);
+            launchTickets.add(new LaunchTicket(launchWindow, launchFuture));
             return true;
         }
     }
 
-    void cancelPendingLaunches()
+    boolean addLaunchFuture(ScheduledFuture<?> launchFuture)
     {
+        return addLaunchFuture(null, launchFuture);
+    }
+
+    List<AcceptanceHarnessService.LaunchWindow> cancelPendingLaunches()
+    {
+        List<AcceptanceHarnessService.LaunchWindow> canceledLaunchWindows = new ArrayList<>();
         synchronized(this)
         {
-            for (ScheduledFuture<?> launchFuture : launchFutures)
+            for (LaunchTicket launchTicket : launchTickets)
             {
-                if (launchFuture.isDone() == false) launchFuture.cancel(false);
+                if (launchTicket.future.isDone() == false)
+                {
+                    launchTicket.future.cancel(false);
+                    if (launchTicket.launchWindow != null) canceledLaunchWindows.add(launchTicket.launchWindow);
+                }
             }
-            launchFutures.clear();
+            launchTickets.clear();
         }
+        return canceledLaunchWindows;
     }
 
     public int getRecordCount()
@@ -302,6 +315,18 @@ public class AcceptanceRun implements TaskLifecycleObserver
     interface LaunchAction
     {
         void launch();
+    }
+
+    private static final class LaunchTicket
+    {
+        private final AcceptanceHarnessService.LaunchWindow launchWindow;
+        private final ScheduledFuture<?> future;
+
+        private LaunchTicket(AcceptanceHarnessService.LaunchWindow launchWindow, ScheduledFuture<?> future)
+        {
+            this.launchWindow = launchWindow;
+            this.future = future;
+        }
     }
 
     public static class AcceptanceSummary

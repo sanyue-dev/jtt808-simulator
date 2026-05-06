@@ -85,7 +85,7 @@ public class AcceptanceHarnessService
                     requestFinish(run, "启动失败: " + ex.getClass().getSimpleName() + ": " + ex.getMessage());
                 }
             }, window.getDelayMillis(), TimeUnit.MILLISECONDS);
-            if (run.addLaunchFuture(launchFuture) == false) return;
+            if (run.addLaunchFuture(window, launchFuture) == false) return;
         }
     }
 
@@ -124,7 +124,7 @@ public class AcceptanceHarnessService
     {
         run.recordFinishFailure(failureReason);
         if (run.beginFinishing() == false) return;
-        run.cancelPendingLaunches();
+        recordCanceledLaunchWindows(run, run.cancelPendingLaunches());
         RuntimeException failure = null;
         for (TerminalAcceptanceRecord record : run.getRecords())
         {
@@ -144,6 +144,24 @@ public class AcceptanceHarnessService
             run.recordFinishFailure("终止失败: " + reason);
         }
         awaitFinish(run);
+    }
+
+    private void recordCanceledLaunchWindows(AcceptanceRun run, List<LaunchWindow> canceledLaunchWindows)
+    {
+        if (canceledLaunchWindows.isEmpty()) return;
+        run.recordFinishFailure(formatCanceledLaunchWindows(canceledLaunchWindows));
+    }
+
+    String formatCanceledLaunchWindows(List<LaunchWindow> canceledLaunchWindows)
+    {
+        StringBuilder message = new StringBuilder("取消未启动窗口: count=").append(canceledLaunchWindows.size()).append(", ranges=");
+        for (int i = 0; i < canceledLaunchWindows.size(); i++)
+        {
+            if (i > 0) message.append(";");
+            LaunchWindow window = canceledLaunchWindows.get(i);
+            message.append(window.getStartIndex()).append("-").append(window.getEndIndex());
+        }
+        return message.toString();
     }
 
     private void awaitFinish(AcceptanceRun run)

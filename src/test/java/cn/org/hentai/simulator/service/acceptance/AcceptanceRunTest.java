@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.yzh.protocol.commons.JT808;
 import org.yzh.protocol.t808.T0200;
 
+import java.util.List;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -141,6 +142,25 @@ class AcceptanceRunTest
 
         run.cancelPendingLaunches();
 
+        assertTrue(pendingLaunch.cancelled.get());
+        assertFalse(completedLaunch.cancelled.get());
+    }
+
+    @Test
+    void returnsCanceledLaunchWindows()
+    {
+        AcceptanceRun run = new AcceptanceRun(new AcceptanceConfig());
+        TestScheduledFuture pendingLaunch = new TestScheduledFuture(false);
+        TestScheduledFuture completedLaunch = new TestScheduledFuture(true);
+        AcceptanceHarnessService.LaunchWindow pendingWindow = new AcceptanceHarnessService.LaunchWindow(100, 200, 1000);
+        AcceptanceHarnessService.LaunchWindow completedWindow = new AcceptanceHarnessService.LaunchWindow(200, 300, 2000);
+        assertTrue(run.addLaunchFuture(pendingWindow, pendingLaunch));
+        assertTrue(run.addLaunchFuture(completedWindow, completedLaunch));
+
+        List<AcceptanceHarnessService.LaunchWindow> canceledWindows = run.cancelPendingLaunches();
+
+        assertEquals(1, canceledWindows.size());
+        assertEquals(pendingWindow, canceledWindows.get(0));
         assertTrue(pendingLaunch.cancelled.get());
         assertFalse(completedLaunch.cancelled.get());
     }

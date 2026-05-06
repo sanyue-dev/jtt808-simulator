@@ -89,4 +89,16 @@ class AcceptanceHarnessServiceTest
         assertEquals(10000, windows.get(99).getEndIndex());
         assertEquals(99000L, windows.get(99).getDelayMillis());
     }
+
+    @Test
+    void formatsCanceledLaunchWindowsAsFailureReason()
+    {
+        AcceptanceHarnessService service = new AcceptanceHarnessService(null);
+        List<AcceptanceHarnessService.LaunchWindow> windows = List.of(
+                new AcceptanceHarnessService.LaunchWindow(3000, 3100, 30000),
+                new AcceptanceHarnessService.LaunchWindow(3100, 3200, 31000)
+        );
+
+        assertEquals("取消未启动窗口: count=2, ranges=3000-3100;3100-3200", service.formatCanceledLaunchWindows(windows));
+    }
 }
