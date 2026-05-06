@@ -42,6 +42,7 @@ class TaskGroupMonitorTemplateTest
         assertThat(template).contains("data-action=\"stop\"");
         assertThat(template).contains("停止成功：");
         assertThat(template).contains("停止失败：");
+        assertThat(template).contains("return group.state === 'creating' || group.state === 'running'");
     }
 
     private String read(String path) throws Exception

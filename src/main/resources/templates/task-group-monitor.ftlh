@@ -213,7 +213,7 @@
 
         function canStop(group)
         {
-            return (group.activeTasks || 0) > 0 && group.state !== 'stopping' && group.state !== 'failed';
+            return group.state === 'creating' || group.state === 'running';
         }
 
         function formatStopFailures(failures)
