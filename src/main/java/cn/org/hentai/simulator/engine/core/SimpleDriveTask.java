@@ -301,7 +301,7 @@ public class SimpleDriveTask extends AbstractDriveTask
 
     @Override
     public void send(JTMessage msg) {
-        if (getState() == TaskState.terminated) return;
+        if (isTerminated()) return;
         try {
             msg.setClientId(getParameter("device.sim"));
             msg.setSerialNo((sequence++) & 0xffff);
