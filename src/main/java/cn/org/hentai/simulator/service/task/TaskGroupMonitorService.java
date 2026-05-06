@@ -119,74 +119,75 @@ public class TaskGroupMonitorService
 
     public TaskLifecycleObserver observer(String taskGroupId)
     {
+        TaskGroup group = group(taskGroupId);
         return new TaskLifecycleObserver()
         {
             @Override
             public void onConnected(TaskInfo taskInfo)
             {
-                group(taskGroupId).recordConnected();
+                group.recordConnected();
             }
 
             @Override
             public void onConnectionFailed(TaskInfo taskInfo, Throwable cause)
             {
-                group(taskGroupId).recordConnectionFailed();
+                group.recordConnectionFailed();
             }
 
             @Override
             public void onRegistrationSucceeded(TaskInfo taskInfo)
             {
-                group(taskGroupId).recordRegistrationSucceeded();
+                group.recordRegistrationSucceeded();
             }
 
             @Override
             public void onRegistrationFailed(TaskInfo taskInfo, String reason)
             {
-                group(taskGroupId).recordRegistrationFailed();
+                group.recordRegistrationFailed();
             }
 
             @Override
             public void onAuthenticationSucceeded(TaskInfo taskInfo)
             {
-                group(taskGroupId).recordAuthenticationSucceeded();
+                group.recordAuthenticationSucceeded();
             }
 
             @Override
             public void onAuthenticationFailed(TaskInfo taskInfo, String reason)
             {
-                group(taskGroupId).recordAuthenticationFailed();
+                group.recordAuthenticationFailed();
             }
 
             @Override
             public void onLocationReported(TaskInfo taskInfo, JTMessage message)
             {
                 if (message == null || (message.getMessageId() & 0xffff) != JT808.位置信息汇报) return;
-                group(taskGroupId).recordLocationReported();
+                group.recordLocationReported();
             }
 
             @Override
             public void onDisconnected(TaskInfo taskInfo)
             {
-                group(taskGroupId).recordDisconnected();
+                group.recordDisconnected();
             }
 
             @Override
             public void onSendFailed(TaskInfo taskInfo, JTMessage message, Throwable cause)
             {
-                group(taskGroupId).recordSendFailed();
+                group.recordSendFailed();
             }
 
             @Override
             public void onProtocolException(TaskInfo taskInfo, Throwable cause)
             {
-                group(taskGroupId).recordProtocolException();
+                group.recordProtocolException();
             }
 
             @Override
             public void onTerminated(TaskInfo taskInfo)
             {
                 if (taskInfo == null) return;
-                group(taskGroupId).recordTaskTerminated(taskInfo.getId());
+                group.recordTaskTerminated(taskInfo.getId());
             }
         };
     }
