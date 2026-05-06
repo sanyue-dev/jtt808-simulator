@@ -25,7 +25,7 @@
                 </div>
 
                 <div class="task-group-table">
-                    <table>
+                    <table class="data-table">
                         <thead>
                         <tr>
                             <th>状态</th>

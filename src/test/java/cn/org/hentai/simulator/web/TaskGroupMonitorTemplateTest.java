@@ -17,6 +17,7 @@ class TaskGroupMonitorTemplateTest
         assertThat(template).contains("setInterval(loadSnapshot, 1000)");
         assertThat(template).contains("expandedTaskGroupIds");
         assertThat(template).contains("data-field=\"runtimeSummary.totalTasks\"");
+        assertThat(template).contains("<table class=\"data-table\">");
         assertThat(template).contains("id=\"task-group-list\"");
         assertThat(template).doesNotContain("paginate(");
     }
