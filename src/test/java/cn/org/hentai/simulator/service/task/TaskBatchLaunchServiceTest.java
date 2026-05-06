@@ -311,6 +311,10 @@ class TaskBatchLaunchServiceTest
         launchScheduler.runAll();
 
         assertEquals(1L, stopResult.getSucceeded());
+        BatchTaskLaunchProgress progress = service.currentProgress();
+        assertEquals("completed", progress.getState());
+        assertEquals(1L, progress.getStopSucceeded());
+        assertEquals(0L, progress.getStopFailed());
         assertEquals(1, taskGateway.started.size());
         assertEquals(Set.of(1L), taskGateway.terminatedTaskIds);
         TaskGroupSummary group = taskGroupMonitorService.snapshot().getTaskGroups().get(0);

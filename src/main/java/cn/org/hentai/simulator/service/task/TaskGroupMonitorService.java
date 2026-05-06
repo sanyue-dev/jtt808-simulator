@@ -88,10 +88,9 @@ public class TaskGroupMonitorService
     public TaskStopResult stopTaskGroup(String taskGroupId)
     {
         TaskGroup group = group(taskGroupId);
-        LaunchStopper launchStopper = launchStoppers.get(taskGroupId);
-        if (launchStopper != null) launchStopper.stopLaunching();
         List<Long> taskIds = group.beginStop();
-        TaskStopResult result = taskStopper.stopTasks(taskIds);
+        LaunchStopper launchStopper = launchStoppers.get(taskGroupId);
+        TaskStopResult result = launchStopper == null ? taskStopper.stopTasks(taskIds) : launchStopper.stopLaunching(taskIds);
         group.recordStopResult(result);
         return result;
     }
@@ -144,7 +143,7 @@ public class TaskGroupMonitorService
 
     public interface LaunchStopper
     {
-        void stopLaunching();
+        TaskStopResult stopLaunching(Collection<Long> taskIds);
     }
 
     private static class TaskGroup
