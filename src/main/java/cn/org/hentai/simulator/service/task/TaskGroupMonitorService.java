@@ -24,24 +24,35 @@ public class TaskGroupMonitorService
 {
     private final RuntimeSummaryProvider runtimeSummaryProvider;
     private final TaskStopper taskStopper;
+    private final TaskGroupAssigner taskGroupAssigner;
     private final AtomicLong sequence = new AtomicLong();
     private final Map<String, TaskGroup> groups = new LinkedHashMap<>();
     private final Map<String, LaunchStopper> launchStoppers = new ConcurrentHashMap<>();
 
     public TaskGroupMonitorService()
     {
-        this(() -> TaskManager.getInstance().getRuntimeSummary(), taskIds -> TaskManager.getInstance().terminateTasks(taskIds));
+        this(() -> TaskManager.getInstance().getRuntimeSummary(),
+                taskIds -> TaskManager.getInstance().terminateTasks(taskIds),
+                (taskId, taskGroupId, taskGroupDisplayName) -> TaskManager.getInstance().assignTaskGroup(taskId, taskGroupId, taskGroupDisplayName));
     }
 
     public TaskGroupMonitorService(RuntimeSummaryProvider runtimeSummaryProvider)
     {
-        this(runtimeSummaryProvider, taskIds -> TaskManager.getInstance().terminateTasks(taskIds));
+        this(runtimeSummaryProvider,
+                taskIds -> TaskManager.getInstance().terminateTasks(taskIds),
+                (taskId, taskGroupId, taskGroupDisplayName) -> TaskManager.getInstance().assignTaskGroup(taskId, taskGroupId, taskGroupDisplayName));
     }
 
     public TaskGroupMonitorService(RuntimeSummaryProvider runtimeSummaryProvider, TaskStopper taskStopper)
     {
+        this(runtimeSummaryProvider, taskStopper, (taskId, taskGroupId, taskGroupDisplayName) -> TaskManager.getInstance().assignTaskGroup(taskId, taskGroupId, taskGroupDisplayName));
+    }
+
+    public TaskGroupMonitorService(RuntimeSummaryProvider runtimeSummaryProvider, TaskStopper taskStopper, TaskGroupAssigner taskGroupAssigner)
+    {
         this.runtimeSummaryProvider = runtimeSummaryProvider;
         this.taskStopper = taskStopper;
+        this.taskGroupAssigner = taskGroupAssigner;
     }
 
     public synchronized TaskCreationResult createGroup(TaskGroupSource source, int targetTasks)
@@ -61,6 +72,7 @@ public class TaskGroupMonitorService
     public void recordTaskStarted(String taskGroupId, long taskId)
     {
         TaskGroup group = group(taskGroupId);
+        taskGroupAssigner.assignTaskGroup(taskId, group.id, group.displayName);
         group.recordTaskStarted(taskId);
     }
 
@@ -139,6 +151,11 @@ public class TaskGroupMonitorService
     public interface TaskStopper
     {
         TaskStopResult stopTasks(Collection<Long> taskIds);
+    }
+
+    public interface TaskGroupAssigner
+    {
+        void assignTaskGroup(long taskId, String taskGroupId, String taskGroupDisplayName);
     }
 
     public interface LaunchStopper

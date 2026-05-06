@@ -101,6 +101,15 @@ public final class TaskManager
         return this.index.addAndGet(1L);
     }
 
+    public void assignTaskGroup(long taskId, String taskGroupId, String taskGroupDisplayName)
+    {
+        AbstractDriveTask task = tasks.get(taskId);
+        if (task == null) throw new IllegalArgumentException("行程任务不存在: " + taskId);
+        TaskInfo info = task.getInfo();
+        info.setTaskGroupId(taskGroupId);
+        info.setTaskGroupDisplayName(taskGroupDisplayName);
+    }
+
     // 分页查找，用于列表显示运行中的行程任务状态
     public Page<TaskInfo> find(int pageIndex, int pageSize)
     {
@@ -109,6 +118,11 @@ public final class TaskManager
 
     public Page<TaskInfo> find(int pageIndex, int pageSize, String state, String keyword)
     {
+        return find(pageIndex, pageSize, state, keyword, null);
+    }
+
+    public Page<TaskInfo> find(int pageIndex, int pageSize, String state, String keyword, String taskGroupId)
+    {
         List<TaskInfo> results = new ArrayList<TaskInfo>(pageSize);
         int start = Math.max((pageIndex - 1) * pageSize, 0);
         long matched = 0L;
@@ -116,7 +130,7 @@ public final class TaskManager
         {
             TaskInfo info = task.getInfo();
             runtimeMetrics.applyFailureInfo(info);
-            if (matches(info, state, keyword) == false) continue;
+            if (matches(info, state, keyword, taskGroupId) == false) continue;
             if (matched >= start && results.size() < pageSize) results.add(info);
             matched++;
         }
@@ -128,7 +142,13 @@ public final class TaskManager
 
     private boolean matches(TaskInfo task, String state, String keyword)
     {
+        return matches(task, state, keyword, null);
+    }
+
+    private boolean matches(TaskInfo task, String state, String keyword, String taskGroupId)
+    {
         if (StringUtils.hasText(state) && state.equals(task.getState()) == false) return false;
+        if (StringUtils.hasText(taskGroupId) && taskGroupId.equals(task.getTaskGroupId()) == false) return false;
         if (StringUtils.hasText(keyword) == false) return true;
         return contains(task.getVehicleNumber(), keyword)
                 || contains(task.getDeviceSn(), keyword)

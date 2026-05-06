@@ -40,6 +40,8 @@ class TaskGroupMonitorTemplateTest
         assertThat(template).contains("停止任务组");
         assertThat(template).contains("$.post('/task-groups/stop'");
         assertThat(template).contains("data-action=\"stop\"");
+        assertThat(template).contains("data-action=\"view-tasks\"");
+        assertThat(template).contains("'/monitor/list/index?taskGroupId=' + encodeURIComponent(id)");
         assertThat(template).contains("停止成功：");
         assertThat(template).contains("停止失败：");
         assertThat(template).contains("return group.state === 'creating' || group.state === 'running'");

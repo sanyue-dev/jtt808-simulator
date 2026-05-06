@@ -31,12 +31,13 @@ public class MonitorController extends BaseController
     public Result listJson(@RequestParam(defaultValue = "1") int pageIndex,
                            @RequestParam(defaultValue = "20") int pageSize,
                            @RequestParam(required = false) String state,
-                           @RequestParam(required = false) String keyword)
+                           @RequestParam(required = false) String keyword,
+                           @RequestParam(required = false) String taskGroupId)
     {
         Result result = new Result();
         try
         {
-            Page<TaskInfo> page = TaskManager.getInstance().find(pageIndex, pageSize, state, keyword);
+            Page<TaskInfo> page = TaskManager.getInstance().find(pageIndex, pageSize, state, keyword, taskGroupId);
             for (TaskInfo task : page.getList())
             {
                 Route route = routeService.getById(task.getRouteId());
