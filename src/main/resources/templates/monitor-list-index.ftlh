@@ -13,32 +13,6 @@
                 <h2>行程任务</h2>
             </div>
             <div class="page-body">
-                <div class="monitor-summary" id="monitor-summary">
-                    <div class="monitor-summary__item"><span>总任务数</span><strong data-field="totalTasks">0</strong></div>
-                    <div class="monitor-summary__item"><span>未终止</span><strong data-field="activeTasks">0</strong></div>
-                    <div class="monitor-summary__item"><span>停车中</span><strong data-field="parkingTasks">0</strong></div>
-                    <div class="monitor-summary__item"><span>已终止</span><strong data-field="terminatedTasks">0</strong></div>
-                    <div class="monitor-summary__item"><span>连接成功</span><strong data-field="connectionSucceeded">0</strong></div>
-                    <div class="monitor-summary__item"><span>连接失败</span><strong data-field="connectionFailed">0</strong></div>
-                    <div class="monitor-summary__item"><span>注册成功</span><strong data-field="registrationSucceeded">0</strong></div>
-                    <div class="monitor-summary__item"><span>注册失败</span><strong data-field="registrationFailed">0</strong></div>
-                    <div class="monitor-summary__item"><span>鉴权成功</span><strong data-field="authenticationSucceeded">0</strong></div>
-                    <div class="monitor-summary__item"><span>鉴权失败</span><strong data-field="authenticationFailed">0</strong></div>
-                    <div class="monitor-summary__item"><span>位置上报</span><strong data-field="locationReportSent">0</strong></div>
-                    <div class="monitor-summary__item"><span>上报速率/s</span><strong data-field="locationReportRate">0</strong></div>
-                    <div class="monitor-summary__item"><span>断连</span><strong data-field="disconnected">0</strong></div>
-                    <div class="monitor-summary__item"><span>终止事件</span><strong data-field="terminated">0</strong></div>
-                    <div class="monitor-summary__item"><span>发送失败</span><strong data-field="sendFailed">0</strong></div>
-                    <div class="monitor-summary__item"><span>协议异常</span><strong data-field="protocolExceptions">0</strong></div>
-                    <div class="monitor-summary__item"><span>Heap 使用</span><strong data-field="runtimeResources.heapUsedBytes" data-format="bytes">0</strong></div>
-                    <div class="monitor-summary__item"><span>Heap 上限</span><strong data-field="runtimeResources.heapMaxBytes" data-format="bytes">0</strong></div>
-                    <div class="monitor-summary__item"><span>线程数</span><strong data-field="runtimeResources.threadCount">0</strong></div>
-                    <div class="monitor-summary__item"><span>FD 使用</span><strong data-field="runtimeResources.openFileDescriptorCount">0</strong></div>
-                    <div class="monitor-summary__item"><span>FD 上限</span><strong data-field="runtimeResources.maxFileDescriptorCount">0</strong></div>
-                    <div class="monitor-summary__item"><span>调度延迟均值</span><strong data-field="schedulerDelay.averageDelayMillis" data-format="millis">0</strong></div>
-                    <div class="monitor-summary__item"><span>调度延迟最大</span><strong data-field="schedulerDelay.maxDelayMillis" data-format="millis">0</strong></div>
-                </div>
-
                 <form class="monitor-toolbar" id="monitor-filter">
                     <input type="hidden" name="taskGroupId" value="" />
                     <div class="task__dropdown monitor-toolbar__dropdown is-unselected" id="stateDropdown">
@@ -69,28 +43,6 @@
 </body>
 <#include "inc/footer.ftlh">
 <style>
-    .monitor-summary {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 8px;
-        margin-bottom: 14px;
-    }
-    .monitor-summary__item {
-        border: 1px solid var(--color-border);
-        background: var(--color-bg-panel);
-        padding: 10px 12px;
-    }
-    .monitor-summary__item span {
-        display: block;
-        color: var(--color-text-secondary);
-        font-size: 12px;
-        margin-bottom: 4px;
-    }
-    .monitor-summary__item strong {
-        color: var(--color-text-primary);
-        font-size: 20px;
-        font-weight: 600;
-    }
     .monitor-toolbar {
         display: flex;
         align-items: center;
@@ -200,50 +152,9 @@
         var initialTaskGroupId = new URLSearchParams(window.location.search).get('taskGroupId') || '';
         $('#monitor-filter input[name="taskGroupId"]').val(initialTaskGroupId);
 
-        function loadSummary()
-        {
-            $.post('/monitor/list/summary', function(result)
-            {
-                if (result.error && result.error.code) return toastr('error', result.error.reason);
-                var data = result.data || {};
-                $('#monitor-summary [data-field]').each(function()
-                {
-                    var field = $(this).attr('data-field');
-                    var value = getValue(data, field);
-                    if (field === 'locationReportRate') value = Number(value).toFixed(2);
-                    if ($(this).attr('data-format') === 'bytes') value = formatBytes(value);
-                    if ($(this).attr('data-format') === 'millis') value = Number(value || 0).toFixed(2) + ' ms';
-                    $(this).text(value);
-                });
-            });
-        }
-
-        function getValue(data, path)
-        {
-            var node = data;
-            var parts = path.split('.');
-            for (var i = 0; i < parts.length; i++)
-            {
-                if (node == null) return 0;
-                node = node[parts[i]];
-            }
-            return node == null ? 0 : node;
-        }
-
-        function formatBytes(value)
-        {
-            var n = Number(value || 0);
-            if (n < 0) return 'N/A';
-            if (n < 1024) return n + ' B';
-            if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
-            if (n < 1024 * 1024 * 1024) return (n / 1024 / 1024).toFixed(1) + ' MB';
-            return (n / 1024 / 1024 / 1024).toFixed(1) + ' GB';
-        }
-
         function reloadTable()
         {
             $('#route-table').paginate('reload');
-            loadSummary();
         }
 
         function escapeHtml(value)
@@ -309,8 +220,6 @@
             }
         });
         $(document).click(function() { $('#stateDropdown').removeClass('is-open'); });
-
-        loadSummary();
 
         $('#route-table').paginate({
             url: '/monitor/list/json',
