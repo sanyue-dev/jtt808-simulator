@@ -113,6 +113,7 @@ public class TaskGroupMonitorService
         private final AtomicInteger executedWindowCount = new AtomicInteger();
         private final AtomicInteger startedTasks = new AtomicInteger();
         private final AtomicInteger terminatedTasks = new AtomicInteger();
+        private final Set<Long> startedTaskIds = ConcurrentHashMap.newKeySet();
         private final Set<Long> activeTaskIds = ConcurrentHashMap.newKeySet();
         private final Set<Long> terminatedTaskIds = ConcurrentHashMap.newKeySet();
         private final AtomicReference<String> state = new AtomicReference<>("creating");
@@ -129,9 +130,11 @@ public class TaskGroupMonitorService
 
         private void recordTaskStarted(long taskId)
         {
-            activeTaskIds.add(taskId);
+            if (startedTaskIds.add(taskId) == false) return;
+            if (terminatedTaskIds.contains(taskId) == false) activeTaskIds.add(taskId);
             int started = startedTasks.incrementAndGet();
             if (started >= targetTasks) state.compareAndSet("creating", "running");
+            completeIfAllStartedTasksTerminated();
         }
 
         private void recordLaunchWindowExecuted()
@@ -147,8 +150,14 @@ public class TaskGroupMonitorService
 
         private void recordTaskTerminated(long taskId)
         {
-            if (activeTaskIds.remove(taskId) && terminatedTaskIds.add(taskId)) terminatedTasks.incrementAndGet();
-            if (startedTasks.get() >= targetTasks && activeTaskIds.isEmpty()) state.set("completed");
+            activeTaskIds.remove(taskId);
+            if (terminatedTaskIds.add(taskId)) terminatedTasks.incrementAndGet();
+            completeIfAllStartedTasksTerminated();
+        }
+
+        private void completeIfAllStartedTasksTerminated()
+        {
+            if (startedTasks.get() >= targetTasks && activeTaskIds.isEmpty() && "failed".equals(state.get()) == false) state.set("completed");
         }
 
         private TaskGroupSummary summary()

@@ -106,6 +106,7 @@ public class TaskBatchLaunchService
         catch(RuntimeException ex)
         {
             session.fail(ex);
+            taskGroupMonitorService.recordLaunchFailure(creation.getTaskGroupId(), ex);
             stopSession(session);
             throw new RuntimeException("批量任务启动失败，已请求终止已启动任务", ex);
         }

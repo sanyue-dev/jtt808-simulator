@@ -297,6 +297,21 @@ class TaskBatchLaunchServiceTest
     }
 
     @Test
+    void recordsTaskGroupFailureWhenSchedulingFails()
+    {
+        BatchTaskLaunchRequest request = validRequest();
+        request.setTerminalCount(1);
+        launchScheduler.failOnSchedule = true;
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.launch(request));
+        assertEquals("批量任务启动失败，已请求终止已启动任务", ex.getMessage());
+
+        TaskGroupSummary group = taskGroupMonitorService.snapshot().getTaskGroups().get(0);
+        assertEquals("failed", group.getState());
+        assertEquals("scheduler rejected", group.getFailureReason());
+    }
+
+    @Test
     void returnsEmptyProgressBeforeAnyBatchLaunch()
     {
         BatchTaskLaunchProgress progress = service.currentProgress();
@@ -379,10 +394,12 @@ class TaskBatchLaunchServiceTest
     {
         private final List<Long> delays = new ArrayList<>();
         private final List<Runnable> tasks = new ArrayList<>();
+        private boolean failOnSchedule = false;
 
         @Override
         public ScheduledFuture<?> schedule(Runnable task, long delay, TimeUnit unit)
         {
+            if (failOnSchedule) throw new RuntimeException("scheduler rejected");
             delays.add(unit.toMillis(delay));
             tasks.add(task);
             return new CompletedFuture();

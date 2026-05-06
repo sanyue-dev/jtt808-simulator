@@ -39,6 +39,23 @@ class TaskGroupMonitorServiceTest
         assertEquals("completed", group.getState());
     }
 
+    @Test
+    void taskGroupHandlesTerminationBeforeStartRecord()
+    {
+        TaskGroupMonitorService service = new TaskGroupMonitorService(new FixedRuntimeSummaryProvider());
+        TaskCreationResult creation = service.createGroup(TaskGroupSource.SINGLE, 1);
+
+        TaskLifecycleObserver observer = service.observer(creation.getTaskGroupId());
+        observer.onTerminated(new TaskInfo().withId(101L));
+        service.recordTaskStarted(creation.getTaskGroupId(), 101L);
+
+        TaskGroupSummary group = service.snapshot().getTaskGroups().get(0);
+        assertEquals(1, group.getStartedTasks());
+        assertEquals(0, group.getActiveTasks());
+        assertEquals(1, group.getTerminatedTasks());
+        assertEquals("completed", group.getState());
+    }
+
     private static class FixedRuntimeSummaryProvider implements TaskGroupMonitorService.RuntimeSummaryProvider
     {
         @Override
