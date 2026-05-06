@@ -116,7 +116,7 @@ public class ConnectionPool
         Connection conn = connections.remove(channelId);
         if (conn != null)
         {
-            intentionallyClosedChannels.add(channelId);
+            if (conn.channel.isActive()) intentionallyClosedChannels.add(channelId);
             conn.channel.close();
         }
     }
