@@ -128,7 +128,7 @@ public class TaskGroupMonitorService
             this.rampUpWindowCount = rampUpWindowCount;
         }
 
-        private void recordTaskStarted(long taskId)
+        private synchronized void recordTaskStarted(long taskId)
         {
             if (startedTaskIds.add(taskId) == false) return;
             if (terminatedTaskIds.contains(taskId) == false) activeTaskIds.add(taskId);
@@ -137,18 +137,18 @@ public class TaskGroupMonitorService
             completeIfAllStartedTasksTerminated();
         }
 
-        private void recordLaunchWindowExecuted()
+        private synchronized void recordLaunchWindowExecuted()
         {
             executedWindowCount.incrementAndGet();
         }
 
-        private void recordLaunchFailure(RuntimeException ex)
+        private synchronized void recordLaunchFailure(RuntimeException ex)
         {
             failureReason.compareAndSet(null, ex.getMessage());
             state.set("failed");
         }
 
-        private void recordTaskTerminated(long taskId)
+        private synchronized void recordTaskTerminated(long taskId)
         {
             activeTaskIds.remove(taskId);
             if (terminatedTaskIds.add(taskId)) terminatedTasks.incrementAndGet();
@@ -160,7 +160,7 @@ public class TaskGroupMonitorService
             if (startedTasks.get() >= targetTasks && activeTaskIds.isEmpty() && "failed".equals(state.get()) == false) state.set("completed");
         }
 
-        private TaskGroupSummary summary()
+        private synchronized TaskGroupSummary summary()
         {
             return new TaskGroupSummary(
                     id,
