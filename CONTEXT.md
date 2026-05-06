@@ -175,3 +175,27 @@ _Avoid_: Runtime summary, task group stop
 - **Runtime Summary** must not be duplicated on the **Trip Task List**; otherwise users have two competing places for process-level truth.
 - Task group details must distinguish launch-side data from current runtime data, even when they are shown together in one expanded row.
 - "runtime overview" was too generic; the resolved product term is **Task Group Monitor** because the page is centered on task groups.
+
+## UI Direction
+
+**Global Design Baseline**:
+The shared visual and interaction foundation used by all simulator pages.
+_Avoid_: Per-page skin, one-off redesign
+
+## UI Relationships
+
+- UI redesign starts by establishing the **Global Design Baseline** before rebuilding individual business pages.
+- The **Global Design Baseline** applies the project `DESIGN.md` direction to shared page layout, typography, colors, buttons, inputs, tables, cards, and page headers.
+- The **Global Design Baseline** adapts IBM Carbon-like engineering rules to a simulator control console; it must not copy enterprise marketing-page composition.
+- The UI uses IBM Blue as the primary action color, white and light-gray surfaces, charcoal text, thin borders, and flat low-radius controls.
+- Hero-scale marketing typography and promotional page layouts do not belong on simulator operation pages.
+- The **Global Design Baseline** keeps the existing FreeMarker, jQuery, Bootstrap, Leaflet, and Font Awesome stack.
+- The **Global Design Baseline** does not introduce a new frontend framework or a broad interaction rewrite.
+- The first **Global Design Baseline** implementation may prefer IBM Plex Sans in the CSS font stack, but must not add external font loading or vendored font assets.
+- The first implementation slice for the **Global Design Baseline** may update shared stylesheet rules that affect all pages.
+- Shared CSS is the home for the **Global Design Baseline**; page-specific CSS should only refine concrete page layouts after the baseline exists.
+- Establishing the **Global Design Baseline** must not change business APIs, polling behavior, task stop behavior, pagination behavior, or route/map domain behavior.
+- Map pages only receive the natural effect of shared styles in the first **Global Design Baseline** implementation; map-specific layout and interaction polish belongs to a later page-level slice.
+- Page-level UI redesign follows the product priority of task group observation and trip task control before route editing or map-specific presentation.
+- The first UI redesign batch is split into three slices: establish the **Global Design Baseline**, refine the **Task Group Monitor**, then refine the **Trip Task List** and trip task creation pages.
+- Route editing and map-specific visual polish are intentionally deferred until the core stress-test observation and control workflow has a stable baseline.
