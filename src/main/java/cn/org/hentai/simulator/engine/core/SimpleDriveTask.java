@@ -169,7 +169,7 @@ public class SimpleDriveTask extends AbstractDriveTask
     }
 
     void authenticate() {
-        executeConstantly(driveTask -> {
+        scheduleAuthenticationAttempt(driveTask -> {
             if (TaskStatus.REGISTRATION_SUCCESSFUL == status) {
                 status = TaskStatus.AUTHENTICATING;
                 T0102 message = new T0102();
@@ -178,6 +178,10 @@ public class SimpleDriveTask extends AbstractDriveTask
                 send(message);
             }
         }, 3000);
+    }
+
+    void scheduleAuthenticationAttempt(Executable executable, int delayMillis) {
+        executeAfter(executable, delayMillis);
     }
 
     public void reportLocation() {

@@ -5,6 +5,7 @@ import cn.org.hentai.simulator.domain.model.TaskInfo;
 import cn.org.hentai.simulator.domain.model.TaskLifecycleObserver;
 import cn.org.hentai.simulator.domain.enums.TaskState;
 import cn.org.hentai.simulator.domain.enums.TaskStatus;
+import cn.org.hentai.simulator.engine.runner.Executable;
 import org.junit.jupiter.api.Test;
 import org.yzh.protocol.basics.JTMessage;
 import org.yzh.protocol.commons.JT808;
@@ -74,6 +75,30 @@ class SimpleDriveTaskTest
         task.onRegisterResponsed(message);
 
         waitUntil(() -> task.sentMessages.size() == 1);
+        assertEquals(JT808.终端鉴权, task.sentMessages.get(0).getMessageId() & 0xffff);
+        assertEquals("token-1", ((T0102) task.sentMessages.get(0)).getToken());
+    }
+
+    @Test
+    void registrationSuccessSchedulesOneDelayedAuthenticationAttempt()
+    {
+        RecordingAuthenticationScheduleTask task = new RecordingAuthenticationScheduleTask();
+        HashMap<String, String> params = new HashMap<>();
+        params.put("device.sim", "013800000001");
+        task.init(params, new DrivePlan());
+
+        T8100 message = new T8100();
+        message.setResultCode(0);
+        message.setToken("token-1");
+
+        task.onRegisterResponsed(message);
+
+        assertEquals(3000, task.authenticationDelayMillis);
+        assertEquals(0, task.sentMessages.size());
+
+        task.runScheduledAuthentication();
+
+        assertEquals(1, task.sentMessages.size());
         assertEquals(JT808.终端鉴权, task.sentMessages.get(0).getMessageId() & 0xffff);
         assertEquals("token-1", ((T0102) task.sentMessages.get(0)).getToken());
     }
@@ -249,7 +274,7 @@ class SimpleDriveTaskTest
 
     static class RecordingSimpleDriveTask extends SimpleDriveTask
     {
-        private final List<JTMessage> sentMessages = new ArrayList<>();
+        protected final List<JTMessage> sentMessages = new ArrayList<>();
         private int locationReportStarted = 0;
 
         RecordingSimpleDriveTask()
@@ -267,6 +292,24 @@ class SimpleDriveTaskTest
         public void reportLocation()
         {
             locationReportStarted++;
+        }
+    }
+
+    static class RecordingAuthenticationScheduleTask extends RecordingSimpleDriveTask
+    {
+        private int authenticationDelayMillis = 0;
+        private Executable authenticationAttempt;
+
+        @Override
+        void scheduleAuthenticationAttempt(Executable executable, int delayMillis)
+        {
+            this.authenticationAttempt = executable;
+            this.authenticationDelayMillis = delayMillis;
+        }
+
+        void runScheduledAuthentication()
+        {
+            authenticationAttempt.execute(this);
         }
     }
 
