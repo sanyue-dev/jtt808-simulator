@@ -26,6 +26,7 @@ public class TaskGroupMonitorService
     private final TaskStopper taskStopper;
     private final AtomicLong sequence = new AtomicLong();
     private final Map<String, TaskGroup> groups = new LinkedHashMap<>();
+    private final Map<String, LaunchStopper> launchStoppers = new ConcurrentHashMap<>();
 
     public TaskGroupMonitorService()
     {
@@ -78,9 +79,17 @@ public class TaskGroupMonitorService
         group(taskGroupId).recordLaunchStopped();
     }
 
+    public void registerLaunchStopper(String taskGroupId, LaunchStopper launchStopper)
+    {
+        group(taskGroupId);
+        launchStoppers.put(taskGroupId, launchStopper);
+    }
+
     public TaskStopResult stopTaskGroup(String taskGroupId)
     {
         TaskGroup group = group(taskGroupId);
+        LaunchStopper launchStopper = launchStoppers.get(taskGroupId);
+        if (launchStopper != null) launchStopper.stopLaunching();
         List<Long> taskIds = group.beginStop();
         TaskStopResult result = taskStopper.stopTasks(taskIds);
         group.recordStopResult(result);
@@ -131,6 +140,11 @@ public class TaskGroupMonitorService
     public interface TaskStopper
     {
         TaskStopResult stopTasks(Collection<Long> taskIds);
+    }
+
+    public interface LaunchStopper
+    {
+        void stopLaunching();
     }
 
     private static class TaskGroup

@@ -88,6 +88,7 @@ public class TaskBatchLaunchService
         List<TerminalIdentity> identities = identityBatchGenerator.generate(request.getTerminalCount(), taskGateway.reserveIndexes(request.getTerminalCount()), request.getVehicleNumberPattern(), request.getDeviceSnPattern(), request.getSimNumberPattern());
         TaskCreationResult creation = taskGroupMonitorService.createGroup(TaskGroupSource.BATCH, request.getTerminalCount(), windows.size());
         LaunchSession session = new LaunchSession(creation.getTaskGroupId(), request.getTerminalCount(), windows.size(), request.getRunDurationSeconds() > 0);
+        taskGroupMonitorService.registerLaunchStopper(creation.getTaskGroupId(), () -> stopLaunching(session));
         currentSession.set(session);
 
         try
@@ -299,9 +300,7 @@ public class TaskBatchLaunchService
     private void stopSession(LaunchSession session)
     {
         if (session.stopping.compareAndSet(false, true) == false) return;
-        session.launchFutures.forEach(future -> {
-            if (future.isDone() == false) future.cancel(false);
-        });
+        cancelPendingLaunches(session);
         List<Long> taskIds = new ArrayList<>(session.taskIds);
         TaskStopResult result = taskGateway.terminateTasks(taskIds);
         session.recordStopResult(taskIds, result);
@@ -310,6 +309,20 @@ public class TaskBatchLaunchService
         {
             logger.error("批量任务自动停止存在失败: succeeded={}, failed={}, failures={}", result.getSucceeded(), result.getFailed(), result.getFailures());
         }
+    }
+
+    private void stopLaunching(LaunchSession session)
+    {
+        if (session.stopping.compareAndSet(false, true) == false) return;
+        cancelPendingLaunches(session);
+        taskGroupMonitorService.recordLaunchStopped(session.taskGroupId);
+    }
+
+    private void cancelPendingLaunches(LaunchSession session)
+    {
+        session.launchFutures.forEach(future -> {
+            if (future.isDone() == false) future.cancel(false);
+        });
     }
 
     interface TaskGateway
