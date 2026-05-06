@@ -1,5 +1,7 @@
 package cn.org.hentai.simulator.service.monitor;
 
+import cn.org.hentai.simulator.engine.runner.SchedulerDelaySummary;
+
 public class TaskRuntimeSummary
 {
     private final long totalTasks;
@@ -18,6 +20,8 @@ public class TaskRuntimeSummary
     private final long terminated;
     private final long sendFailed;
     private final long protocolExceptions;
+    private final RuntimeResourceSnapshot runtimeResources;
+    private final SchedulerDelaySummary schedulerDelay;
 
     public TaskRuntimeSummary(long totalTasks,
                               long activeTasks,
@@ -34,7 +38,9 @@ public class TaskRuntimeSummary
                               long disconnected,
                               long terminated,
                               long sendFailed,
-                              long protocolExceptions)
+                              long protocolExceptions,
+                              RuntimeResourceSnapshot runtimeResources,
+                              SchedulerDelaySummary schedulerDelay)
     {
         this.totalTasks = totalTasks;
         this.activeTasks = activeTasks;
@@ -52,6 +58,8 @@ public class TaskRuntimeSummary
         this.terminated = terminated;
         this.sendFailed = sendFailed;
         this.protocolExceptions = protocolExceptions;
+        this.runtimeResources = runtimeResources;
+        this.schedulerDelay = schedulerDelay;
     }
 
     public long getTotalTasks() { return totalTasks; }
@@ -70,4 +78,6 @@ public class TaskRuntimeSummary
     public long getTerminated() { return terminated; }
     public long getSendFailed() { return sendFailed; }
     public long getProtocolExceptions() { return protocolExceptions; }
+    public RuntimeResourceSnapshot getRuntimeResources() { return runtimeResources; }
+    public SchedulerDelaySummary getSchedulerDelay() { return schedulerDelay; }
 }

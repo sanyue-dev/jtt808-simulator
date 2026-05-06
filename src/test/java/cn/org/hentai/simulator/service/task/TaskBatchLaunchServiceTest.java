@@ -23,7 +23,8 @@ class TaskBatchLaunchServiceTest
     private final RecordingTaskGateway taskGateway = new RecordingTaskGateway();
     private final RecordingScheduler launchScheduler = new RecordingScheduler();
     private final RecordingScheduler stopScheduler = new RecordingScheduler();
-    private final TaskBatchLaunchService service = new TaskBatchLaunchService(new FakeRouteService(), taskGateway, launchScheduler, stopScheduler);
+    private final RecordingCapacityProbe capacityProbe = new RecordingCapacityProbe();
+    private final TaskBatchLaunchService service = new TaskBatchLaunchService(new FakeRouteService(), taskGateway, launchScheduler, stopScheduler, capacityProbe);
 
     @Test
     void validatesGeneralBatchLaunchConfig()
@@ -46,6 +47,19 @@ class TaskBatchLaunchServiceTest
     }
 
     @Test
+    void rejectsZeroTerminalCountWithoutDividingByZero()
+    {
+        BatchTaskLaunchRequest request = validRequest();
+        request.setTerminalCount(0);
+        request.setRunDurationSeconds(300);
+        request.setRampUpBatchSize(0);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> service.validate(request));
+
+        assertEquals("终端数量必须在 1 到 100000 之间; ramp-up 批次大小必须大于 0", ex.getMessage());
+    }
+
+    @Test
     void rejectsRampUpWindowThatOutlivesRunDuration()
     {
         BatchTaskLaunchRequest request = validRequest();
@@ -57,6 +71,53 @@ class TaskBatchLaunchServiceTest
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> service.validate(request));
 
         assertEquals("ramp-up 最后启动窗口必须早于运行时长: lastLaunchDelayMillis=990000, runDurationMillis=300000", ex.getMessage());
+    }
+
+    @Test
+    void failsPreflightWhenFileDescriptorCapacityIsInsufficient()
+    {
+        BatchTaskLaunchRequest request = validRequest();
+        request.setTerminalCount(1000);
+        capacityProbe.openFileDescriptorCount = 100L;
+        capacityProbe.maxFileDescriptorCount = 500L;
+
+        PreflightCheckResult result = service.preflight(request);
+
+        assertEquals(true, result.hasFailures());
+        assertEquals("本机文件描述符余量不足: available=400, required=1064, open=100, max=500", result.getFailures().get(0));
+        assertEquals(100L, result.getOpenFileDescriptorCount());
+        assertEquals(500L, result.getMaxFileDescriptorCount());
+        assertEquals(1064L, result.getRequiredFileDescriptorCount());
+    }
+
+    @Test
+    void preflightLaunchFailuresCarryDiagnosticResult()
+    {
+        BatchTaskLaunchRequest request = validRequest();
+        request.setTerminalCount(1000);
+        capacityProbe.openFileDescriptorCount = 100L;
+        capacityProbe.maxFileDescriptorCount = 500L;
+
+        PreflightCheckException ex = assertThrows(PreflightCheckException.class, () -> service.launch(request));
+
+        assertEquals("本机文件描述符余量不足: available=400, required=1064, open=100, max=500", ex.getMessage());
+        assertEquals(ex.getPreflight().getFailures().get(0), ex.getMessage());
+        assertEquals(100L, ex.getPreflight().getOpenFileDescriptorCount());
+        assertEquals(500L, ex.getPreflight().getMaxFileDescriptorCount());
+        assertEquals(1064L, ex.getPreflight().getRequiredFileDescriptorCount());
+    }
+
+    @Test
+    void warnsWhenSingleDestinationEphemeralPortCapacityIsRisky()
+    {
+        BatchTaskLaunchRequest request = validRequest();
+        request.setTerminalCount(30000);
+
+        PreflightCheckResult result = service.preflight(request);
+
+        assertEquals(false, result.hasFailures());
+        assertEquals("单源 IP 到同一服务端地址端口的临时端口容量存在风险: requested=30000, estimatedCapacity=28000", result.getWarnings().get(0));
+        assertEquals(28000L, result.getSingleDestinationEphemeralPortCapacity());
     }
 
     @Test
@@ -87,6 +148,7 @@ class TaskBatchLaunchServiceTest
         assertEquals(3, result.getScheduledTasks());
         assertEquals(2, result.getRampUpWindowCount());
         assertEquals(true, result.isAutoStopScheduled());
+        assertEquals(false, result.getPreflight().hasFailures());
         assertEquals(List.of(0L, 1000L), launchScheduler.delays);
         assertEquals(List.of(30000L), stopScheduler.delays);
 
@@ -187,6 +249,31 @@ class TaskBatchLaunchServiceTest
         void runAll()
         {
             tasks.forEach(Runnable::run);
+        }
+    }
+
+    private static class RecordingCapacityProbe implements TaskBatchLaunchService.CapacityProbe
+    {
+        private long openFileDescriptorCount = 10L;
+        private long maxFileDescriptorCount = 200000L;
+        private long singleDestinationEphemeralPortCapacity = 28000L;
+
+        @Override
+        public long openFileDescriptorCount()
+        {
+            return openFileDescriptorCount;
+        }
+
+        @Override
+        public long maxFileDescriptorCount()
+        {
+            return maxFileDescriptorCount;
+        }
+
+        @Override
+        public long singleDestinationEphemeralPortCapacity()
+        {
+            return singleDestinationEphemeralPortCapacity;
         }
     }
 

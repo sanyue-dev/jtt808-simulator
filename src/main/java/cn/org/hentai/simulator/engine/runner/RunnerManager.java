@@ -14,10 +14,12 @@ public final class RunnerManager
 {
     static final RunnerManager instance = new RunnerManager();
     private final ScheduledExecutorService scheduler;
+    private final SchedulerDelayMetrics schedulerDelayMetrics;
 
     private RunnerManager()
     {
         this.scheduler = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+        this.schedulerDelayMetrics = new SchedulerDelayMetrics();
     }
 
     // 只要在应用程序启动时调用一下这个方法，就可以完成本类的static变量的初始化，省得加锁了
@@ -44,9 +46,16 @@ public final class RunnerManager
 
     // 委托在milliseconds时间后运行某任务
     public void execute(AbstractDriveTask driveTask, Executable task, int milliseconds, int interval) {
+        long plannedAtMillis = System.currentTimeMillis() + Math.max(milliseconds, 0);
         scheduler.schedule(() -> {
+            schedulerDelayMetrics.record(plannedAtMillis, System.currentTimeMillis());
             task.execute(driveTask);
         }, milliseconds, TimeUnit.MILLISECONDS);
+    }
+
+    public SchedulerDelaySummary getSchedulerDelaySummary()
+    {
+        return schedulerDelayMetrics.summary();
     }
 
     // 关闭线程组里的所有LoopRunner

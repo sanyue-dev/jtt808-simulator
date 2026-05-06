@@ -2,6 +2,7 @@ package cn.org.hentai.simulator.service.monitor;
 
 import cn.org.hentai.simulator.domain.model.TaskInfo;
 import cn.org.hentai.simulator.domain.model.TaskLifecycleObserver;
+import cn.org.hentai.simulator.engine.runner.RunnerManager;
 import org.yzh.protocol.basics.JTMessage;
 import org.yzh.protocol.commons.JT808;
 
@@ -13,6 +14,7 @@ import java.util.function.LongSupplier;
 public class TaskRuntimeMetrics implements TaskLifecycleObserver
 {
     private final LongSupplier clock;
+    private final RuntimeResourceProbe runtimeResourceProbe;
     private final long startedAtMillis;
     private final AtomicLong connectionSucceeded = new AtomicLong();
     private final AtomicLong connectionFailed = new AtomicLong();
@@ -29,12 +31,18 @@ public class TaskRuntimeMetrics implements TaskLifecycleObserver
 
     public TaskRuntimeMetrics()
     {
-        this(System::currentTimeMillis);
+        this(System::currentTimeMillis, new RuntimeResourceProbe());
     }
 
     TaskRuntimeMetrics(LongSupplier clock)
     {
+        this(clock, new RuntimeResourceProbe());
+    }
+
+    TaskRuntimeMetrics(LongSupplier clock, RuntimeResourceProbe runtimeResourceProbe)
+    {
         this.clock = clock;
+        this.runtimeResourceProbe = runtimeResourceProbe;
         this.startedAtMillis = clock.getAsLong();
     }
 
@@ -137,7 +145,9 @@ public class TaskRuntimeMetrics implements TaskLifecycleObserver
                 disconnected.get(),
                 terminated.get(),
                 sendFailed.get(),
-                protocolExceptions.get()
+                protocolExceptions.get(),
+                runtimeResourceProbe.snapshot(),
+                RunnerManager.getInstance().getSchedulerDelaySummary()
         );
     }
 
