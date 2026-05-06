@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
@@ -21,6 +23,9 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +40,7 @@ public class TaskBatchLaunchService
     private final TaskScheduler stopScheduler;
     private final CapacityProbe capacityProbe;
     private final TaskIdentityBatchGenerator identityBatchGenerator;
+    private final AtomicReference<LaunchSession> currentSession = new AtomicReference<>();
 
     @Autowired
     public TaskBatchLaunchService(RouteService routeService)
@@ -72,7 +78,8 @@ public class TaskBatchLaunchService
         int batchSize = effectiveRampUpBatchSize(request);
         List<TaskLaunchWindow> windows = buildLaunchWindows(request.getTerminalCount(), batchSize, request.getRampUpIntervalMillis());
         List<TerminalIdentity> identities = identityBatchGenerator.generate(request.getTerminalCount(), taskGateway.reserveIndexes(request.getTerminalCount()), request.getVehicleNumberPattern(), request.getDeviceSnPattern(), request.getSimNumberPattern());
-        LaunchSession session = new LaunchSession();
+        LaunchSession session = new LaunchSession(request.getTerminalCount(), windows.size(), request.getRunDurationSeconds() > 0);
+        currentSession.set(session);
 
         try
         {
@@ -89,9 +96,17 @@ public class TaskBatchLaunchService
         }
         catch(RuntimeException ex)
         {
+            session.fail(ex);
             stopSession(session);
             throw new RuntimeException("批量任务启动失败，已请求终止已启动任务", ex);
         }
+    }
+
+    public BatchTaskLaunchProgress currentProgress()
+    {
+        LaunchSession session = currentSession.get();
+        if (session == null) return BatchTaskLaunchProgress.empty();
+        return session.progress();
     }
 
     public void validate(BatchTaskLaunchRequest request)
@@ -222,6 +237,7 @@ public class TaskBatchLaunchService
 
     private void launchWindow(BatchTaskLaunchRequest request, List<Route> routes, List<TerminalIdentity> identities, TaskLaunchWindow window, LaunchSession session)
     {
+        session.recordWindowStarted();
         try
         {
             for (int i = window.getStartIndex(); i < window.getEndIndex(); i++)
@@ -232,14 +248,25 @@ public class TaskBatchLaunchService
                 long taskId = taskGateway.nextTaskId();
                 taskGateway.run(taskId, params(request, identity), route.getId(), request.getReportIntervalSeconds());
                 session.taskIds.add(taskId);
-                if (session.stopping.get()) taskGateway.terminateTasks(List.of(taskId));
+                session.startedTasks.incrementAndGet();
+                if (session.stopping.get())
+                {
+                    TaskStopResult result = taskGateway.terminateTasks(List.of(taskId));
+                    session.recordStopResult(List.of(taskId), result);
+                }
             }
+            session.recordWindowExecuted();
         }
         catch(RuntimeException ex)
         {
             logger.error("批量任务启动窗口失败: startIndex={}, endIndex={}, delayMillis={}", window.getStartIndex(), window.getEndIndex(), window.getDelayMillis(), ex);
+            session.fail(ex);
             stopSession(session);
             throw ex;
+        }
+        finally
+        {
+            session.recordWindowFinished();
         }
     }
 
@@ -262,7 +289,9 @@ public class TaskBatchLaunchService
         session.launchFutures.forEach(future -> {
             if (future.isDone() == false) future.cancel(false);
         });
-        TaskStopResult result = taskGateway.terminateTasks(session.taskIds);
+        List<Long> taskIds = new ArrayList<>(session.taskIds);
+        TaskStopResult result = taskGateway.terminateTasks(taskIds);
+        session.recordStopResult(taskIds, result);
         if (result.getFailed() > 0)
         {
             logger.error("批量任务自动停止存在失败: succeeded={}, failed={}, failures={}", result.getSucceeded(), result.getFailed(), result.getFailures());
@@ -364,8 +393,86 @@ public class TaskBatchLaunchService
 
     private static class LaunchSession
     {
+        private final int targetTasks;
+        private final int rampUpWindowCount;
+        private final boolean autoStopScheduled;
         private final AtomicBoolean stopping = new AtomicBoolean(false);
+        private final AtomicBoolean stopRequested = new AtomicBoolean(false);
+        private final AtomicInteger runningWindowCount = new AtomicInteger();
+        private final AtomicInteger executedWindowCount = new AtomicInteger();
+        private final AtomicInteger startedTasks = new AtomicInteger();
         private final Queue<Long> taskIds = new ConcurrentLinkedQueue<>();
+        private final Set<Long> stoppedTaskIds = ConcurrentHashMap.newKeySet();
         private final CopyOnWriteArrayList<ScheduledFuture<?>> launchFutures = new CopyOnWriteArrayList<>();
+        private final AtomicReference<String> state = new AtomicReference<>("launching");
+        private final AtomicReference<String> failureReason = new AtomicReference<>();
+        private final AtomicLong stopSucceeded = new AtomicLong();
+        private final AtomicLong stopFailed = new AtomicLong();
+
+        private LaunchSession(int targetTasks, int rampUpWindowCount, boolean autoStopScheduled)
+        {
+            this.targetTasks = targetTasks;
+            this.rampUpWindowCount = rampUpWindowCount;
+            this.autoStopScheduled = autoStopScheduled;
+        }
+
+        private void recordWindowExecuted()
+        {
+            int executed = executedWindowCount.incrementAndGet();
+            if (executed >= rampUpWindowCount) state.compareAndSet("launching", "running");
+        }
+
+        private void recordWindowStarted()
+        {
+            runningWindowCount.incrementAndGet();
+        }
+
+        private void recordWindowFinished()
+        {
+            runningWindowCount.decrementAndGet();
+            completeIfStopped();
+        }
+
+        private void fail(RuntimeException ex)
+        {
+            failureReason.compareAndSet(null, ex.getMessage());
+            state.set("failed");
+        }
+
+        private void recordStopResult(Collection<Long> taskIds, TaskStopResult result)
+        {
+            stopRequested.set(true);
+            Set<Long> failedTaskIds = new java.util.HashSet<>();
+            result.getFailures().forEach(failure -> failedTaskIds.add(failure.getTaskId()));
+            for (Long taskId : taskIds)
+            {
+                if (stoppedTaskIds.add(taskId) == false) continue;
+                if (failedTaskIds.contains(taskId)) stopFailed.incrementAndGet();
+                else stopSucceeded.incrementAndGet();
+            }
+            if ("failed".equals(state.get())) return;
+            completeIfStopped();
+        }
+
+        private void completeIfStopped()
+        {
+            if (stopRequested.get() && runningWindowCount.get() == 0 && "failed".equals(state.get()) == false) state.set("completed");
+        }
+
+        private BatchTaskLaunchProgress progress()
+        {
+            String currentState = stopping.get() && ("launching".equals(state.get()) || runningWindowCount.get() > 0) ? "stopping" : state.get();
+            return BatchTaskLaunchProgress.of(
+                    currentState,
+                    targetTasks,
+                    rampUpWindowCount,
+                    executedWindowCount.get(),
+                    startedTasks.get(),
+                    autoStopScheduled,
+                    failureReason.get(),
+                    stopSucceeded.get(),
+                    stopFailed.get()
+            );
+        }
     }
 }

@@ -124,6 +124,21 @@
             <div class="card-section__actions">
                 <button class="btn btn--blue" id="btn-run" style="min-width: 120px; height: 38px; line-height: 38px; font-size: 14px;">创建任务</button>
                 </div>
+
+            <div class="card-section batch-progress" id="batch-progress" style="display:none;">
+                <div class="card-section-header">
+                    <h3>当前启动进度</h3>
+                </div>
+                <div class="batch-progress__grid">
+                    <div class="batch-progress__item"><span>状态</span><strong data-field="state">-</strong></div>
+                    <div class="batch-progress__item"><span>目标终端数</span><strong data-field="targetTasks">0</strong></div>
+                    <div class="batch-progress__item"><span>已启动任务</span><strong data-field="startedTasks">0</strong></div>
+                    <div class="batch-progress__item"><span>启动窗口</span><strong data-field="windowProgress">0 / 0</strong></div>
+                    <div class="batch-progress__item"><span>自动停止</span><strong data-field="autoStopScheduled">否</strong></div>
+                    <div class="batch-progress__item"><span>停止结果</span><strong data-field="stopResult">0 / 0</strong></div>
+                </div>
+                <div class="batch-progress__failure" data-field="failureReason" style="display:none;"></div>
+            </div>
             </div>
         </div>
     </div>
@@ -182,11 +197,41 @@
         background: var(--color-bg-muted); padding: 2px 8px; border-radius: var(--radius-sm);
         white-space: nowrap;
     }
+    .batch-progress__grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 8px;
+    }
+    .batch-progress__item {
+        border: 1px solid var(--color-border);
+        background: var(--color-bg-panel);
+        padding: 10px 12px;
+    }
+    .batch-progress__item span {
+        display: block;
+        color: var(--color-text-secondary);
+        font-size: 12px;
+        margin-bottom: 4px;
+    }
+    .batch-progress__item strong {
+        color: var(--color-text-primary);
+        font-size: 18px;
+        font-weight: 600;
+    }
+    .batch-progress__failure {
+        margin-top: 10px;
+        border: 1px solid #d9534f;
+        color: #d9534f;
+        background: rgba(217, 83, 79, .08);
+        padding: 10px 12px;
+        font-size: 13px;
+    }
 </style>
 <script type="text/javascript">
     $(document).ready(function()
     {
         setCurrentMenu('batch');
+        var progressTimer = null;
 
         function updateCount()
         {
@@ -223,6 +268,63 @@
         $('#deviceSnPattern').on('input', function() { refreshPreview('deviceSnPattern', 'preview-sn'); });
         $('#simNumberPattern').on('input', function() { refreshPreview('simNumberPattern', 'preview-sim'); });
 
+        function startProgressPolling()
+        {
+            loadProgress();
+            if (progressTimer) clearInterval(progressTimer);
+            progressTimer = setInterval(loadProgress, 1000);
+        }
+
+        function stopProgressPollingIfFinished(data)
+        {
+            if (!data || data.empty) return;
+            if ((data.state === 'running' && !data.autoStopScheduled) || data.state === 'completed' || data.state === 'failed')
+            {
+                clearInterval(progressTimer);
+                progressTimer = null;
+            }
+        }
+
+        function loadProgress()
+        {
+            $.post('./progress', function(result)
+            {
+                if (result.error && result.error.code) return toastr('error', result.error.reason);
+                renderProgress(result.data || {});
+                stopProgressPollingIfFinished(result.data || {});
+            });
+        }
+
+        function renderProgress(data)
+        {
+            if (data.empty) return;
+            $('#batch-progress').show();
+            $('#batch-progress [data-field="state"]').text(formatState(data.state));
+            $('#batch-progress [data-field="targetTasks"]').text(data.targetTasks || 0);
+            $('#batch-progress [data-field="startedTasks"]').text(data.startedTasks || 0);
+            $('#batch-progress [data-field="windowProgress"]').text((data.executedWindowCount || 0) + ' / ' + (data.rampUpWindowCount || 0));
+            $('#batch-progress [data-field="autoStopScheduled"]').text(data.autoStopScheduled ? '是' : '否');
+            $('#batch-progress [data-field="stopResult"]').text((data.stopSucceeded || 0) + ' / ' + (data.stopFailed || 0));
+            if (data.failureReason)
+            {
+                $('#batch-progress [data-field="failureReason"]').text(data.failureReason).show();
+            }
+            else
+            {
+                $('#batch-progress [data-field="failureReason"]').hide();
+            }
+        }
+
+        function formatState(state)
+        {
+            if (state === 'launching') return '启动中';
+            if (state === 'running') return '运行中';
+            if (state === 'stopping') return '停止中';
+            if (state === 'completed') return '已完成';
+            if (state === 'failed') return '失败';
+            return '-';
+        }
+
         // 提交
         $('#btn-run').click(function()
         {
@@ -250,6 +352,7 @@
             {
                 if (result.error && result.error.code) return toastr('error', result.error.reason);
                 toastr('success', '启动成功');
+                startProgressPolling();
             });
         });
     });

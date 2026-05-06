@@ -167,6 +167,109 @@ class TaskBatchLaunchServiceTest
         assertEquals(Set.of(1L, 2L, 3L), taskGateway.terminatedTaskIds);
     }
 
+    @Test
+    void exposesCurrentBatchLaunchProgressWhileRampUpWindowsRun()
+    {
+        BatchTaskLaunchRequest request = validRequest();
+        request.setTerminalCount(3);
+        request.setRampUpBatchSize(2);
+        request.setRampUpIntervalMillis(1000);
+
+        service.launch(request);
+
+        BatchTaskLaunchProgress progress = service.currentProgress();
+        assertEquals(false, progress.isEmpty());
+        assertEquals("launching", progress.getState());
+        assertEquals(3, progress.getTargetTasks());
+        assertEquals(2, progress.getRampUpWindowCount());
+        assertEquals(0, progress.getExecutedWindowCount());
+        assertEquals(0, progress.getStartedTasks());
+
+        launchScheduler.runNext();
+
+        progress = service.currentProgress();
+        assertEquals("launching", progress.getState());
+        assertEquals(1, progress.getExecutedWindowCount());
+        assertEquals(2, progress.getStartedTasks());
+
+        launchScheduler.runNext();
+
+        progress = service.currentProgress();
+        assertEquals("running", progress.getState());
+        assertEquals(2, progress.getExecutedWindowCount());
+        assertEquals(3, progress.getStartedTasks());
+    }
+
+    @Test
+    void recordsStopResultInCurrentBatchLaunchProgress()
+    {
+        BatchTaskLaunchRequest request = validRequest();
+        request.setTerminalCount(3);
+        request.setRunDurationSeconds(30);
+        request.setRampUpBatchSize(3);
+
+        service.launch(request);
+        launchScheduler.runAll();
+
+        stopScheduler.runAll();
+
+        BatchTaskLaunchProgress progress = service.currentProgress();
+        assertEquals("completed", progress.getState());
+        assertEquals(3, progress.getStartedTasks());
+        assertEquals(3L, progress.getStopSucceeded());
+        assertEquals(0L, progress.getStopFailed());
+    }
+
+    @Test
+    void recordsTaskStoppedAfterAutoStopSnapshot()
+    {
+        BatchTaskLaunchRequest request = validRequest();
+        request.setTerminalCount(1);
+        request.setRunDurationSeconds(30);
+        taskGateway.afterRun = () -> {
+            stopScheduler.runAll();
+            assertEquals("stopping", service.currentProgress().getState());
+            assertEquals(0L, service.currentProgress().getStopSucceeded());
+        };
+
+        service.launch(request);
+        launchScheduler.runNext();
+
+        BatchTaskLaunchProgress progress = service.currentProgress();
+        assertEquals("completed", progress.getState());
+        assertEquals(1, progress.getStartedTasks());
+        assertEquals(1L, progress.getStopSucceeded());
+        assertEquals(Set.of(1L), taskGateway.terminatedTaskIds);
+    }
+
+    @Test
+    void recordsLaunchFailureInCurrentBatchLaunchProgress()
+    {
+        BatchTaskLaunchRequest request = validRequest();
+        request.setTerminalCount(3);
+        request.setRampUpBatchSize(3);
+        taskGateway.failOnRun = true;
+
+        service.launch(request);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> launchScheduler.runAll());
+        assertEquals("route start failed", ex.getMessage());
+
+        BatchTaskLaunchProgress progress = service.currentProgress();
+        assertEquals("failed", progress.getState());
+        assertEquals(0, progress.getStartedTasks());
+        assertEquals("route start failed", progress.getFailureReason());
+    }
+
+    @Test
+    void returnsEmptyProgressBeforeAnyBatchLaunch()
+    {
+        BatchTaskLaunchProgress progress = service.currentProgress();
+
+        assertEquals(true, progress.isEmpty());
+        assertEquals("empty", progress.getState());
+    }
+
     private BatchTaskLaunchRequest validRequest()
     {
         BatchTaskLaunchRequest request = new BatchTaskLaunchRequest();
@@ -200,6 +303,8 @@ class TaskBatchLaunchServiceTest
         private long nextTaskId = 1L;
         private final List<StartedTask> started = new ArrayList<>();
         private final Set<Long> terminatedTaskIds = new HashSet<>();
+        private boolean failOnRun = false;
+        private Runnable afterRun = null;
 
         @Override
         public long reserveIndexes(int count)
@@ -216,7 +321,9 @@ class TaskBatchLaunchServiceTest
         @Override
         public void run(long taskId, Map<String, String> params, Long routeId, int reportIntervalSeconds)
         {
+            if (failOnRun) throw new RuntimeException("route start failed");
             started.add(new StartedTask(taskId, params, routeId, reportIntervalSeconds));
+            if (afterRun != null) afterRun.run();
         }
 
         @Override
@@ -249,6 +356,11 @@ class TaskBatchLaunchServiceTest
         void runAll()
         {
             tasks.forEach(Runnable::run);
+        }
+
+        void runNext()
+        {
+            tasks.remove(0).run();
         }
     }
 
