@@ -17,7 +17,7 @@
 
             <!-- 线路选择 -->
             <div class="card-section">
-                <div class="card-section-header">
+                <div class="card-section__header">
                     <h3>行驶线路</h3>
                     <div class="batch__route-toolbar">
                         <button type="button" class="batch__toolbar-btn" id="btn-select-all">全选</button>
@@ -43,7 +43,7 @@
 
             <!-- 车辆配置 -->
             <div class="card-section">
-                <div class="card-section-header">
+                <div class="card-section__header">
                     <h3>车辆配置</h3>
                 </div>
                 <div class="card-section__fields">
@@ -78,7 +78,7 @@
 
             <!-- 服务器配置 -->
             <div class="card-section">
-                <div class="card-section-header">
+                <div class="card-section__header">
                     <h3>服务器配置</h3>
                 </div>
                 <div class="card-section__fields">
@@ -88,14 +88,14 @@
                     </div>
                     <div class="card-section__field">
                         <label class="card-section__label">端口</label>
-                        <input type="text" name="serverPort" id="serverPort" class="card-section__input" style="max-width: 140px;" value="${vehicleServerPort}" />
+                        <input type="text" name="serverPort" id="serverPort" class="card-section__input" value="${vehicleServerPort}" />
                     </div>
                 </div>
             </div>
 
             <!-- 启动控制 -->
             <div class="card-section">
-                <div class="card-section-header">
+                <div class="card-section__header">
                     <h3>启动控制</h3>
                 </div>
                 <div class="card-section__fields">
@@ -121,12 +121,15 @@
             </div>
 
             <!-- 提交 -->
+            <div class="batch__creation-note">
+                创建后会生成 Task Group，并进入任务组监控页观察批量启动进度。
+            </div>
             <div class="card-section__actions">
-                <button class="btn btn--blue" id="btn-run" style="min-width: 120px; height: 38px; line-height: 38px; font-size: 14px;">创建任务</button>
-                </div>
+                <button class="btn btn--blue batch__primary-action" id="btn-run">创建任务</button>
+            </div>
 
             <div class="card-section batch-progress" id="batch-progress" style="display:none;">
-                <div class="card-section-header">
+                <div class="card-section__header">
                     <h3>当前启动进度</h3>
                 </div>
                 <div class="batch-progress__grid">
@@ -150,14 +153,14 @@
 
     .batch__route-toolbar { display: flex; align-items: center; gap: 12px; }
     .batch__toolbar-btn {
-        background: none; border: none; cursor: pointer;
+        background: var(--color-bg-panel); border: 1px solid var(--color-border); cursor: pointer;
         font-size: 12px; color: var(--color-text-secondary); padding: 2px 0;
         transition: color var(--transition-fast);
     }
     .batch__toolbar-btn:hover { color: var(--color-text-primary); }
     .batch__selected-count {
         font-size: 11px; color: var(--color-text-secondary);
-        background: var(--color-bg-muted); padding: 2px 8px; border-radius: var(--radius-sm);
+        background: var(--color-bg-muted); padding: 2px 8px; border-radius: var(--radius-none);
     }
 
     .batch__route-hint {
@@ -194,9 +197,16 @@
     .batch__route-name { flex: 1; font-size: 13px; color: var(--color-text-primary); }
     .batch__route-tag {
         font-size: 11px; color: var(--color-text-secondary);
-        background: var(--color-bg-muted); padding: 2px 8px; border-radius: var(--radius-sm);
+        background: var(--color-bg-muted); padding: 2px 8px; border-radius: var(--radius-none);
         white-space: nowrap;
     }
+    .batch__creation-note {
+        color: var(--color-text-secondary);
+        font-size: 12px;
+        line-height: 1.5;
+        margin-top: 12px;
+    }
+    .batch__primary-action { min-width: 120px; }
     .batch-progress__grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));

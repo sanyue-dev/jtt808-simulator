@@ -374,6 +374,7 @@ form .grid__row { min-height: 30px; line-height: 30px; }
 }
 .card-section__fields { display: flex; flex-wrap: wrap; gap: 16px 32px; }
 .card-section__field { display: flex; flex-direction: column; gap: 6px; min-width: 200px; flex: 1; }
+.card-section__field--narrow { flex: 0 0 180px; min-width: 140px; }
 .card-section__label { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); }
 .card-section__input {
     height: 40px; padding: 0 16px; width: 100%;
@@ -384,6 +385,7 @@ form .grid__row { min-height: 30px; line-height: 30px; }
 }
 .card-section__input:focus { border-color: var(--color-border-focus); box-shadow: inset 0 -1px 0 var(--color-border-focus); outline: none; }
 .card-section__hint { font-size: 11px; color: var(--color-text-secondary); margin-top: -2px; }
+.card-section__field-hint { font-size: 11px; color: var(--color-text-secondary); margin-top: -2px; }
 .card-section__input-group { display: flex; align-items: center; gap: 12px; }
 .card-section__input-group .card-section__input { flex: 1; }
 .card-section__preview {
@@ -393,6 +395,65 @@ form .grid__row { min-height: 30px; line-height: 30px; }
     padding: 6px 10px; border-radius: var(--radius-none); min-width: 100px; text-align: center;
 }
 .card-section__actions { margin-top: 24px; padding-left: 4px; }
+
+/* ========== Custom dropdown (shared) ========== */
+.task__dropdown { position: relative; width: 100%; }
+.task__dropdown-trigger {
+    height: 40px; width: 100%; padding: 0 36px 0 16px;
+    box-sizing: border-box;
+    border: 0; border-bottom: 1px solid var(--color-border); border-radius: var(--radius-none);
+    background: var(--color-bg-panel-muted); color: var(--color-text-primary);
+    font-size: 13px; cursor: pointer;
+    display: flex; align-items: center;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+}
+.task__dropdown-trigger:hover { background: var(--color-bg-muted); }
+.task__dropdown.is-open .task__dropdown-trigger {
+    border-color: var(--color-border-focus);
+    box-shadow: inset 0 -1px 0 var(--color-border-focus);
+}
+.task__dropdown-text {
+    flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.task__dropdown.is-unselected .task__dropdown-text { color: var(--color-text-secondary); opacity: .8; }
+.task__dropdown-arrow {
+    position: absolute; right: 12px; top: 20px; transform: translateY(-50%);
+    color: var(--color-text-secondary); font-size: 12px;
+    transition: transform var(--transition-fast);
+    pointer-events: none;
+}
+.task__dropdown.is-open .task__dropdown-arrow { transform: translateY(-50%) rotate(180deg); }
+.task__dropdown-menu {
+    position: absolute; left: 0; right: 0; top: 100%;
+    opacity: 0; visibility: hidden;
+    max-height: 240px; overflow-y: auto;
+    background: var(--color-bg-panel);
+    border: 1px solid var(--color-border-focus); border-top: none;
+    box-sizing: border-box; z-index: 100;
+    transition: opacity .15s ease, visibility .15s ease;
+}
+.task__dropdown.is-open .task__dropdown-menu {
+    opacity: 1; visibility: visible;
+}
+.task__dropdown-option {
+    padding: 10px 16px; font-size: 13px; color: var(--color-text-primary);
+    cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+.task__dropdown-option:hover { background: var(--color-bg-sidebar-hover); }
+.task__dropdown-option.is-selected {
+    background: var(--color-bg-sidebar-active); color: var(--color-text-inverse);
+}
+.task__dropdown-option.is-selected:hover { background: var(--color-primary-hover); }
+.task__dropdown--compact .task__dropdown-trigger {
+    height: 32px; padding: 0 32px 0 12px;
+    border: 1px solid var(--color-border); background: var(--color-bg-panel);
+}
+.task__dropdown--compact.is-open .task__dropdown-trigger {
+    border-color: var(--color-border-focus); box-shadow: none;
+}
+.task__dropdown--compact .task__dropdown-arrow { top: 16px; right: 10px; }
+.task__dropdown--compact .task__dropdown-option { padding: 8px 12px; }
 
 /* ========== Utility ========== */
 .text-center { text-align: center; }

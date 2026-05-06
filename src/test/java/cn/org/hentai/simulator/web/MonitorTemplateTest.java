@@ -24,6 +24,9 @@ class MonitorTemplateTest
         String template = read("/templates/monitor-list-index.ftlh");
 
         assertThat(template).contains("name=\"taskGroupId\"");
+        assertThat(template).contains("id=\"task-group-filter-context\"");
+        assertThat(template).contains("id=\"task-group-filter-value\"");
+        assertThat(template).contains("id=\"task-group-filter-link\"");
         assertThat(template).contains("new URLSearchParams(window.location.search).get('taskGroupId')");
         assertThat(template).contains("taskGroupDisplayName");
         assertThat(template).contains("title: '任务组'");

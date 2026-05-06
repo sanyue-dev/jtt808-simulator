@@ -15,7 +15,7 @@
             <div class="page-body">
                 <form class="monitor-toolbar" id="monitor-filter">
                     <input type="hidden" name="taskGroupId" value="" />
-                    <div class="task__dropdown monitor-toolbar__dropdown is-unselected" id="stateDropdown">
+                    <div class="task__dropdown task__dropdown--compact monitor-toolbar__dropdown is-unselected" id="stateDropdown">
                         <input type="hidden" name="state" value="" />
                         <div class="task__dropdown-trigger" id="stateDropdownTrigger">
                             <span class="task__dropdown-text">全部状态</span>
@@ -34,6 +34,11 @@
                     <button class="btn btn--sm btn--gray" type="button" id="btn-clear-filter">清空</button>
                     <button class="btn btn--sm btn--red" type="button" id="btn-terminate-all">停止全部未终止任务</button>
                 </form>
+                <div class="monitor-filter-context" id="task-group-filter-context">
+                    <span>当前按 Task Group 过滤：</span>
+                    <strong id="task-group-filter-value"></strong>
+                    <a id="task-group-filter-link" href="/task-groups/monitor">查看任务组监控</a>
+                </div>
                 <div id="route-table"></div>
                 <ul class="pagination"></ul>
             </div>
@@ -51,98 +56,35 @@
         flex-wrap: wrap;
     }
     .monitor-toolbar__input {
+        width: 220px;
         height: 32px;
         border: 1px solid var(--color-border);
         background: var(--color-bg-panel);
-        color: var(--color-text-primary);
-        padding: 0 10px;
+        padding: 0 12px;
         font-size: 13px;
     }
     .monitor-toolbar__dropdown {
-        position: relative;
         width: 140px;
     }
-    .monitor-toolbar__dropdown .task__dropdown-trigger {
-        height: 32px;
-        width: 100%;
-        padding: 0 32px 0 10px;
-        box-sizing: border-box;
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-sm);
-        background: var(--color-bg-panel);
-        color: var(--color-text-primary);
-        font-size: 13px;
-        cursor: pointer;
-        display: flex;
+    .monitor-filter-context {
+        display: none;
         align-items: center;
-        transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-    }
-    .monitor-toolbar__dropdown .task__dropdown-trigger:hover { border-color: var(--color-border-strong); }
-    .monitor-toolbar__dropdown.is-open .task__dropdown-trigger {
-        border-color: var(--color-text-primary);
-        border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-    }
-    .monitor-toolbar__dropdown .task__dropdown-text {
-        flex: 1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    .monitor-toolbar__dropdown.is-unselected .task__dropdown-text {
-        color: var(--color-text-secondary);
-        opacity: .8;
-    }
-    .monitor-toolbar__dropdown .task__dropdown-arrow {
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
+        gap: 8px;
+        margin: -2px 0 12px 0;
+        padding: 8px 12px;
+        background: var(--color-bg-panel);
+        border: 1px solid var(--color-border);
         color: var(--color-text-secondary);
         font-size: 12px;
-        transition: transform var(--transition-fast);
-        pointer-events: none;
     }
-    .monitor-toolbar__dropdown.is-open .task__dropdown-arrow { transform: translateY(-50%) rotate(180deg); }
-    .monitor-toolbar__dropdown .task__dropdown-menu {
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 100%;
-        opacity: 0;
-        visibility: hidden;
-        max-height: 220px;
-        overflow-y: auto;
-        background: var(--color-bg-panel);
-        border: 1px solid var(--color-text-primary);
-        border-top: none;
-        box-sizing: border-box;
-        border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-        z-index: 100;
-        box-shadow: 0 4px 12px rgba(0,0,0,.08);
-        transition: opacity .15s ease, visibility .15s ease;
-    }
-    .monitor-toolbar__dropdown.is-open .task__dropdown-menu {
-        opacity: 1;
-        visibility: visible;
-    }
-    .monitor-toolbar__dropdown .task__dropdown-option {
-        padding: 8px 10px;
-        font-size: 13px;
+    .monitor-filter-context strong {
         color: var(--color-text-primary);
-        cursor: pointer;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        transition: background var(--transition-fast), color var(--transition-fast);
+        font-size: 12px;
+        font-weight: 600;
     }
-    .monitor-toolbar__dropdown .task__dropdown-option:hover { background: var(--color-bg-sidebar-hover); }
-    .monitor-toolbar__dropdown .task__dropdown-option.is-selected {
-        background: var(--color-bg-sidebar-active);
-        color: var(--color-text-inverse);
-    }
-    .monitor-toolbar__dropdown .task__dropdown-option.is-selected:hover { background: var(--color-primary-hover); }
-    .monitor-toolbar__input {
-        width: 220px;
+    .monitor-filter-context a {
+        color: var(--color-primary);
+        font-size: 12px;
     }
 </style>
 <script type="text/javascript">
@@ -151,6 +93,12 @@
         setCurrentMenu('list-monitor');
         var initialTaskGroupId = new URLSearchParams(window.location.search).get('taskGroupId') || '';
         $('#monitor-filter input[name="taskGroupId"]').val(initialTaskGroupId);
+        if (initialTaskGroupId)
+        {
+            $('#task-group-filter-value').text(initialTaskGroupId);
+            $('#task-group-filter-link').attr('href', '/task-groups/monitor?taskGroupId=' + encodeURIComponent(initialTaskGroupId));
+            $('#task-group-filter-context').css('display', 'flex');
+        }
 
         function reloadTable()
         {
@@ -333,6 +281,7 @@
         {
             $('#monitor-filter').get(0).reset();
             $('#monitor-filter input[name="taskGroupId"]').val('');
+            $('#task-group-filter-context').hide();
             resetStateDropdown();
             reloadTable();
         });
