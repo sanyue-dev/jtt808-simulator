@@ -13,7 +13,7 @@ class TaskGroupMonitorTemplateTest
     {
         String template = read("/templates/task-group-monitor.ftlh");
 
-        assertThat(template).contains("$.post('/task-groups/snapshot'");
+        assertThat(template).contains("$.post('/task-groups/snapshot', function(result)");
         assertThat(template).contains("setInterval(loadSnapshot, 1000)");
         assertThat(template).contains("expandedTaskGroupIds");
         assertThat(template).contains("data-field=\"runtimeSummary.totalTasks\"");
