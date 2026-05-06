@@ -37,6 +37,32 @@ class ConnectionPoolTest
     }
 
     @Test
+    void intentionalCloseDoesNotReportMissingChannelWhenLateInboundMessageArrives(CapturedOutput output)
+    {
+        ConnectionPool pool = ConnectionPool.getInstance();
+        EmbeddedChannel channel = new EmbeddedChannel();
+        String channelId = channel.id().asLongText();
+
+        pool.connections.put(channelId, new ConnectionPool.Connection(channel, null));
+
+        try
+        {
+            pool.close(channelId);
+            pool.notify("message_received", channelId, "8300", null);
+            pool.notify("disconnected", channelId, null, null);
+
+            assertFalse(output.getOut().contains("no channel found for: " + channelId));
+            assertFalse(output.getErr().contains("no channel found for: " + channelId));
+        }
+        finally
+        {
+            pool.connections.remove(channelId);
+            pool.intentionallyClosedChannels.remove(channelId);
+            channel.close();
+        }
+    }
+
+    @Test
     void unknownChannelStillReportsMissingChannel(CapturedOutput output)
     {
         String channelId = "unknown-channel-id";
