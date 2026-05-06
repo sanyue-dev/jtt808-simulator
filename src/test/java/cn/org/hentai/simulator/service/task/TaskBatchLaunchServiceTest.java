@@ -226,7 +226,11 @@ class TaskBatchLaunchServiceTest
         BatchTaskLaunchRequest request = validRequest();
         request.setTerminalCount(1);
         request.setRunDurationSeconds(30);
-        taskGateway.afterRun = stopScheduler::runAll;
+        taskGateway.afterRun = () -> {
+            stopScheduler.runAll();
+            assertEquals("stopping", service.currentProgress().getState());
+            assertEquals(0L, service.currentProgress().getStopSucceeded());
+        };
 
         service.launch(request);
         launchScheduler.runNext();

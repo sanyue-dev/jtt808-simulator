@@ -237,6 +237,7 @@ public class TaskBatchLaunchService
 
     private void launchWindow(BatchTaskLaunchRequest request, List<Route> routes, List<TerminalIdentity> identities, TaskLaunchWindow window, LaunchSession session)
     {
+        session.recordWindowStarted();
         try
         {
             for (int i = window.getStartIndex(); i < window.getEndIndex(); i++)
@@ -262,6 +263,10 @@ public class TaskBatchLaunchService
             session.fail(ex);
             stopSession(session);
             throw ex;
+        }
+        finally
+        {
+            session.recordWindowFinished();
         }
     }
 
@@ -392,6 +397,8 @@ public class TaskBatchLaunchService
         private final int rampUpWindowCount;
         private final boolean autoStopScheduled;
         private final AtomicBoolean stopping = new AtomicBoolean(false);
+        private final AtomicBoolean stopRequested = new AtomicBoolean(false);
+        private final AtomicInteger runningWindowCount = new AtomicInteger();
         private final AtomicInteger executedWindowCount = new AtomicInteger();
         private final AtomicInteger startedTasks = new AtomicInteger();
         private final Queue<Long> taskIds = new ConcurrentLinkedQueue<>();
@@ -415,6 +422,17 @@ public class TaskBatchLaunchService
             if (executed >= rampUpWindowCount) state.compareAndSet("launching", "running");
         }
 
+        private void recordWindowStarted()
+        {
+            runningWindowCount.incrementAndGet();
+        }
+
+        private void recordWindowFinished()
+        {
+            runningWindowCount.decrementAndGet();
+            completeIfStopped();
+        }
+
         private void fail(RuntimeException ex)
         {
             failureReason.compareAndSet(null, ex.getMessage());
@@ -423,6 +441,7 @@ public class TaskBatchLaunchService
 
         private void recordStopResult(Collection<Long> taskIds, TaskStopResult result)
         {
+            stopRequested.set(true);
             Set<Long> failedTaskIds = new java.util.HashSet<>();
             result.getFailures().forEach(failure -> failedTaskIds.add(failure.getTaskId()));
             for (Long taskId : taskIds)
@@ -432,12 +451,17 @@ public class TaskBatchLaunchService
                 else stopSucceeded.incrementAndGet();
             }
             if ("failed".equals(state.get())) return;
-            state.set("completed");
+            completeIfStopped();
+        }
+
+        private void completeIfStopped()
+        {
+            if (stopRequested.get() && runningWindowCount.get() == 0 && "failed".equals(state.get()) == false) state.set("completed");
         }
 
         private BatchTaskLaunchProgress progress()
         {
-            String currentState = stopping.get() && "launching".equals(state.get()) ? "stopping" : state.get();
+            String currentState = stopping.get() && ("launching".equals(state.get()) || runningWindowCount.get() > 0) ? "stopping" : state.get();
             return BatchTaskLaunchProgress.of(
                     currentState,
                     targetTasks,
