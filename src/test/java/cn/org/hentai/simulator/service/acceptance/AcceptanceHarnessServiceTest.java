@@ -59,6 +59,22 @@ class AcceptanceHarnessServiceTest
     }
 
     @Test
+    void rejectsRampUpWindowThatOutlivesRunDuration()
+    {
+        AcceptanceHarnessService service = new AcceptanceHarnessService(null);
+        AcceptanceConfig config = new AcceptanceConfig();
+        config.setTerminalCount(10000);
+        config.setRunDurationSeconds(300);
+        config.setRampUpBatchSize(100);
+        config.setRampUpIntervalMillis(10000);
+        config.setServerAddress("127.0.0.1");
+        config.setServerPort(20021);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> service.validate(config));
+        assertEquals("ramp-up 最后启动窗口必须早于运行时长: lastLaunchDelayMillis=990000, runDurationMillis=300000", ex.getMessage());
+    }
+
+    @Test
     void buildsRampUpLaunchWindows()
     {
         AcceptanceHarnessService service = new AcceptanceHarnessService(null);

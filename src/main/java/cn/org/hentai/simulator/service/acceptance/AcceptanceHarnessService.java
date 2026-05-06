@@ -164,6 +164,11 @@ public class AcceptanceHarnessService
         if (config.getRunDurationSeconds() < 1) throw new IllegalArgumentException("运行时长必须大于 0 秒");
         if (config.getRampUpBatchSize() < 1) throw new IllegalArgumentException("ramp-up 批次大小必须大于 0");
         if (config.getRampUpIntervalMillis() < 1) throw new IllegalArgumentException("ramp-up 间隔必须大于 0 毫秒");
+        long launchWindowCount = (config.getTerminalCount() + (long) config.getRampUpBatchSize() - 1L) / config.getRampUpBatchSize();
+        long lastLaunchDelayMillis = (launchWindowCount - 1L) * config.getRampUpIntervalMillis();
+        long runDurationMillis = config.getRunDurationSeconds() * 1000L;
+        if (lastLaunchDelayMillis >= runDurationMillis)
+            throw new IllegalArgumentException("ramp-up 最后启动窗口必须早于运行时长: lastLaunchDelayMillis=" + lastLaunchDelayMillis + ", runDurationMillis=" + runDurationMillis);
         if (config.getServerAddress() == null || config.getServerAddress().isBlank()) throw new IllegalArgumentException("目标服务端地址不能为空");
         if (config.getServerPort() < 1 || config.getServerPort() > 65535) throw new IllegalArgumentException("目标服务端端口非法: " + config.getServerPort());
     }
