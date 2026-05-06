@@ -24,6 +24,8 @@ public class TaskInfo
     private long reportTime;
     private int stateFlags;
     private int warningFlags;
+    private String failureStage;
+    private String failureReason;
 
     public TaskInfo withSimNumber(String sim)
     {
@@ -127,6 +129,26 @@ public class TaskInfo
     public void setWarningFlags(int warningFlags)
     {
         this.warningFlags = warningFlags;
+    }
+
+    public String getFailureStage()
+    {
+        return failureStage;
+    }
+
+    public void setFailureStage(String failureStage)
+    {
+        this.failureStage = failureStage;
+    }
+
+    public String getFailureReason()
+    {
+        return failureReason;
+    }
+
+    public void setFailureReason(String failureReason)
+    {
+        this.failureReason = failureReason;
     }
 
     public long getReportTime()
@@ -267,6 +289,8 @@ public class TaskInfo
                 ", reportTime=" + reportTime +
                 ", stateFlags=" + stateFlags +
                 ", warningFlags=" + warningFlags +
+                ", failureStage='" + failureStage + '\'' +
+                ", failureReason='" + failureReason + '\'' +
                 '}';
     }
 }

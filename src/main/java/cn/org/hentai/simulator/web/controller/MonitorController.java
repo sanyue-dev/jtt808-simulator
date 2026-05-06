@@ -28,12 +28,15 @@ public class MonitorController extends BaseController
 
     @RequestMapping("/json")
     @ResponseBody
-    public Result listJson(@RequestParam(defaultValue = "1") int pageIndex, @RequestParam(defaultValue = "20") int pageSize)
+    public Result listJson(@RequestParam(defaultValue = "1") int pageIndex,
+                           @RequestParam(defaultValue = "20") int pageSize,
+                           @RequestParam(required = false) String state,
+                           @RequestParam(required = false) String keyword)
     {
         Result result = new Result();
         try
         {
-            Page<TaskInfo> page = TaskManager.getInstance().find(pageIndex, pageSize);
+            Page<TaskInfo> page = TaskManager.getInstance().find(pageIndex, pageSize, state, keyword);
             for (TaskInfo task : page.getList())
             {
                 Route route = routeService.getById(task.getRouteId());
@@ -44,6 +47,54 @@ public class MonitorController extends BaseController
                 }
             }
             result.setData(page);
+        }
+        catch(Exception ex)
+        {
+            result.setError(ex);
+        }
+        return result;
+    }
+
+    @RequestMapping("/summary")
+    @ResponseBody
+    public Result summary()
+    {
+        Result result = new Result();
+        try
+        {
+            result.setData(TaskManager.getInstance().getRuntimeSummary());
+        }
+        catch(Exception ex)
+        {
+            result.setError(ex);
+        }
+        return result;
+    }
+
+    @RequestMapping("/terminate")
+    @ResponseBody
+    public Result terminate(@RequestParam Long id)
+    {
+        Result result = new Result();
+        try
+        {
+            TaskManager.getInstance().terminate(id);
+        }
+        catch(Exception ex)
+        {
+            result.setError(ex);
+        }
+        return result;
+    }
+
+    @RequestMapping("/terminate-all")
+    @ResponseBody
+    public Result terminateAll()
+    {
+        Result result = new Result();
+        try
+        {
+            result.setData(TaskManager.getInstance().terminateActiveTasks());
         }
         catch(Exception ex)
         {

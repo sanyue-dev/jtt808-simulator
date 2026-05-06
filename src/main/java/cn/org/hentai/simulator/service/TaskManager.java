@@ -8,12 +8,18 @@ import cn.org.hentai.simulator.engine.core.AbstractDriveTask;
 import cn.org.hentai.simulator.engine.core.SimpleDriveTask;
 import cn.org.hentai.simulator.engine.log.Log;
 import cn.org.hentai.simulator.engine.runner.Executable;
+import cn.org.hentai.simulator.domain.enums.TaskState;
+import cn.org.hentai.simulator.service.monitor.TaskLifecycleObservers;
+import cn.org.hentai.simulator.service.monitor.TaskRuntimeMetrics;
+import cn.org.hentai.simulator.service.monitor.TaskRuntimeSummary;
+import cn.org.hentai.simulator.service.monitor.TaskStopResult;
 import cn.org.hentai.simulator.web.vo.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -24,10 +30,10 @@ public final class TaskManager
     static Logger logger = LoggerFactory.getLogger(TaskManager.class);
 
     Object lock;
-    // TODO: map的value是无序的，不好做分页，得想个办法
-    ConcurrentHashMap<Long, AbstractDriveTask> tasks;
+    NavigableMap<Long, AbstractDriveTask> tasks;
     AtomicLong sequence;
     AtomicLong index;
+    TaskRuntimeMetrics runtimeMetrics;
 
     static final Comparator<AbstractDriveTask> SORT_COMPARATOR = new Comparator<AbstractDriveTask>()
     {
@@ -44,10 +50,11 @@ public final class TaskManager
     private TaskManager()
     {
         this.lock = new Object();
-        this.tasks = new ConcurrentHashMap<Long, AbstractDriveTask>();
+        this.tasks = new ConcurrentSkipListMap<Long, AbstractDriveTask>();
 
         this.index = new AtomicLong(0L);
         this.sequence = new AtomicLong(0L);
+        this.runtimeMetrics = new TaskRuntimeMetrics();
     }
 
     /**
@@ -73,7 +80,7 @@ public final class TaskManager
         DrivePlan plan = RouteManager.getInstance().generate(routeId, new Date(), reportIntervalSeconds);
 
         AbstractDriveTask task = new SimpleDriveTask(taskId, routeId);
-        task.init(params, plan, lifecycleObserver);
+        task.init(params, plan, TaskLifecycleObservers.composite(runtimeMetrics, lifecycleObserver));
         task.startup();
         tasks.put(task.getId(), task);
     }
@@ -97,17 +104,57 @@ public final class TaskManager
     // 分页查找，用于列表显示运行中的行程任务状态
     public Page<TaskInfo> find(int pageIndex, int pageSize)
     {
-        AbstractDriveTask[] list = tasks.values().toArray(new AbstractDriveTask[0]);
-        Arrays.sort(list, SORT_COMPARATOR);
+        return find(pageIndex, pageSize, null, null);
+    }
+
+    public Page<TaskInfo> find(int pageIndex, int pageSize, String state, String keyword)
+    {
         List<TaskInfo> results = new ArrayList<TaskInfo>(pageSize);
-        for (int k = 0, i = Math.max((pageIndex - 1) * pageSize, 0); k < pageSize && i < list.length; i++, k++)
+        int start = Math.max((pageIndex - 1) * pageSize, 0);
+        long matched = 0L;
+        for (AbstractDriveTask task : tasks.values())
         {
-            results.add(list[i].getInfo());
+            TaskInfo info = task.getInfo();
+            runtimeMetrics.applyFailureInfo(info);
+            if (matches(info, state, keyword) == false) continue;
+            if (matched >= start && results.size() < pageSize) results.add(info);
+            matched++;
         }
         Page<TaskInfo> page = new Page(pageIndex, pageSize);
         page.setList(results);
-        page.setRecordCount(list.length);
+        page.setRecordCount(matched);
         return page;
+    }
+
+    private boolean matches(TaskInfo task, String state, String keyword)
+    {
+        if (StringUtils.hasText(state) && state.equals(task.getState()) == false) return false;
+        if (StringUtils.hasText(keyword) == false) return true;
+        return contains(task.getVehicleNumber(), keyword)
+                || contains(task.getDeviceSn(), keyword)
+                || contains(task.getSimNumber(), keyword);
+    }
+
+    private boolean contains(String value, String keyword)
+    {
+        return value != null && value.contains(keyword);
+    }
+
+    public TaskRuntimeSummary getRuntimeSummary()
+    {
+        long total = 0L;
+        long active = 0L;
+        long parking = 0L;
+        long terminated = 0L;
+        for (AbstractDriveTask task : tasks.values())
+        {
+            total++;
+            TaskState state = task.getState();
+            if (state == TaskState.terminated) terminated++;
+            else active++;
+            if (state == TaskState.parking) parking++;
+        }
+        return runtimeMetrics.summary(total, active, parking, terminated);
     }
 
     // 获取timeAfter时间之后的任务日志
@@ -120,10 +167,14 @@ public final class TaskManager
 
     public TaskInfo getById(Long id)
     {
-        TaskInfo info = null;
         AbstractDriveTask task = tasks.get(id);
         if (task == null) return null;
-        else return task.getInfo();
+        else
+        {
+            TaskInfo info = task.getInfo();
+            runtimeMetrics.applyFailureInfo(info);
+            return info;
+        }
     }
 
     // 获取当前位置信息
@@ -162,6 +213,25 @@ public final class TaskManager
                 driveTask.terminate();
             }
         });
+    }
+
+    public TaskStopResult terminateActiveTasks()
+    {
+        TaskStopResult result = new TaskStopResult();
+        for (AbstractDriveTask task : tasks.values())
+        {
+            if (task.getState() == TaskState.terminated) continue;
+            try
+            {
+                terminate(task.getId());
+                result.recordSuccess();
+            }
+            catch(RuntimeException ex)
+            {
+                result.recordFailure(task.getId(), ex.getMessage());
+            }
+        }
+        return result;
     }
 
     static final TaskManager instance = new TaskManager();
