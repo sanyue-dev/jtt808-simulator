@@ -1,8 +1,9 @@
 package cn.org.hentai.simulator.web.controller;
 
-import cn.org.hentai.simulator.service.TaskManager;
 import cn.org.hentai.simulator.domain.entity.Route;
 import cn.org.hentai.simulator.service.RouteService;
+import cn.org.hentai.simulator.service.task.BatchTaskLaunchRequest;
+import cn.org.hentai.simulator.service.task.TaskBatchLaunchService;
 import cn.org.hentai.simulator.web.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +21,9 @@ public class BatchController extends BaseController
 {
     @Autowired
     RouteService routeService;
+
+    @Autowired
+    TaskBatchLaunchService taskBatchLaunchService;
 
     @Value("${vehicle-server.addr}")
     String vehicleServerAddr;
@@ -50,70 +54,62 @@ public class BatchController extends BaseController
                        @RequestParam String deviceSnPattern,
                        @RequestParam String simNumberPattern,
                        @RequestParam String serverAddress,
-                       @RequestParam String serverPort)
+                       @RequestParam String serverPort,
+                       @RequestParam(defaultValue = "5") int reportIntervalSeconds,
+                       @RequestParam(defaultValue = "0") int runDurationSeconds,
+                       @RequestParam(defaultValue = "0") int rampUpBatchSize,
+                       @RequestParam(defaultValue = "1") int rampUpIntervalMillis)
     {
         Result result = new Result();
         try
         {
-            if (vehicleCount < 1 || vehicleCount > 10_0000)
-                throw new RuntimeException("请填写车辆数量，最低1辆，最多100000辆。");
-
-            // 准备线路
-            boolean randomRouteMode = false;
-            for (Long id : routeIdList)
+            List<Long> routeIds = new ArrayList<>();
+            if (routeIdList != null)
             {
-                if (id == 0)
-                {
-                    randomRouteMode = true;
-                    routeIdList = new Long[0];
-                    break;
-                }
-            }
-            List<Route> routes = null;
-            if (randomRouteMode) routes = routeService.list();
-            else
-            {
-                routes = new ArrayList(routeIdList.length);
                 for (Long id : routeIdList)
                 {
-                    Route route = routeService.getById(id);
-                    if (route != null) routes.add(route);
+                    if (id == null || id == 0L)
+                    {
+                        routeIds.clear();
+                        break;
+                    }
+                    routeIds.add(id);
                 }
             }
 
-            Map<String, String> params = new HashMap()
-            {
-                {
-                    put("server.address", serverAddress);
-                    put("server.port", serverPort);
-                    put("mode", mode);
-                }
-            };
+            BatchTaskLaunchRequest request = new BatchTaskLaunchRequest();
+            request.setTerminalCount(vehicleCount);
+            request.setRouteIds(routeIds);
+            request.setVehicleNumberPattern(vehicleNumberPattern);
+            request.setDeviceSnPattern(deviceSnPattern);
+            request.setSimNumberPattern(simNumberPattern);
+            request.setServerAddress(serverAddress);
+            request.setServerPort(parseServerPort(serverPort));
+            request.setMode(mode);
+            request.setReportIntervalSeconds(reportIntervalSeconds);
+            request.setRunDurationSeconds(runDurationSeconds);
+            request.setRampUpBatchSize(rampUpBatchSize);
+            request.setRampUpIntervalMillis(rampUpIntervalMillis);
 
-            // 创建任务
-            TaskManager mgr = TaskManager.getInstance();
-            for (int i = 0; i < vehicleCount; i++)
-            {
-                long idx = mgr.nextIndex();
-                String sn = String.format(deviceSnPattern, idx);
-                String sim = String.format(simNumberPattern, idx);
-
-                if (sn.length() < 7) sn = ("00000000000000000" + sn).replaceAll("^0+(\\w{7})$", "$1");
-                if (sim.length() < 12) sim = ("00000000000000000000" + sim).replaceAll("^0+(\\d{12})$", "$1");
-
-                params.put("vehicle.number", String.format(vehicleNumberPattern, idx));
-                params.put("device.sn", sn);
-                params.put("device.sim", sim);
-
-                long routeId = routes.get((int)(Math.random() * routes.size())).getId();
-                mgr.run(params, routeId);
-            }
+            result.setData(taskBatchLaunchService.launch(request));
         }
         catch(Exception ex)
         {
             result.setError(ex);
         }
         return result;
+    }
+
+    private int parseServerPort(String serverPort)
+    {
+        try
+        {
+            return Integer.parseInt(serverPort);
+        }
+        catch(Exception ex)
+        {
+            throw new IllegalArgumentException("目标服务端端口非法: " + serverPort, ex);
+        }
     }
 
     @Value("${simulator.mode}")

@@ -234,6 +234,24 @@ public final class TaskManager
         return result;
     }
 
+    public TaskStopResult terminateTasks(Collection<Long> taskIds)
+    {
+        TaskStopResult result = new TaskStopResult();
+        for (Long taskId : taskIds)
+        {
+            try
+            {
+                terminate(taskId);
+                result.recordSuccess();
+            }
+            catch(RuntimeException ex)
+            {
+                result.recordFailure(taskId, ex.getMessage());
+            }
+        }
+        return result;
+    }
+
     static final TaskManager instance = new TaskManager();
     public static void init()
     {

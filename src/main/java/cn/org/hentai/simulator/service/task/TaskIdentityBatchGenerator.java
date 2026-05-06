@@ -1,4 +1,4 @@
-package cn.org.hentai.simulator.service.acceptance;
+package cn.org.hentai.simulator.service.task;
 
 import cn.org.hentai.simulator.domain.model.TerminalIdentity;
 
@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class IdentityBatchGenerator
+public class TaskIdentityBatchGenerator
 {
     public List<TerminalIdentity> generate(int count, long startIndex, String vehicleNumberPattern, String deviceSnPattern, String simNumberPattern)
     {
