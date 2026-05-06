@@ -8,6 +8,8 @@ public class AcceptanceConfig
     private int terminalCount = 1000;
     private int reportIntervalSeconds = 5;
     private int runDurationSeconds = 300;
+    private int rampUpBatchSize = 100;
+    private int rampUpIntervalMillis = 1000;
     private String serverAddress;
     private int serverPort;
     private String vehicleNumberPattern = "京%06d";
@@ -43,6 +45,26 @@ public class AcceptanceConfig
     public void setRunDurationSeconds(int runDurationSeconds)
     {
         this.runDurationSeconds = runDurationSeconds;
+    }
+
+    public int getRampUpBatchSize()
+    {
+        return rampUpBatchSize;
+    }
+
+    public void setRampUpBatchSize(int rampUpBatchSize)
+    {
+        this.rampUpBatchSize = rampUpBatchSize;
+    }
+
+    public int getRampUpIntervalMillis()
+    {
+        return rampUpIntervalMillis;
+    }
+
+    public void setRampUpIntervalMillis(int rampUpIntervalMillis)
+    {
+        this.rampUpIntervalMillis = rampUpIntervalMillis;
     }
 
     public String getServerAddress()

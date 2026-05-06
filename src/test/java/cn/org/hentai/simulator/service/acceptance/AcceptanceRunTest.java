@@ -6,6 +6,12 @@ import org.junit.jupiter.api.Test;
 import org.yzh.protocol.commons.JT808;
 import org.yzh.protocol.t808.T0200;
 
+import java.util.List;
+import java.util.concurrent.Delayed;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -123,5 +129,159 @@ class AcceptanceRunTest
         run.onTerminated(new TaskInfo().withId(1L));
 
         assertFalse(run.allRecordedTasksTerminated());
+    }
+
+    @Test
+    void cancelsPendingLaunchFutures()
+    {
+        AcceptanceRun run = new AcceptanceRun(new AcceptanceConfig());
+        TestScheduledFuture pendingLaunch = new TestScheduledFuture(false);
+        TestScheduledFuture completedLaunch = new TestScheduledFuture(true);
+        assertTrue(run.addLaunchFuture(pendingLaunch));
+        assertTrue(run.addLaunchFuture(completedLaunch));
+
+        run.cancelPendingLaunches();
+
+        assertTrue(pendingLaunch.cancelled.get());
+        assertFalse(completedLaunch.cancelled.get());
+    }
+
+    @Test
+    void returnsCanceledLaunchWindows()
+    {
+        AcceptanceRun run = new AcceptanceRun(new AcceptanceConfig());
+        TestScheduledFuture pendingLaunch = new TestScheduledFuture(false);
+        TestScheduledFuture completedLaunch = new TestScheduledFuture(true);
+        AcceptanceHarnessService.LaunchWindow pendingWindow = new AcceptanceHarnessService.LaunchWindow(100, 200, 1000);
+        AcceptanceHarnessService.LaunchWindow completedWindow = new AcceptanceHarnessService.LaunchWindow(200, 300, 2000);
+        assertTrue(run.addLaunchFuture(pendingWindow, pendingLaunch));
+        assertTrue(run.addLaunchFuture(completedWindow, completedLaunch));
+
+        List<AcceptanceHarnessService.LaunchWindow> canceledWindows = run.cancelPendingLaunches();
+
+        assertEquals(1, canceledWindows.size());
+        assertEquals(pendingWindow, canceledWindows.get(0));
+        assertTrue(pendingLaunch.cancelled.get());
+        assertFalse(completedLaunch.cancelled.get());
+    }
+
+    @Test
+    void cancelsNewLaunchFutureAfterFinishingBegins()
+    {
+        AcceptanceRun run = new AcceptanceRun(new AcceptanceConfig());
+        TestScheduledFuture launch = new TestScheduledFuture(false);
+
+        assertTrue(run.beginFinishing());
+
+        assertFalse(run.addLaunchFuture(launch));
+        assertTrue(launch.cancelled.get());
+    }
+
+    @Test
+    void skipsLaunchRecordAfterFinishingBegins()
+    {
+        AcceptanceRun run = new AcceptanceRun(new AcceptanceConfig());
+        AtomicBoolean launched = new AtomicBoolean(false);
+
+        assertTrue(run.beginFinishing());
+        boolean accepted = run.launchIfRunning(new TerminalAcceptanceRecord(new TerminalIdentity("京000001", "A000001", "013800000001"), 1L), () -> launched.set(true));
+
+        assertFalse(accepted);
+        assertFalse(launched.get());
+        assertEquals(0, run.getRecordCount());
+    }
+
+    @Test
+    void removesLaunchRecordWhenTaskLaunchFails()
+    {
+        AcceptanceRun run = new AcceptanceRun(new AcceptanceConfig());
+        RuntimeException failure = new RuntimeException("boom");
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> run.launchIfRunning(
+                new TerminalAcceptanceRecord(new TerminalIdentity("京000001", "A000001", "013800000001"), 1L),
+                () -> { throw failure; }
+        ));
+
+        assertEquals(failure, ex);
+        assertEquals(0, run.getRecordCount());
+    }
+
+    @Test
+    void preservesFinishFailureRecordedAfterFinishingBegins()
+    {
+        AcceptanceRun run = new AcceptanceRun(new AcceptanceConfig());
+
+        assertTrue(run.beginFinishing());
+        run.recordFinishFailure("启动失败: RuntimeException: boom");
+        run.finish();
+
+        assertEquals("finish_failed", run.getState());
+        assertEquals("启动失败: RuntimeException: boom", run.getFinishFailureReason());
+    }
+
+    @Test
+    void exposesFinishFailureRecordedAfterFinishedState()
+    {
+        AcceptanceRun run = new AcceptanceRun(new AcceptanceConfig());
+
+        run.finish();
+        run.recordFinishFailure("启动失败: RuntimeException: boom");
+
+        assertEquals("finish_failed", run.getState());
+        assertEquals("启动失败: RuntimeException: boom", run.getFinishFailureReason());
+    }
+
+    private static class TestScheduledFuture implements ScheduledFuture<Object>
+    {
+        private final boolean done;
+        private final AtomicBoolean cancelled = new AtomicBoolean(false);
+
+        private TestScheduledFuture(boolean done)
+        {
+            this.done = done;
+        }
+
+        @Override
+        public long getDelay(TimeUnit unit)
+        {
+            return 0;
+        }
+
+        @Override
+        public int compareTo(Delayed other)
+        {
+            return 0;
+        }
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning)
+        {
+            cancelled.set(true);
+            return true;
+        }
+
+        @Override
+        public boolean isCancelled()
+        {
+            return cancelled.get();
+        }
+
+        @Override
+        public boolean isDone()
+        {
+            return done;
+        }
+
+        @Override
+        public Object get()
+        {
+            return null;
+        }
+
+        @Override
+        public Object get(long timeout, TimeUnit unit)
+        {
+            return null;
+        }
     }
 }

@@ -7,9 +7,14 @@ import org.yzh.protocol.commons.JT808;
 
 import java.time.Instant;
 import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class AcceptanceRun implements TaskLifecycleObserver
@@ -32,6 +37,8 @@ public class AcceptanceRun implements TaskLifecycleObserver
     private final AtomicLong terminated = new AtomicLong();
     private final AtomicLong sendFailed = new AtomicLong();
     private final AtomicLong protocolExceptions = new AtomicLong();
+    private final AtomicBoolean finishing = new AtomicBoolean(false);
+    private final CopyOnWriteArrayList<LaunchTicket> launchTickets = new CopyOnWriteArrayList<>();
 
     public AcceptanceRun(AcceptanceConfig config)
     {
@@ -68,6 +75,13 @@ public class AcceptanceRun implements TaskLifecycleObserver
         return finishFailureReason;
     }
 
+    public synchronized void recordFinishFailure(String reason)
+    {
+        if (reason == null) return;
+        finishFailureReason = finishFailureReason == null ? reason : finishFailureReason + "; " + reason;
+        if ("finished".equals(state)) state = "finish_failed";
+    }
+
     public void addRecord(TerminalAcceptanceRecord record)
     {
         records.put(record.getTaskId(), record);
@@ -76,6 +90,62 @@ public class AcceptanceRun implements TaskLifecycleObserver
     public void removeRecord(long taskId)
     {
         records.remove(taskId);
+    }
+
+    boolean launchIfRunning(TerminalAcceptanceRecord record, LaunchAction launchAction)
+    {
+        synchronized(this)
+        {
+            if (canLaunch() == false) return false;
+            records.put(record.getTaskId(), record);
+            try
+            {
+                launchAction.launch();
+            }
+            catch(RuntimeException ex)
+            {
+                records.remove(record.getTaskId());
+                throw ex;
+            }
+            return true;
+        }
+    }
+
+    boolean addLaunchFuture(AcceptanceHarnessService.LaunchWindow launchWindow, ScheduledFuture<?> launchFuture)
+    {
+        synchronized(this)
+        {
+            if (canLaunch() == false)
+            {
+                launchFuture.cancel(false);
+                return false;
+            }
+            launchTickets.add(new LaunchTicket(launchWindow, launchFuture));
+            return true;
+        }
+    }
+
+    boolean addLaunchFuture(ScheduledFuture<?> launchFuture)
+    {
+        return addLaunchFuture(null, launchFuture);
+    }
+
+    List<AcceptanceHarnessService.LaunchWindow> cancelPendingLaunches()
+    {
+        List<AcceptanceHarnessService.LaunchWindow> canceledLaunchWindows = new ArrayList<>();
+        synchronized(this)
+        {
+            for (LaunchTicket launchTicket : launchTickets)
+            {
+                if (launchTicket.future.isDone() == false)
+                {
+                    launchTicket.future.cancel(false);
+                    if (launchTicket.launchWindow != null) canceledLaunchWindows.add(launchTicket.launchWindow);
+                }
+            }
+            launchTickets.clear();
+        }
+        return canceledLaunchWindows;
     }
 
     public int getRecordCount()
@@ -106,9 +176,10 @@ public class AcceptanceRun implements TaskLifecycleObserver
         );
     }
 
-    public void finish()
+    public synchronized void finish()
     {
-        state = "finished";
+        finishing.set(true);
+        state = finishFailureReason == null ? "finished" : "finish_failed";
         finishedAt = Instant.now();
     }
 
@@ -117,11 +188,27 @@ public class AcceptanceRun implements TaskLifecycleObserver
         state = "finishing";
     }
 
-    public void finishFailed(String reason)
+    public synchronized void finishFailed(String reason)
     {
+        recordFinishFailure(reason);
+        finishing.set(true);
         state = "finish_failed";
-        finishFailureReason = reason;
         finishedAt = Instant.now();
+    }
+
+    public synchronized boolean beginFinishing()
+    {
+        if (finishing.compareAndSet(false, true))
+        {
+            state = "finishing";
+            return true;
+        }
+        return false;
+    }
+
+    public boolean canLaunch()
+    {
+        return "running".equals(state);
     }
 
     public boolean allRecordedTasksTerminated()
@@ -223,6 +310,23 @@ public class AcceptanceRun implements TaskLifecycleObserver
     {
         if (cause == null) return "unknown";
         return cause.getClass().getSimpleName() + ": " + cause.getMessage();
+    }
+
+    interface LaunchAction
+    {
+        void launch();
+    }
+
+    private static final class LaunchTicket
+    {
+        private final AcceptanceHarnessService.LaunchWindow launchWindow;
+        private final ScheduledFuture<?> future;
+
+        private LaunchTicket(AcceptanceHarnessService.LaunchWindow launchWindow, ScheduledFuture<?> future)
+        {
+            this.launchWindow = launchWindow;
+            this.future = future;
+        }
     }
 
     public static class AcceptanceSummary
