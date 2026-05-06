@@ -30,6 +30,13 @@
                     <div class="monitor-summary__item"><span>终止事件</span><strong data-field="terminated">0</strong></div>
                     <div class="monitor-summary__item"><span>发送失败</span><strong data-field="sendFailed">0</strong></div>
                     <div class="monitor-summary__item"><span>协议异常</span><strong data-field="protocolExceptions">0</strong></div>
+                    <div class="monitor-summary__item"><span>Heap 使用</span><strong data-field="runtimeResources.heapUsedBytes" data-format="bytes">0</strong></div>
+                    <div class="monitor-summary__item"><span>Heap 上限</span><strong data-field="runtimeResources.heapMaxBytes" data-format="bytes">0</strong></div>
+                    <div class="monitor-summary__item"><span>线程数</span><strong data-field="runtimeResources.threadCount">0</strong></div>
+                    <div class="monitor-summary__item"><span>FD 使用</span><strong data-field="runtimeResources.openFileDescriptorCount">0</strong></div>
+                    <div class="monitor-summary__item"><span>FD 上限</span><strong data-field="runtimeResources.maxFileDescriptorCount">0</strong></div>
+                    <div class="monitor-summary__item"><span>调度延迟均值</span><strong data-field="schedulerDelay.averageDelayMillis" data-format="millis">0</strong></div>
+                    <div class="monitor-summary__item"><span>调度延迟最大</span><strong data-field="schedulerDelay.maxDelayMillis" data-format="millis">0</strong></div>
                 </div>
 
                 <form class="monitor-toolbar" id="monitor-filter">
@@ -199,11 +206,35 @@
                 $('#monitor-summary [data-field]').each(function()
                 {
                     var field = $(this).attr('data-field');
-                    var value = data[field] == null ? 0 : data[field];
+                    var value = getValue(data, field);
                     if (field === 'locationReportRate') value = Number(value).toFixed(2);
+                    if ($(this).attr('data-format') === 'bytes') value = formatBytes(value);
+                    if ($(this).attr('data-format') === 'millis') value = Number(value || 0).toFixed(2) + ' ms';
                     $(this).text(value);
                 });
             });
+        }
+
+        function getValue(data, path)
+        {
+            var node = data;
+            var parts = path.split('.');
+            for (var i = 0; i < parts.length; i++)
+            {
+                if (node == null) return 0;
+                node = node[parts[i]];
+            }
+            return node == null ? 0 : node;
+        }
+
+        function formatBytes(value)
+        {
+            var n = Number(value || 0);
+            if (n < 0) return 'N/A';
+            if (n < 1024) return n + ' B';
+            if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+            if (n < 1024 * 1024 * 1024) return (n / 1024 / 1024).toFixed(1) + ' MB';
+            return (n / 1024 / 1024 / 1024).toFixed(1) + ' GB';
         }
 
         function reloadTable()

@@ -33,20 +33,27 @@ public class TaskBatchLaunchService
     private final TaskGateway taskGateway;
     private final TaskScheduler launchScheduler;
     private final TaskScheduler stopScheduler;
+    private final CapacityProbe capacityProbe;
     private final TaskIdentityBatchGenerator identityBatchGenerator;
 
     @Autowired
     public TaskBatchLaunchService(RouteService routeService)
     {
-        this(routeService, new TaskManagerGateway(), new ExecutorTaskScheduler(newLaunchScheduler()), new ExecutorTaskScheduler(Executors.newSingleThreadScheduledExecutor()));
+        this(routeService, new TaskManagerGateway(), new ExecutorTaskScheduler(newLaunchScheduler()), new ExecutorTaskScheduler(Executors.newSingleThreadScheduledExecutor()), new SystemCapacityProbe());
     }
 
     TaskBatchLaunchService(RouteService routeService, TaskGateway taskGateway, TaskScheduler launchScheduler, TaskScheduler stopScheduler)
+    {
+        this(routeService, taskGateway, launchScheduler, stopScheduler, new SystemCapacityProbe());
+    }
+
+    TaskBatchLaunchService(RouteService routeService, TaskGateway taskGateway, TaskScheduler launchScheduler, TaskScheduler stopScheduler, CapacityProbe capacityProbe)
     {
         this.routeService = routeService;
         this.taskGateway = taskGateway;
         this.launchScheduler = launchScheduler;
         this.stopScheduler = stopScheduler;
+        this.capacityProbe = capacityProbe;
         this.identityBatchGenerator = new TaskIdentityBatchGenerator();
     }
 
@@ -59,7 +66,8 @@ public class TaskBatchLaunchService
 
     public BatchTaskLaunchResult launch(BatchTaskLaunchRequest request)
     {
-        validate(request);
+        PreflightCheckResult preflight = preflight(request);
+        throwIfPreflightFailed(preflight);
         List<Route> routes = resolveRoutes(request.getRouteIds());
         int batchSize = effectiveRampUpBatchSize(request);
         List<TaskLaunchWindow> windows = buildLaunchWindows(request.getTerminalCount(), batchSize, request.getRampUpIntervalMillis());
@@ -77,7 +85,7 @@ public class TaskBatchLaunchService
             {
                 stopScheduler.schedule(() -> stopSession(session), request.getRunDurationSeconds(), TimeUnit.SECONDS);
             }
-            return new BatchTaskLaunchResult(request.getTerminalCount(), windows.size(), request.getRunDurationSeconds() > 0);
+            return new BatchTaskLaunchResult(request.getTerminalCount(), windows.size(), request.getRunDurationSeconds() > 0, preflight);
         }
         catch(RuntimeException ex)
         {
@@ -88,24 +96,92 @@ public class TaskBatchLaunchService
 
     public void validate(BatchTaskLaunchRequest request)
     {
+        throwIfPreflightFailed(preflight(request));
+    }
+
+    public PreflightCheckResult preflight(BatchTaskLaunchRequest request)
+    {
+        PreflightCheckResult result = new PreflightCheckResult();
+        validateConfig(request, result);
+        validateIdentityGeneration(request, result);
+        checkFileDescriptors(request, result);
+        checkEphemeralPorts(request, result);
+        return result;
+    }
+
+    private void throwIfPreflightFailed(PreflightCheckResult preflight)
+    {
+        if (preflight.hasFailures()) throw new IllegalArgumentException(String.join("; ", preflight.getFailures()));
+    }
+
+    private void validateConfig(BatchTaskLaunchRequest request, PreflightCheckResult result)
+    {
         if (request.getTerminalCount() < 1 || request.getTerminalCount() > 100000)
-            throw new IllegalArgumentException("终端数量必须在 1 到 100000 之间");
-        if (request.getReportIntervalSeconds() < 1) throw new IllegalArgumentException("位置上报间隔必须大于 0 秒");
-        if (request.getRunDurationSeconds() < 0) throw new IllegalArgumentException("运行时长不能小于 0 秒");
+            result.fail("终端数量必须在 1 到 100000 之间");
+        if (request.getReportIntervalSeconds() < 1) result.fail("位置上报间隔必须大于 0 秒");
+        if (request.getRunDurationSeconds() < 0) result.fail("运行时长不能小于 0 秒");
 
         int batchSize = effectiveRampUpBatchSize(request);
-        if (batchSize < 1) throw new IllegalArgumentException("ramp-up 批次大小必须大于 0");
-        if (request.getRampUpIntervalMillis() < 1) throw new IllegalArgumentException("ramp-up 间隔必须大于 0 毫秒");
-        if (request.getRunDurationSeconds() > 0)
+        if (batchSize < 1) result.fail("ramp-up 批次大小必须大于 0");
+        if (request.getRampUpIntervalMillis() < 1) result.fail("ramp-up 间隔必须大于 0 毫秒");
+        if (request.getRunDurationSeconds() > 0 && request.getTerminalCount() > 0 && batchSize > 0)
         {
             long launchWindowCount = (request.getTerminalCount() + (long) batchSize - 1L) / batchSize;
             long lastLaunchDelayMillis = (launchWindowCount - 1L) * request.getRampUpIntervalMillis();
             long runDurationMillis = request.getRunDurationSeconds() * 1000L;
             if (lastLaunchDelayMillis >= runDurationMillis)
-                throw new IllegalArgumentException("ramp-up 最后启动窗口必须早于运行时长: lastLaunchDelayMillis=" + lastLaunchDelayMillis + ", runDurationMillis=" + runDurationMillis);
+                result.fail("ramp-up 最后启动窗口必须早于运行时长: lastLaunchDelayMillis=" + lastLaunchDelayMillis + ", runDurationMillis=" + runDurationMillis);
         }
-        if (request.getServerAddress() == null || request.getServerAddress().isBlank()) throw new IllegalArgumentException("目标服务端地址不能为空");
-        if (request.getServerPort() < 1 || request.getServerPort() > 65535) throw new IllegalArgumentException("目标服务端端口非法: " + request.getServerPort());
+        if (request.getServerAddress() == null || request.getServerAddress().isBlank()) result.fail("目标服务端地址不能为空");
+        if (request.getServerPort() < 1 || request.getServerPort() > 65535) result.fail("目标服务端端口非法: " + request.getServerPort());
+    }
+
+    private void validateIdentityGeneration(BatchTaskLaunchRequest request, PreflightCheckResult result)
+    {
+        if (request.getTerminalCount() < 1 || request.getTerminalCount() > 100000) return;
+        try
+        {
+            identityBatchGenerator.generate(request.getTerminalCount(), 1L, request.getVehicleNumberPattern(), request.getDeviceSnPattern(), request.getSimNumberPattern());
+        }
+        catch(RuntimeException ex)
+        {
+            result.fail(ex.getMessage());
+        }
+    }
+
+    private void checkFileDescriptors(BatchTaskLaunchRequest request, PreflightCheckResult result)
+    {
+        long open = capacityProbe.openFileDescriptorCount();
+        long max = capacityProbe.maxFileDescriptorCount();
+        long required = request.getTerminalCount() + 64L;
+        result.setOpenFileDescriptorCount(open);
+        result.setMaxFileDescriptorCount(max);
+        result.setRequiredFileDescriptorCount(required);
+        if (max < 0)
+        {
+            result.warn("无法读取本机文件描述符限制，10k 验证前请人工确认 ulimit -n 足够支撑目标连接数");
+            return;
+        }
+        long available = max - Math.max(open, 0L);
+        if (available < required)
+        {
+            result.fail("本机文件描述符余量不足: available=" + available + ", required=" + required + ", open=" + open + ", max=" + max);
+        }
+    }
+
+    private void checkEphemeralPorts(BatchTaskLaunchRequest request, PreflightCheckResult result)
+    {
+        long capacity = capacityProbe.singleDestinationEphemeralPortCapacity();
+        result.setSingleDestinationEphemeralPortCapacity(capacity);
+        if (capacity < 0)
+        {
+            result.warn("无法读取单源 IP 连接单服务端的临时端口容量，10k 验证前请人工确认本地端口范围");
+            return;
+        }
+        if (request.getTerminalCount() > capacity)
+        {
+            result.warn("单源 IP 到同一服务端地址端口的临时端口容量存在风险: requested=" + request.getTerminalCount() + ", estimatedCapacity=" + capacity);
+        }
     }
 
     public List<TaskLaunchWindow> buildLaunchWindows(int terminalCount, int batchSize, long intervalMillis)
@@ -209,6 +285,15 @@ public class TaskBatchLaunchService
         ScheduledFuture<?> schedule(Runnable task, long delay, TimeUnit unit);
     }
 
+    interface CapacityProbe
+    {
+        long openFileDescriptorCount();
+
+        long maxFileDescriptorCount();
+
+        long singleDestinationEphemeralPortCapacity();
+    }
+
     private static class TaskManagerGateway implements TaskGateway
     {
         @Override
@@ -249,6 +334,31 @@ public class TaskBatchLaunchService
         public ScheduledFuture<?> schedule(Runnable task, long delay, TimeUnit unit)
         {
             return executor.schedule(task, delay, unit);
+        }
+    }
+
+    private static class SystemCapacityProbe implements CapacityProbe
+    {
+        @Override
+        public long openFileDescriptorCount()
+        {
+            java.lang.management.OperatingSystemMXBean bean = java.lang.management.ManagementFactory.getOperatingSystemMXBean();
+            if (bean instanceof com.sun.management.UnixOperatingSystemMXBean unixBean) return unixBean.getOpenFileDescriptorCount();
+            return -1L;
+        }
+
+        @Override
+        public long maxFileDescriptorCount()
+        {
+            java.lang.management.OperatingSystemMXBean bean = java.lang.management.ManagementFactory.getOperatingSystemMXBean();
+            if (bean instanceof com.sun.management.UnixOperatingSystemMXBean unixBean) return unixBean.getMaxFileDescriptorCount();
+            return -1L;
+        }
+
+        @Override
+        public long singleDestinationEphemeralPortCapacity()
+        {
+            return 28000L;
         }
     }
 
