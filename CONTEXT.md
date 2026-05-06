@@ -24,9 +24,9 @@ _Avoid_: Batch type, batch mode
 A task group whose trip tasks have all reached a terminal state.
 _Avoid_: Current run
 
-**Runtime Overview**:
-An aggregate view of all trip tasks and task groups currently known by the simulator process.
-_Avoid_: Batch summary, task list summary
+**Task Group Monitor**:
+A live view centered on all task groups currently known by the simulator process.
+_Avoid_: Runtime overview, batch summary, task list summary
 
 **Runtime Summary**:
 The current aggregate metrics for all trip tasks known by the simulator process.
@@ -49,8 +49,16 @@ The current runtime-side status for the trip tasks inside one task group.
 _Avoid_: Creation result
 
 **Task Group List**:
-A runtime overview list where each row represents one task group and its aggregate status.
+A live monitor list where each row represents one task group and its aggregate status.
 _Avoid_: Trip task list
+
+**Monitor Polling**:
+Periodic in-page refresh for task group monitor data, using a one-second interval in the first version.
+_Avoid_: Manual refresh, first-version WebSocket
+
+**Task Group Monitor Snapshot**:
+One polling response containing the runtime summary and all task group summaries.
+_Avoid_: Trip task export, task detail payload
 
 **Trip Task List**:
 The canonical list for inspecting individual trip tasks.
@@ -66,14 +74,19 @@ _Avoid_: Task group detail list
 - A **Task Group** is not manually assembled from existing **Trip Tasks**.
 - A **Task Group** remains visible in the current simulator process after its **Trip Tasks** finish, until the process restarts.
 - A **Task Group** is both an observation boundary and a stop-control boundary for its **Trip Tasks**.
-- A **Runtime Overview** aggregates all **Task Groups** and all **Trip Tasks** currently known by the simulator process.
+- A **Task Group Monitor** centers on all **Task Groups** currently known by the simulator process.
 - A **Runtime Summary** is separate from any one **Task Group** and represents the simulator process as a whole.
 - A **Runtime Summary** includes all **Trip Tasks** known by the current process, including completed trip tasks.
-- A **Runtime Overview** presents a **Runtime Summary** and a **Task Group List**.
+- A **Task Group Monitor** presents a **Runtime Summary** and a **Task Group List**.
+- A **Task Group Monitor** refreshes through **Monitor Polling** without a full page reload.
+- A **Task Group List** shows all task groups known by the current process, is not paginated, and is rendered in full in the first version.
+- A **Task Group Monitor Snapshot** contains one **Runtime Summary** and the complete **Task Group List**.
+- A **Task Group Monitor Snapshot** does not contain individual **Trip Task** rows.
+- **Monitor Polling** preserves expanded **Task Group List** rows while refreshing their displayed metrics.
 - A **Creation Result** is not a **Task Group Summary**; it only reports whether the creation action was accepted and which task group was produced.
 - A **Task Group Summary** can change after the **Creation Result** is returned.
-- After a successful **Creation Result**, the user observes the resulting **Task Group** from the **Runtime Overview**, not from the creation entry point.
-- After either single-task creation or batch creation succeeds, the UI takes the user to the **Runtime Overview** focused on the produced **Task Group**.
+- After a successful **Creation Result**, the user observes the resulting **Task Group** from the **Task Group Monitor**, not from the creation entry point.
+- After either single-task creation or batch creation succeeds, the UI takes the user to the **Task Group Monitor** focused on the produced **Task Group**.
 - A **Task Group List** row can be expanded or opened to inspect group-level progress and stop results for that **Task Group**.
 - Expanded task group details distinguish **Task Group Launch Status** from **Task Group Current Status**.
 - A **Trip Task List** is the only place that lists individual **Trip Tasks**; it can be filtered by **Task Group**.
@@ -94,16 +107,28 @@ _Avoid_: Task group detail list
 > **Domain expert:** "No. It summarizes every trip task known by the current process; restarting the process resets that memory."
 >
 > **Dev:** "Where should users inspect task groups?"
-> **Domain expert:** "In the runtime overview: the summary shows the whole process, and the task group list shows each creation action."
+> **Domain expert:** "In the task group monitor: the summary gives process-level context, and the task group list shows each creation action."
 >
 > **Dev:** "Is the response from clicking batch creation the same data as the task group's later summary?"
 > **Domain expert:** "No. The creation result tells whether the creation action was accepted and which task group was created; the task group summary tells how that group is running afterward."
 >
 > **Dev:** "Where should the UI take the user after a successful creation action?"
-> **Domain expert:** "To the runtime overview, focused on the task group produced by that creation action."
+> **Domain expert:** "To the task group monitor, focused on the task group produced by that creation action."
 >
 > **Dev:** "Does single-task creation follow the same navigation rule as batch creation?"
-> **Domain expert:** "Yes. Both creation paths produce a task group and then focus that task group in the runtime overview."
+> **Domain expert:** "Yes. Both creation paths produce a task group and then focus that task group in the task group monitor."
+>
+> **Dev:** "Should users refresh the task group monitor or page through task groups?"
+> **Domain expert:** "No. The monitor updates in place and shows all task groups known by the current process without pagination or lazy loading in the first version."
+>
+> **Dev:** "How does the task group monitor stay current?"
+> **Domain expert:** "It uses one-second monitor polling in the page; the first version does not require WebSocket or Server-Sent Events."
+>
+> **Dev:** "Should polling fetch the summary and task group list separately?"
+> **Domain expert:** "No. Fetch one task group monitor snapshot containing the runtime summary and all task group summaries, but not individual trip task rows."
+>
+> **Dev:** "What happens if a user has expanded a task group while polling refreshes?"
+> **Domain expert:** "Keep that row expanded and update its metrics in place, as long as the task group is still present."
 >
 > **Dev:** "What should an expanded task group show?"
 > **Domain expert:** "Separate the launch status from the current status: startup counts and ramp-up belong to launch status, while active, parking, terminated, and stop results belong to current status."
@@ -127,3 +152,4 @@ _Avoid_: Task group detail list
 - Completed task group data is historical within the current process; it must not be presented as the current active run.
 - "summary" must distinguish **Runtime Summary** from task-group-level progress or result metrics.
 - Task group details must distinguish launch-side data from current runtime data, even when they are shown together in one expanded row.
+- "runtime overview" was too generic; the resolved product term is **Task Group Monitor** because the page is centered on task groups.
