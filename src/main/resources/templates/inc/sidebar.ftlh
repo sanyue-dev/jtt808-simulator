@@ -5,6 +5,7 @@
         <!--<li x-tag="schedule"><i class="fa fa-history"></i> <a href="/schdule/index">计划任务</a></li>-->
         <li x-tag="task" title="创建行程"><i class="fa fa-location-arrow"></i> <a href="/task/index">创建行程</a></li>
         <li x-tag="batch" title="压力测试"><i class="fa fa-bolt"></i> <a href="/batch/index">压力测试</a></li>
+        <li x-tag="task-group-monitor" title="任务组监控"><i class="fa fa-dashboard"></i> <a href="/task-groups/monitor">任务组监控</a></li>
         <li x-tag="list-monitor" title="实时行程监控"><i class="fa fa-eye"></i> <a href="/monitor/list/index">实时行程监控</a></li>
         <!--
         <li x-tag="map-monitor"><i class="fa fa-globe"></i> <a href="/monitor/map/index">地图实时监控</a></li>

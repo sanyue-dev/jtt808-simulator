@@ -351,8 +351,7 @@
             $.post('./run', params, function(result)
             {
                 if (result.error && result.error.code) return toastr('error', result.error.reason);
-                toastr('success', '启动成功');
-                startProgressPolling();
+                window.location.href = '/task-groups/monitor?taskGroupId=' + result.data.taskGroupId;
             });
         });
     });

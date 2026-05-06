@@ -1,6 +1,7 @@
 package cn.org.hentai.simulator.service.task;
 
 import cn.org.hentai.simulator.domain.entity.Route;
+import cn.org.hentai.simulator.domain.model.TaskLifecycleObserver;
 import cn.org.hentai.simulator.service.RouteService;
 import cn.org.hentai.simulator.service.monitor.TaskStopResult;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,8 @@ class TaskBatchLaunchServiceTest
     private final RecordingScheduler launchScheduler = new RecordingScheduler();
     private final RecordingScheduler stopScheduler = new RecordingScheduler();
     private final RecordingCapacityProbe capacityProbe = new RecordingCapacityProbe();
-    private final TaskBatchLaunchService service = new TaskBatchLaunchService(new FakeRouteService(), taskGateway, launchScheduler, stopScheduler, capacityProbe);
+    private final TaskGroupMonitorService taskGroupMonitorService = new TaskGroupMonitorService(() -> null);
+    private final TaskBatchLaunchService service = new TaskBatchLaunchService(new FakeRouteService(), taskGateway, launchScheduler, stopScheduler, capacityProbe, taskGroupMonitorService);
 
     @Test
     void validatesGeneralBatchLaunchConfig()
@@ -165,6 +167,39 @@ class TaskBatchLaunchServiceTest
         stopScheduler.runAll();
 
         assertEquals(Set.of(1L, 2L, 3L), taskGateway.terminatedTaskIds);
+    }
+
+    @Test
+    void batchLaunchCreatesTaskGroupVisibleInMonitorSnapshot()
+    {
+        BatchTaskLaunchRequest request = validRequest();
+        request.setTerminalCount(3);
+        request.setRampUpBatchSize(2);
+        request.setRampUpIntervalMillis(1000);
+
+        BatchTaskLaunchResult result = service.launch(request);
+
+        assertEquals("TG-1", result.getTaskGroupId());
+        assertEquals("批量创建 3 台 #1", result.getTaskGroupDisplayName());
+
+        launchScheduler.runNext();
+
+        TaskGroupSummary group = taskGroupMonitorService.snapshot().getTaskGroups().get(0);
+        assertEquals(result.getTaskGroupId(), group.getTaskGroupId());
+        assertEquals("batch", group.getSource());
+        assertEquals(3, group.getTargetTasks());
+        assertEquals(2, group.getRampUpWindowCount());
+        assertEquals(1, group.getExecutedWindowCount());
+        assertEquals(2, group.getStartedTasks());
+        assertEquals(2, group.getActiveTasks());
+        assertEquals("creating", group.getState());
+
+        launchScheduler.runNext();
+
+        group = taskGroupMonitorService.snapshot().getTaskGroups().get(0);
+        assertEquals(3, group.getStartedTasks());
+        assertEquals(2, group.getExecutedWindowCount());
+        assertEquals("running", group.getState());
     }
 
     @Test
@@ -319,7 +354,7 @@ class TaskBatchLaunchServiceTest
         }
 
         @Override
-        public void run(long taskId, Map<String, String> params, Long routeId, int reportIntervalSeconds)
+        public void run(long taskId, Map<String, String> params, Long routeId, int reportIntervalSeconds, TaskLifecycleObserver lifecycleObserver)
         {
             if (failOnRun) throw new RuntimeException("route start failed");
             started.add(new StartedTask(taskId, params, routeId, reportIntervalSeconds));
