@@ -51,6 +51,7 @@ $.fn.paginate = function(param)
 
     if (param.form && typeof(this.get(0).parameters) == 'undefined') param.form.submit(function()
     {
+        paginate.get(0).parameters.pageIndex = 1;
         paginate.paginate(paginate.get(0).parameters);
         return false;
     });
