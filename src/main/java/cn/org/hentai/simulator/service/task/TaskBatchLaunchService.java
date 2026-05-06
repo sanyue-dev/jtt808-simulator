@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -398,8 +399,8 @@ public class TaskBatchLaunchService
         private final CopyOnWriteArrayList<ScheduledFuture<?>> launchFutures = new CopyOnWriteArrayList<>();
         private final AtomicReference<String> state = new AtomicReference<>("launching");
         private final AtomicReference<String> failureReason = new AtomicReference<>();
-        private volatile long stopSucceeded = 0L;
-        private volatile long stopFailed = 0L;
+        private final AtomicLong stopSucceeded = new AtomicLong();
+        private final AtomicLong stopFailed = new AtomicLong();
 
         private LaunchSession(int targetTasks, int rampUpWindowCount, boolean autoStopScheduled)
         {
@@ -427,8 +428,8 @@ public class TaskBatchLaunchService
             for (Long taskId : taskIds)
             {
                 if (stoppedTaskIds.add(taskId) == false) continue;
-                if (failedTaskIds.contains(taskId)) stopFailed++;
-                else stopSucceeded++;
+                if (failedTaskIds.contains(taskId)) stopFailed.incrementAndGet();
+                else stopSucceeded.incrementAndGet();
             }
             if ("failed".equals(state.get())) return;
             state.set("completed");
@@ -445,8 +446,8 @@ public class TaskBatchLaunchService
                     startedTasks.get(),
                     autoStopScheduled,
                     failureReason.get(),
-                    stopSucceeded,
-                    stopFailed
+                    stopSucceeded.get(),
+                    stopFailed.get()
             );
         }
     }
