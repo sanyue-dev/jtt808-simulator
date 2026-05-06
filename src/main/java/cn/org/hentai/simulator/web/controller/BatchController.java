@@ -107,6 +107,22 @@ public class BatchController extends BaseController
         return result;
     }
 
+    @RequestMapping("/progress")
+    @ResponseBody
+    public Result progress()
+    {
+        Result result = new Result();
+        try
+        {
+            result.setData(taskBatchLaunchService.currentProgress());
+        }
+        catch(Exception ex)
+        {
+            result.setError(ex);
+        }
+        return result;
+    }
+
     private int parseServerPort(String serverPort)
     {
         try
