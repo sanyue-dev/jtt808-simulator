@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
@@ -245,7 +247,11 @@ public class TaskBatchLaunchService
                 taskGateway.run(taskId, params(request, identity), route.getId(), request.getReportIntervalSeconds());
                 session.taskIds.add(taskId);
                 session.startedTasks.incrementAndGet();
-                if (session.stopping.get()) taskGateway.terminateTasks(List.of(taskId));
+                if (session.stopping.get())
+                {
+                    TaskStopResult result = taskGateway.terminateTasks(List.of(taskId));
+                    session.recordStopResult(List.of(taskId), result);
+                }
             }
             session.recordWindowExecuted();
         }
@@ -277,8 +283,9 @@ public class TaskBatchLaunchService
         session.launchFutures.forEach(future -> {
             if (future.isDone() == false) future.cancel(false);
         });
-        TaskStopResult result = taskGateway.terminateTasks(session.taskIds);
-        session.recordStopResult(result);
+        List<Long> taskIds = new ArrayList<>(session.taskIds);
+        TaskStopResult result = taskGateway.terminateTasks(taskIds);
+        session.recordStopResult(taskIds, result);
         if (result.getFailed() > 0)
         {
             logger.error("批量任务自动停止存在失败: succeeded={}, failed={}, failures={}", result.getSucceeded(), result.getFailed(), result.getFailures());
@@ -387,6 +394,7 @@ public class TaskBatchLaunchService
         private final AtomicInteger executedWindowCount = new AtomicInteger();
         private final AtomicInteger startedTasks = new AtomicInteger();
         private final Queue<Long> taskIds = new ConcurrentLinkedQueue<>();
+        private final Set<Long> stoppedTaskIds = ConcurrentHashMap.newKeySet();
         private final CopyOnWriteArrayList<ScheduledFuture<?>> launchFutures = new CopyOnWriteArrayList<>();
         private final AtomicReference<String> state = new AtomicReference<>("launching");
         private final AtomicReference<String> failureReason = new AtomicReference<>();
@@ -412,10 +420,16 @@ public class TaskBatchLaunchService
             state.set("failed");
         }
 
-        private void recordStopResult(TaskStopResult result)
+        private void recordStopResult(Collection<Long> taskIds, TaskStopResult result)
         {
-            stopSucceeded = result.getSucceeded();
-            stopFailed = result.getFailed();
+            Set<Long> failedTaskIds = new java.util.HashSet<>();
+            result.getFailures().forEach(failure -> failedTaskIds.add(failure.getTaskId()));
+            for (Long taskId : taskIds)
+            {
+                if (stoppedTaskIds.add(taskId) == false) continue;
+                if (failedTaskIds.contains(taskId)) stopFailed++;
+                else stopSucceeded++;
+            }
             if ("failed".equals(state.get())) return;
             state.set("completed");
         }

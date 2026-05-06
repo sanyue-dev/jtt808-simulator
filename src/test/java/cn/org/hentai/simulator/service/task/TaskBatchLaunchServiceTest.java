@@ -221,6 +221,24 @@ class TaskBatchLaunchServiceTest
     }
 
     @Test
+    void recordsTaskStoppedAfterAutoStopSnapshot()
+    {
+        BatchTaskLaunchRequest request = validRequest();
+        request.setTerminalCount(1);
+        request.setRunDurationSeconds(30);
+        taskGateway.afterRun = stopScheduler::runAll;
+
+        service.launch(request);
+        launchScheduler.runNext();
+
+        BatchTaskLaunchProgress progress = service.currentProgress();
+        assertEquals("completed", progress.getState());
+        assertEquals(1, progress.getStartedTasks());
+        assertEquals(1L, progress.getStopSucceeded());
+        assertEquals(Set.of(1L), taskGateway.terminatedTaskIds);
+    }
+
+    @Test
     void recordsLaunchFailureInCurrentBatchLaunchProgress()
     {
         BatchTaskLaunchRequest request = validRequest();
@@ -282,6 +300,7 @@ class TaskBatchLaunchServiceTest
         private final List<StartedTask> started = new ArrayList<>();
         private final Set<Long> terminatedTaskIds = new HashSet<>();
         private boolean failOnRun = false;
+        private Runnable afterRun = null;
 
         @Override
         public long reserveIndexes(int count)
@@ -300,6 +319,7 @@ class TaskBatchLaunchServiceTest
         {
             if (failOnRun) throw new RuntimeException("route start failed");
             started.add(new StartedTask(taskId, params, routeId, reportIntervalSeconds));
+            if (afterRun != null) afterRun.run();
         }
 
         @Override
