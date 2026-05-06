@@ -59,6 +59,13 @@
                     </section>
                 </div>
 
+                <div class="task-group-monitor__section-heading">
+                    <div>
+                        <h3>任务组列表</h3>
+                        <p>Task Group List</p>
+                    </div>
+                </div>
+
                 <div class="task-group-table">
                     <table class="data-table">
                         <thead>
@@ -130,6 +137,82 @@
         font-size: 13px;
     }
     .task-group-table th { color: var(--color-text-secondary); font-weight: 500; }
+    .task-group-monitor__section-heading {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin: 18px 0 8px;
+        border-bottom: 1px solid var(--color-border);
+        padding-bottom: 8px;
+    }
+    .task-group-monitor__section-heading h3 {
+        margin: 0;
+        color: var(--color-text-primary);
+        font-size: 15px;
+        font-weight: 600;
+    }
+    .task-group-monitor__section-heading p {
+        margin: 3px 0 0;
+        color: var(--color-text-secondary);
+        font-size: 12px;
+    }
+    .task-group-row__primary td {
+        vertical-align: top;
+    }
+    .task-group-row__identity {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 180px;
+    }
+    .task-group-row__display-name {
+        color: var(--color-text-primary);
+        font-weight: 600;
+        font-size: 13px;
+    }
+    .task-group-row__meta {
+        color: var(--color-text-secondary);
+        font-size: 12px;
+    }
+    .task-group-row__metrics {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(72px, 1fr));
+        gap: 8px;
+        min-width: 360px;
+    }
+    .task-group-row__metric {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        border-left: 2px solid var(--color-border);
+        padding-left: 8px;
+    }
+    .task-group-row__metric span {
+        color: var(--color-text-secondary);
+        font-size: 11px;
+    }
+    .task-group-row__metric strong {
+        color: var(--color-text-primary);
+        font-size: 15px;
+        font-weight: 600;
+    }
+    .task-group-state {
+        display: inline-flex;
+        align-items: center;
+        min-width: 64px;
+        height: 24px;
+        padding: 0 8px;
+        border-left: 3px solid var(--color-border-strong);
+        background: var(--color-bg-panel-muted);
+        color: var(--color-text-primary);
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .task-group-state--running { border-left-color: var(--color-success); }
+    .task-group-state--creating,
+    .task-group-state--stopping { border-left-color: var(--color-primary); }
+    .task-group-state--completed { border-left-color: var(--color-border-strong); color: var(--color-text-secondary); }
+    .task-group-state--failed { border-left-color: var(--color-danger); }
     .task-group-table__details td { background: var(--color-bg-panel-muted); }
     .task-group-detail {
         display: grid;
@@ -147,10 +230,23 @@
         font-size: 13px;
         color: var(--color-text-primary);
     }
+    .task-group-detail__section h4 span {
+        display: block;
+        margin-top: 2px;
+        color: var(--color-text-secondary);
+        font-size: 11px;
+        font-weight: 400;
+    }
     .task-group-detail__section p {
         margin: 4px 0;
         font-size: 12px;
         color: var(--color-text-secondary);
+    }
+    .task-group-actions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        min-width: 208px;
     }
     .task-group-table__btn {
         border: 1px solid var(--color-border);
@@ -161,9 +257,19 @@
         cursor: pointer;
         color: var(--color-text-primary);
     }
+    .task-group-table__btn i { margin-right: 4px; }
+    .task-group-table__btn:hover {
+        border-color: var(--color-border-strong);
+        background: var(--color-bg-muted);
+    }
     .task-group-table__btn--danger {
-        border-color: #dc3545;
-        color: #dc3545;
+        border-color: var(--color-danger);
+        color: var(--color-danger);
+    }
+    .task-group-table__btn--danger:hover {
+        background: var(--color-danger);
+        border-color: var(--color-danger);
+        color: var(--color-text-inverse);
     }
 </style>
 <script type="text/javascript">
@@ -200,20 +306,24 @@
             (data.taskGroups || []).forEach(function(group)
             {
                 var expanded = !!expandedTaskGroupIds[group.taskGroupId];
-                var actions = '<button type="button" class="task-group-table__btn" data-action="toggle">' + (expanded ? '收起' : '展开') + '</button>';
-                actions += ' <button type="button" class="task-group-table__btn" data-action="view-tasks">查看行程任务</button>';
+                var actions = '<div class="task-group-actions">';
+                actions += '<button type="button" class="task-group-table__btn" data-action="toggle"><i class="fa ' + (expanded ? 'fa-chevron-up' : 'fa-chevron-down') + '"></i>' + (expanded ? '收起' : '展开') + '</button>';
+                actions += '<button type="button" class="task-group-table__btn" data-action="view-tasks"><i class="fa fa-list-ul"></i>查看行程任务</button>';
                 if (canStop(group))
                 {
-                    actions += ' <button type="button" class="task-group-table__btn task-group-table__btn--danger" data-action="stop">停止任务组</button>';
+                    actions += '<button type="button" class="task-group-table__btn task-group-table__btn--danger" data-action="stop"><i class="fa fa-stop-circle"></i>停止任务组</button>';
                 }
-                rows.push('<tr data-task-group-id="' + escapeHtml(group.taskGroupId) + '">' +
-                    '<td>' + formatState(group.state) + '</td>' +
-                    '<td>' + escapeHtml(group.displayName) + '</td>' +
+                actions += '</div>';
+                rows.push('<tr class="task-group-row__primary" data-task-group-id="' + escapeHtml(group.taskGroupId) + '">' +
+                    '<td><span class="task-group-state task-group-state--' + stateClass(group.state) + '">' + formatState(group.state) + '</span></td>' +
+                    '<td><div class="task-group-row__identity"><strong class="task-group-row__display-name">' + escapeHtml(group.displayName) + '</strong><span class="task-group-row__meta">' + escapeHtml(group.taskGroupId) + '</span></div></td>' +
                     '<td>' + escapeHtml(group.sourceText || group.source) + '</td>' +
-                    '<td>' + (group.targetTasks || 0) + '</td>' +
-                    '<td>' + (group.startedTasks || 0) + '</td>' +
-                    '<td>' + (group.activeTasks || 0) + '</td>' +
-                    '<td>' + (group.terminatedTasks || 0) + '</td>' +
+                    '<td colspan="4"><div class="task-group-row__metrics">' +
+                    '<div class="task-group-row__metric task-group-row__metric--target"><span>目标数</span><strong>' + (group.targetTasks || 0) + '</strong></div>' +
+                    '<div class="task-group-row__metric"><span>已启动</span><strong>' + (group.startedTasks || 0) + '</strong></div>' +
+                    '<div class="task-group-row__metric"><span>活动中</span><strong>' + (group.activeTasks || 0) + '</strong></div>' +
+                    '<div class="task-group-row__metric"><span>已终止</span><strong>' + (group.terminatedTasks || 0) + '</strong></div>' +
+                    '</div></td>' +
                     '<td>' + actions + '</td>' +
                     '</tr>');
                 if (expanded) rows.push(detailRow(group));
@@ -225,13 +335,13 @@
         {
             return '<tr class="task-group-table__details"><td colspan="8">' +
                 '<div class="task-group-detail">' +
-                '<div class="task-group-detail__section"><h4>启动情况</h4>' +
+                '<div class="task-group-detail__section task-group-detail__section--launch"><h4>启动情况<span>Task Group Launch Status</span></h4>' +
                 '<p>目标任务数：' + (group.targetTasks || 0) + '</p>' +
                 '<p>已启动任务：' + (group.startedTasks || 0) + '</p>' +
                 '<p>ramp-up：' + (group.executedWindowCount || 0) + ' / ' + (group.rampUpWindowCount || 0) + '</p>' +
                 '<p>失败原因：' + escapeHtml(group.failureReason || '无') + '</p>' +
                 '</div>' +
-                '<div class="task-group-detail__section"><h4>当前运行情况</h4>' +
+                '<div class="task-group-detail__section task-group-detail__section--current"><h4>当前运行情况<span>Task Group Current Status</span></h4>' +
                 '<p>状态：' + formatState(group.state) + '</p>' +
                 '<p>活动中：' + (group.activeTasks || 0) + '</p>' +
                 '<p>已终止：' + (group.terminatedTasks || 0) + '</p>' +
@@ -326,6 +436,16 @@
             if (state === 'completed') return '已完成';
             if (state === 'failed') return '失败';
             return '-';
+        }
+
+        function stateClass(state)
+        {
+            if (state === 'creating') return 'creating';
+            if (state === 'running') return 'running';
+            if (state === 'stopping') return 'stopping';
+            if (state === 'completed') return 'completed';
+            if (state === 'failed') return 'failed';
+            return 'unknown';
         }
 
         function escapeHtml(value)
