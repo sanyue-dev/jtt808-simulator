@@ -91,6 +91,23 @@ class TaskBatchLaunchServiceTest
     }
 
     @Test
+    void preflightLaunchFailuresCarryDiagnosticResult()
+    {
+        BatchTaskLaunchRequest request = validRequest();
+        request.setTerminalCount(1000);
+        capacityProbe.openFileDescriptorCount = 100L;
+        capacityProbe.maxFileDescriptorCount = 500L;
+
+        PreflightCheckException ex = assertThrows(PreflightCheckException.class, () -> service.launch(request));
+
+        assertEquals("本机文件描述符余量不足: available=400, required=1064, open=100, max=500", ex.getMessage());
+        assertEquals(ex.getPreflight().getFailures().get(0), ex.getMessage());
+        assertEquals(100L, ex.getPreflight().getOpenFileDescriptorCount());
+        assertEquals(500L, ex.getPreflight().getMaxFileDescriptorCount());
+        assertEquals(1064L, ex.getPreflight().getRequiredFileDescriptorCount());
+    }
+
+    @Test
     void warnsWhenSingleDestinationEphemeralPortCapacityIsRisky()
     {
         BatchTaskLaunchRequest request = validRequest();

@@ -111,7 +111,7 @@ public class TaskBatchLaunchService
 
     private void throwIfPreflightFailed(PreflightCheckResult preflight)
     {
-        if (preflight.hasFailures()) throw new IllegalArgumentException(String.join("; ", preflight.getFailures()));
+        if (preflight.hasFailures()) throw new PreflightCheckException(preflight);
     }
 
     private void validateConfig(BatchTaskLaunchRequest request, PreflightCheckResult result)
