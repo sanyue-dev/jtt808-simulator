@@ -278,6 +278,25 @@ class TaskBatchLaunchServiceTest
     }
 
     @Test
+    void recordsTaskGroupCompletedWhenAutoStopCancelsLaunchWindowBeforeTargetReached()
+    {
+        BatchTaskLaunchRequest request = validRequest();
+        request.setTerminalCount(3);
+        request.setRunDurationSeconds(30);
+        request.setRampUpBatchSize(3);
+        taskGateway.afterRun = stopScheduler::runAll;
+
+        service.launch(request);
+        launchScheduler.runNext();
+
+        TaskGroupSummary group = taskGroupMonitorService.snapshot().getTaskGroups().get(0);
+        assertEquals(1, group.getStartedTasks());
+        assertEquals(0, group.getActiveTasks());
+        assertEquals(1, group.getTerminatedTasks());
+        assertEquals("completed", group.getState());
+    }
+
+    @Test
     void recordsLaunchFailureInCurrentBatchLaunchProgress()
     {
         BatchTaskLaunchRequest request = validRequest();
@@ -372,7 +391,7 @@ class TaskBatchLaunchServiceTest
         public void run(long taskId, Map<String, String> params, Long routeId, int reportIntervalSeconds, TaskLifecycleObserver lifecycleObserver)
         {
             if (failOnRun) throw new RuntimeException("route start failed");
-            started.add(new StartedTask(taskId, params, routeId, reportIntervalSeconds));
+            started.add(new StartedTask(taskId, params, routeId, reportIntervalSeconds, lifecycleObserver));
             if (afterRun != null) afterRun.run();
         }
 
@@ -381,12 +400,18 @@ class TaskBatchLaunchServiceTest
         {
             terminatedTaskIds.addAll(taskIds);
             TaskStopResult result = new TaskStopResult();
-            taskIds.forEach(id -> result.recordSuccess());
+            taskIds.forEach(id -> {
+                result.recordSuccess();
+                started.stream()
+                        .filter(task -> task.taskId == id)
+                        .findFirst()
+                        .ifPresent(task -> task.lifecycleObserver.onTerminated(new cn.org.hentai.simulator.domain.model.TaskInfo().withId(id)));
+            });
             return result;
         }
     }
 
-    private record StartedTask(long taskId, Map<String, String> params, Long routeId, int reportIntervalSeconds)
+    private record StartedTask(long taskId, Map<String, String> params, Long routeId, int reportIntervalSeconds, TaskLifecycleObserver lifecycleObserver)
     {
     }
 

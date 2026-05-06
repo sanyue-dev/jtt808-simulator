@@ -62,6 +62,11 @@ public class TaskGroupMonitorService
         group(taskGroupId).recordLaunchFailure(ex);
     }
 
+    public void recordLaunchStopped(String taskGroupId)
+    {
+        group(taskGroupId).recordLaunchStopped();
+    }
+
     public TaskLifecycleObserver observer(String taskGroupId)
     {
         return new TaskLifecycleObserver()
@@ -148,6 +153,12 @@ public class TaskGroupMonitorService
             state.set("failed");
         }
 
+        private synchronized void recordLaunchStopped()
+        {
+            if ("failed".equals(state.get())) return;
+            state.set(activeTaskIds.isEmpty() ? "completed" : "stopping");
+        }
+
         private synchronized void recordTaskTerminated(long taskId)
         {
             activeTaskIds.remove(taskId);
@@ -157,6 +168,7 @@ public class TaskGroupMonitorService
 
         private void completeIfAllStartedTasksTerminated()
         {
+            if (activeTaskIds.isEmpty() && "stopping".equals(state.get())) state.set("completed");
             if (startedTasks.get() >= targetTasks && activeTaskIds.isEmpty() && "failed".equals(state.get()) == false) state.set("completed");
         }
 

@@ -205,6 +205,7 @@
         {
             if (state === 'creating') return '创建中';
             if (state === 'running') return '运行中';
+            if (state === 'stopping') return '停止中';
             if (state === 'completed') return '已完成';
             if (state === 'failed') return '失败';
             return '-';

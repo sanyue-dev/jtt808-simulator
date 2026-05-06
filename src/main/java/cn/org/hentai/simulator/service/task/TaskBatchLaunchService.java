@@ -305,6 +305,7 @@ public class TaskBatchLaunchService
         List<Long> taskIds = new ArrayList<>(session.taskIds);
         TaskStopResult result = taskGateway.terminateTasks(taskIds);
         session.recordStopResult(taskIds, result);
+        taskGroupMonitorService.recordLaunchStopped(session.taskGroupId);
         if (result.getFailed() > 0)
         {
             logger.error("批量任务自动停止存在失败: succeeded={}, failed={}, failures={}", result.getSucceeded(), result.getFailed(), result.getFailures());
