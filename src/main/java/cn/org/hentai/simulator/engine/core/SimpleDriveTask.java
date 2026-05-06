@@ -18,7 +18,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yzh.protocol.basics.JTMessage;
 import org.yzh.protocol.commons.JT808;
-import org.yzh.protocol.t808.*;
+import org.yzh.protocol.t808.T0001;
+import org.yzh.protocol.t808.T0102;
+import org.yzh.protocol.t808.T0200;
+import org.yzh.protocol.t808.T8100;
+import org.yzh.protocol.t808.T8300;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -56,6 +60,8 @@ public class SimpleDriveTask extends AbstractDriveTask
 
     // 连接池
     ConnectionPool pool = ConnectionPool.getInstance();
+
+    private final Jtt808ProtocolStage protocolStage = new Jtt808ProtocolStage();
 
     public SimpleDriveTask(long id, long routeId)
     {
@@ -112,57 +118,18 @@ public class SimpleDriveTask extends AbstractDriveTask
     @Listen(when = EventEnum.connected)
     public void onConnected()
     {
-        log(LogType.INFO, "connected");
-        TaskLifecycleObserver observer = getLifecycleObserver();
-        if (observer != null) observer.onConnected(getInfo());
-        // 连接成功时，发送注册消息
-        String sn = getParameter("device.sn");
-
-        T0100 msg = new T0100();
-        msg.setMessageId(JT808.终端注册);
-        msg.setProvinceId(1);
-        msg.setCityId(1);
-        msg.setMakerId("CHINA");
-        msg.setDeviceModel("HENTAI-SIMULATOR");
-        msg.setDeviceId(sn);
-        msg.setPlateColor(1);
-        msg.setPlateNo(getParameter("vehicle.number"));
-
-        send(msg);
+        protocolStage.onConnected(this);
     }
 
     @Listen(when = EventEnum.message_received, attachment = "8001")
     public void onGenericResponse(T0001 msg) {
-        if (status == TaskStatus.AUTHENTICATING) {
-            TaskLifecycleObserver observer = getLifecycleObserver();
-            if (msg.isSuccess()) {
-                status = TaskStatus.AUTHENTICATION_SUCCESSFUL;
-                if (observer != null) observer.onAuthenticationSucceeded(getInfo());
-            } else {
-                status = TaskStatus.AUTHENTICATION_FAILED;
-                if (observer != null) observer.onAuthenticationFailed(getInfo(), "resultCode=" + msg.getResultCode());
-            }
-        }
-        next();
+        protocolStage.onGenericResponse(this, msg);
     }
 
     // 注册应答时
     @Listen(when = EventEnum.message_received, attachment = "8100")
     public void onRegisterResponsed(T8100 msg) {
-        int result = msg.getResultCode();
-        if (result == 0) {
-            status = TaskStatus.REGISTRATION_SUCCESSFUL;
-            token = msg.getToken();
-            log(LogType.INFO, "registered");
-            TaskLifecycleObserver observer = getLifecycleObserver();
-            if (observer != null) observer.onRegistrationSucceeded(getInfo());
-        } else {
-            status = TaskStatus.REGISTRATION_FAILED;
-            log(LogType.EXCEPTION, "register failed");
-            TaskLifecycleObserver observer = getLifecycleObserver();
-            if (observer != null) observer.onRegistrationFailed(getInfo(), "resultCode=" + result);
-        }
-        next();
+        protocolStage.onRegisterResponse(this, msg);
     }
 
     @Listen(when = EventEnum.disconnected)
@@ -201,32 +168,7 @@ public class SimpleDriveTask extends AbstractDriveTask
         send(responMsg);
     }
 
-    // 根据状态进行下一步
-    protected void next() {
-        if (TaskStatus.REGISTRATION_SUCCESSFUL == status) {
-            authenticate();
-        } else if (TaskStatus.REGISTRATION_FAILED == status) {
-            terminate();
-        } else if (TaskStatus.AUTHENTICATION_SUCCESSFUL == status) {
-            reportLocation();
-        } else if (TaskStatus.AUTHENTICATION_FAILED == status) {
-            terminate();
-        }
-        // 暂时先屏蔽掉，没发送心跳消息就暂时先不执行了
-        /*
-        executeConstantly(new Executable()
-        {
-            @Override
-            public void execute(AbstractDriveTask driveTask)
-            {
-                ((SimpleDriveTask)driveTask).heartbeat();
-            }
-        }, 30000);
-        */
-//        reportLocation();
-    }
-
-    private void authenticate() {
+    void authenticate() {
         executeConstantly(driveTask -> {
             if (TaskStatus.REGISTRATION_SUCCESSFUL == status) {
                 status = TaskStatus.AUTHENTICATING;
