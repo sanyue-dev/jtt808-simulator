@@ -32,6 +32,18 @@ class TaskGroupMonitorTemplateTest
         assertThat(batchCreate).contains("window.location.href = '/task-groups/monitor?taskGroupId=' + result.data.taskGroupId");
     }
 
+    @Test
+    void monitorCanStopTaskGroupAndShowStopResult() throws Exception
+    {
+        String template = read("/templates/task-group-monitor.ftlh");
+
+        assertThat(template).contains("停止任务组");
+        assertThat(template).contains("$.post('/task-groups/stop'");
+        assertThat(template).contains("data-action=\"stop\"");
+        assertThat(template).contains("停止成功：");
+        assertThat(template).contains("停止失败：");
+    }
+
     private String read(String path) throws Exception
     {
         return new String(getClass().getResourceAsStream(path).readAllBytes(), StandardCharsets.UTF_8);

@@ -35,4 +35,20 @@ public class TaskGroupMonitorController
         }
         return result;
     }
+
+    @RequestMapping("/stop")
+    @ResponseBody
+    public Result stop(String taskGroupId)
+    {
+        Result result = new Result();
+        try
+        {
+            result.setData(taskGroupMonitorService.stopTaskGroup(taskGroupId));
+        }
+        catch(Exception ex)
+        {
+            result.setError(ex);
+        }
+        return result;
+    }
 }

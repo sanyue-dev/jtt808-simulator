@@ -1,5 +1,9 @@
 package cn.org.hentai.simulator.service.task;
 
+import cn.org.hentai.simulator.service.monitor.TaskStopResult;
+
+import java.util.List;
+
 public class TaskGroupSummary
 {
     private final String taskGroupId;
@@ -14,6 +18,9 @@ public class TaskGroupSummary
     private final int rampUpWindowCount;
     private final int executedWindowCount;
     private final String failureReason;
+    private final long stopSucceeded;
+    private final long stopFailed;
+    private final List<TaskStopResult.TaskStopFailure> stopFailures;
 
     TaskGroupSummary(String taskGroupId,
                      String displayName,
@@ -26,7 +33,10 @@ public class TaskGroupSummary
                      int terminatedTasks,
                      int rampUpWindowCount,
                      int executedWindowCount,
-                     String failureReason)
+                     String failureReason,
+                     long stopSucceeded,
+                     long stopFailed,
+                     List<TaskStopResult.TaskStopFailure> stopFailures)
     {
         this.taskGroupId = taskGroupId;
         this.displayName = displayName;
@@ -40,6 +50,9 @@ public class TaskGroupSummary
         this.rampUpWindowCount = rampUpWindowCount;
         this.executedWindowCount = executedWindowCount;
         this.failureReason = failureReason;
+        this.stopSucceeded = stopSucceeded;
+        this.stopFailed = stopFailed;
+        this.stopFailures = stopFailures;
     }
 
     public String getTaskGroupId() { return taskGroupId; }
@@ -54,4 +67,7 @@ public class TaskGroupSummary
     public int getRampUpWindowCount() { return rampUpWindowCount; }
     public int getExecutedWindowCount() { return executedWindowCount; }
     public String getFailureReason() { return failureReason; }
+    public long getStopSucceeded() { return stopSucceeded; }
+    public long getStopFailed() { return stopFailed; }
+    public List<TaskStopResult.TaskStopFailure> getStopFailures() { return stopFailures; }
 }

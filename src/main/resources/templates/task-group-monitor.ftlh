@@ -115,6 +115,10 @@
         cursor: pointer;
         color: var(--color-text-primary);
     }
+    .task-group-table__btn--danger {
+        border-color: #dc3545;
+        color: #dc3545;
+    }
 </style>
 <script type="text/javascript">
     $(document).ready(function()
@@ -148,6 +152,11 @@
             (data.taskGroups || []).forEach(function(group)
             {
                 var expanded = !!expandedTaskGroupIds[group.taskGroupId];
+                var actions = '<button type="button" class="task-group-table__btn" data-action="toggle">' + (expanded ? '收起' : '展开') + '</button>';
+                if (canStop(group))
+                {
+                    actions += ' <button type="button" class="task-group-table__btn task-group-table__btn--danger" data-action="stop">停止任务组</button>';
+                }
                 rows.push('<tr data-task-group-id="' + escapeHtml(group.taskGroupId) + '">' +
                     '<td>' + formatState(group.state) + '</td>' +
                     '<td>' + escapeHtml(group.displayName) + '</td>' +
@@ -156,7 +165,7 @@
                     '<td>' + (group.startedTasks || 0) + '</td>' +
                     '<td>' + (group.activeTasks || 0) + '</td>' +
                     '<td>' + (group.terminatedTasks || 0) + '</td>' +
-                    '<td><button type="button" class="task-group-table__btn" data-action="toggle">' + (expanded ? '收起' : '展开') + '</button></td>' +
+                    '<td>' + actions + '</td>' +
                     '</tr>');
                 if (expanded) rows.push(detailRow(group));
             });
@@ -177,6 +186,9 @@
                 '<p>状态：' + formatState(group.state) + '</p>' +
                 '<p>活动中：' + (group.activeTasks || 0) + '</p>' +
                 '<p>已终止：' + (group.terminatedTasks || 0) + '</p>' +
+                '<p>停止成功：' + (group.stopSucceeded || 0) + '</p>' +
+                '<p>停止失败：' + (group.stopFailed || 0) + '</p>' +
+                '<p>停止失败明细：' + formatStopFailures(group.stopFailures || []) + '</p>' +
                 '</div>' +
                 '</div>' +
                 '</td></tr>';
@@ -188,6 +200,30 @@
             expandedTaskGroupIds[id] = !expandedTaskGroupIds[id];
             loadSnapshot();
         });
+
+        $('#task-group-list').on('click', '[data-action="stop"]', function()
+        {
+            var id = $(this).closest('tr').attr('data-task-group-id');
+            $.post('/task-groups/stop', { taskGroupId: id }, function(result)
+            {
+                if (result.error && result.error.code) return toastr('error', result.error.reason);
+                loadSnapshot();
+            });
+        });
+
+        function canStop(group)
+        {
+            return (group.activeTasks || 0) > 0 && group.state !== 'stopping' && group.state !== 'failed';
+        }
+
+        function formatStopFailures(failures)
+        {
+            if (!failures.length) return '无';
+            return failures.map(function(failure)
+            {
+                return escapeHtml(failure.taskId) + '：' + escapeHtml(failure.reason || '');
+            }).join('；');
+        }
 
         function getValue(data, path)
         {
