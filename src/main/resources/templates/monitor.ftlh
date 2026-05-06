@@ -348,7 +348,7 @@
             var info = result.data;
             $('#routeName').html(info.routeName);
             $('#routeMileages').html((info.routeMileages / 1000).toFixed(2) + ' km');
-            $('#vehiclenumber').html(info.vehicleNumber);
+            $('#vehicleNumber').html(info.vehicleNumber);
             $('#deviceSn').html(info.deviceSn);
             $('#simNumber').html(info.simNumber);
             $('#startTime').html(new Date(info.startTime).format('yyyy-MM-dd hh:mm:ss'));
