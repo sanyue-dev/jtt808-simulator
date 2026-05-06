@@ -46,6 +46,18 @@ class GlobalDesignBaselineTest
         assertThat(css).doesNotContain("@font-face");
     }
 
+    @Test
+    void routeEditorPanelRowsFitSharedCarbonInputs() throws Exception
+    {
+        String template = read("/templates/route-create.ftlh");
+
+        assertThat(template).contains("#panel .grid__row { min-height: 44px; line-height: 40px;");
+        assertThat(template).contains("min-height: 44px;");
+        assertThat(template).contains(".station .station-value input");
+        assertThat(template).contains("height: 40px;");
+        assertThat(template).doesNotContain("#panel .grid__row { height: 36px;");
+    }
+
     private String read(String path) throws Exception
     {
         return new String(getClass().getResourceAsStream(path).readAllBytes(), StandardCharsets.UTF_8);

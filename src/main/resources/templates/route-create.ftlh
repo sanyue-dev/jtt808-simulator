@@ -27,7 +27,7 @@
         #panel h4:first-child button { margin-top: 10px; }
         #panel h4 a { float: right; margin-right: 12px; }
         #panel h4 button { float: right; }
-        #panel .grid__row { height: 36px; line-height: 36px; font-size: 13px; }
+        #panel .grid__row { min-height: 44px; line-height: 40px; font-size: 13px; }
         #panel .grid__col--7 input[type=text] { min-width: 200px; }
         #panel #btn-locate-point { margin-right: 5px; }
         #map { width: 100%; height: 100%; }
@@ -101,33 +101,33 @@
         }
         .station
         {
-            height: 36px;
-            line-height: 36px;
+            min-height: 44px;
+            line-height: 40px;
         }
         .station .station-title
         {
             width: 100px;
-            height: 36px;
-            line-height: 36px;
+            min-height: 44px;
+            line-height: 40px;
             float: left;
         }
         .station .station-value
         {
             width: 210px;
-            height: 36px;
-            line-height: 36px;
+            min-height: 44px;
+            line-height: 40px;
             float: left;
         }
         .station .station-value input
         {
             width: 100%;
-            height: 30px;
+            height: 40px;
         }
         .station .station-action
         {
             width: 80px;
-            height: 36px;
-            line-height: 36px;
+            min-height: 44px;
+            line-height: 40px;
             text-align: center;
             float: left;
         }
