@@ -138,7 +138,7 @@ java -jar target/jtt808-simulator-1.0-SNAPSHOT.jar
 - 设置运行时长，达到时长后自动停止。
 - 设置 ramp-up 批次大小和批次间隔，控制启动节奏。
 
-批量启动前会执行前置检查。检查失败时接口会明确返回失败原因，不会通过静默降级、跳过任务或虚假成功来掩盖问题。
+批量启动前会执行前置检查。检查失败时，页面会显示具体原因；按提示调整系统资源、目标地址或启动参数后再重试。
 
 ### 4. 观察和停止任务
 
@@ -235,7 +235,7 @@ public final void executeAfter(Executable executable, int milliseconds);
 public final void executeConstantly(Executable executable, int interval);
 ```
 
-任务终止后，已排队的发送逻辑应显式识别终止状态并停止执行，不能通过吞掉异常或伪造成功来掩盖真实问题。
+位置上报调度在发送前会检查任务是否已终止，避免终止后继续上报。扩展自定义延迟或周期任务时，也应在执行前判断任务状态。
 
 ## 测试
 
@@ -256,7 +256,7 @@ public final void executeConstantly(Executable executable, int interval);
 ## 注意事项
 
 - 当前默认位置上报间隔是 5 秒，可在批量启动页面调整。
-- 压测失败时应保留失败阶段、失败原因和资源指标，不要为了显示“通过”而隐藏错误。
+- 压测失败时，优先查看失败阶段、失败原因和资源指标，再调整系统参数或启动规模。
 - 前端静态资源可能被浏览器缓存。修改 `static/` 下的 JS/CSS 后，验证时建议强制刷新页面。
 - 调试大量终端时，避免开启过高日志级别。
 
