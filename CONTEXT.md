@@ -64,6 +64,10 @@ _Avoid_: Trip task export, task detail payload
 The canonical list for inspecting individual trip tasks.
 _Avoid_: Task group detail list
 
+**Global Stop Action**:
+A stop command that targets every non-terminated trip task known by the current simulator process.
+_Avoid_: Runtime summary, task group stop
+
 ## Relationships
 
 - A **Task Group** contains one or more **Trip Tasks**.
@@ -77,7 +81,10 @@ _Avoid_: Task group detail list
 - A **Task Group Monitor** centers on all **Task Groups** currently known by the simulator process.
 - A **Runtime Summary** is separate from any one **Task Group** and represents the simulator process as a whole.
 - A **Runtime Summary** includes all **Trip Tasks** known by the current process, including completed trip tasks.
+- A **Runtime Summary** includes task counts, protocol-stage counts, reporting throughput, failure counts, runtime resource usage, and scheduler delay.
+- A **Runtime Summary** is displayed as grouped process-level metrics: task status, protocol runtime, resource usage, and scheduler health.
 - A **Task Group Monitor** presents a **Runtime Summary** and a **Task Group List**.
+- A **Task Group Monitor** is the only UI page that presents the **Runtime Summary**.
 - A **Task Group Monitor** refreshes through **Monitor Polling** without a full page reload.
 - A **Task Group List** shows all task groups known by the current process, is not paginated, and is rendered in full in the first version.
 - A **Task Group Monitor Snapshot** contains one **Runtime Summary** and the complete **Task Group List**.
@@ -90,6 +97,8 @@ _Avoid_: Task group detail list
 - A **Task Group List** row can be expanded or opened to inspect group-level progress and stop results for that **Task Group**.
 - Expanded task group details distinguish **Task Group Launch Status** from **Task Group Current Status**.
 - A **Trip Task List** is the only place that lists individual **Trip Tasks**; it can be filtered by **Task Group**.
+- A **Trip Task List** does not present the **Runtime Summary**.
+- A **Trip Task List** may expose a **Global Stop Action** as an emergency control, but it remains separate from the **Runtime Summary**.
 - A **Trip Task** exposes its **Task Group** so users can tell which creation action produced it.
 
 ## Example Dialogue
@@ -108,6 +117,15 @@ _Avoid_: Task group detail list
 >
 > **Dev:** "Where should users inspect task groups?"
 > **Domain expert:** "In the task group monitor: the summary gives process-level context, and the task group list shows each creation action."
+>
+> **Dev:** "Should the trip task list also show the runtime summary?"
+> **Domain expert:** "No. The runtime summary belongs to the task group monitor; the trip task list is for filtering and inspecting individual trip tasks."
+>
+> **Dev:** "Should the task group monitor runtime summary be less detailed than the old trip task list summary?"
+> **Domain expert:** "No. It must carry the complete process-level metrics, including resource usage and scheduler delay."
+>
+> **Dev:** "Should all runtime summary metrics appear as one flat block?"
+> **Domain expert:** "No. Keep one runtime summary, but group it into task status, protocol runtime, resource usage, and scheduler health."
 >
 > **Dev:** "Is the response from clicking batch creation the same data as the task group's later summary?"
 > **Domain expert:** "No. The creation result tells whether the creation action was accepted and which task group was created; the task group summary tells how that group is running afterward."
@@ -139,6 +157,9 @@ _Avoid_: Task group detail list
 > **Dev:** "How does a user inspect the tasks created by one task group?"
 > **Domain expert:** "Open the trip task list with a task-group filter; each row can also show which task group produced the trip task."
 >
+> **Dev:** "If the trip task list no longer shows the runtime summary, should it lose the stop-all button too?"
+> **Domain expert:** "No. It may keep a global stop action as an emergency control, but that does not make the trip task list the process-level monitoring page."
+>
 > **Dev:** "Should users identify task groups by raw IDs?"
 > **Domain expert:** "No. APIs use stable identifiers, while the UI shows a task group display name that describes the creation action."
 >
@@ -151,5 +172,6 @@ _Avoid_: Task group detail list
 - "task group" means the boundary created by a creation action; it does not mean a manually managed fleet, label, or saved collection.
 - Completed task group data is historical within the current process; it must not be presented as the current active run.
 - "summary" must distinguish **Runtime Summary** from task-group-level progress or result metrics.
+- **Runtime Summary** must not be duplicated on the **Trip Task List**; otherwise users have two competing places for process-level truth.
 - Task group details must distinguish launch-side data from current runtime data, even when they are shown together in one expanded row.
 - "runtime overview" was too generic; the resolved product term is **Task Group Monitor** because the page is centered on task groups.
