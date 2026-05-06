@@ -1,6 +1,7 @@
 package cn.org.hentai.simulator.service.task;
 
 import cn.org.hentai.simulator.domain.entity.Route;
+import cn.org.hentai.simulator.domain.model.TaskLifecycleObserver;
 import cn.org.hentai.simulator.domain.model.TerminalIdentity;
 import cn.org.hentai.simulator.service.RouteService;
 import cn.org.hentai.simulator.service.TaskManager;
@@ -40,26 +41,33 @@ public class TaskBatchLaunchService
     private final TaskScheduler stopScheduler;
     private final CapacityProbe capacityProbe;
     private final TaskIdentityBatchGenerator identityBatchGenerator;
+    private final TaskGroupMonitorService taskGroupMonitorService;
     private final AtomicReference<LaunchSession> currentSession = new AtomicReference<>();
 
     @Autowired
-    public TaskBatchLaunchService(RouteService routeService)
+    public TaskBatchLaunchService(RouteService routeService, TaskGroupMonitorService taskGroupMonitorService)
     {
-        this(routeService, new TaskManagerGateway(), new ExecutorTaskScheduler(newLaunchScheduler()), new ExecutorTaskScheduler(Executors.newSingleThreadScheduledExecutor()), new SystemCapacityProbe());
+        this(routeService, new TaskManagerGateway(), new ExecutorTaskScheduler(newLaunchScheduler()), new ExecutorTaskScheduler(Executors.newSingleThreadScheduledExecutor()), new SystemCapacityProbe(), taskGroupMonitorService);
     }
 
     TaskBatchLaunchService(RouteService routeService, TaskGateway taskGateway, TaskScheduler launchScheduler, TaskScheduler stopScheduler)
     {
-        this(routeService, taskGateway, launchScheduler, stopScheduler, new SystemCapacityProbe());
+        this(routeService, taskGateway, launchScheduler, stopScheduler, new SystemCapacityProbe(), new TaskGroupMonitorService());
     }
 
     TaskBatchLaunchService(RouteService routeService, TaskGateway taskGateway, TaskScheduler launchScheduler, TaskScheduler stopScheduler, CapacityProbe capacityProbe)
+    {
+        this(routeService, taskGateway, launchScheduler, stopScheduler, capacityProbe, new TaskGroupMonitorService());
+    }
+
+    TaskBatchLaunchService(RouteService routeService, TaskGateway taskGateway, TaskScheduler launchScheduler, TaskScheduler stopScheduler, CapacityProbe capacityProbe, TaskGroupMonitorService taskGroupMonitorService)
     {
         this.routeService = routeService;
         this.taskGateway = taskGateway;
         this.launchScheduler = launchScheduler;
         this.stopScheduler = stopScheduler;
         this.capacityProbe = capacityProbe;
+        this.taskGroupMonitorService = taskGroupMonitorService;
         this.identityBatchGenerator = new TaskIdentityBatchGenerator();
     }
 
@@ -78,7 +86,8 @@ public class TaskBatchLaunchService
         int batchSize = effectiveRampUpBatchSize(request);
         List<TaskLaunchWindow> windows = buildLaunchWindows(request.getTerminalCount(), batchSize, request.getRampUpIntervalMillis());
         List<TerminalIdentity> identities = identityBatchGenerator.generate(request.getTerminalCount(), taskGateway.reserveIndexes(request.getTerminalCount()), request.getVehicleNumberPattern(), request.getDeviceSnPattern(), request.getSimNumberPattern());
-        LaunchSession session = new LaunchSession(request.getTerminalCount(), windows.size(), request.getRunDurationSeconds() > 0);
+        TaskCreationResult creation = taskGroupMonitorService.createGroup(TaskGroupSource.BATCH, request.getTerminalCount(), windows.size());
+        LaunchSession session = new LaunchSession(creation.getTaskGroupId(), request.getTerminalCount(), windows.size(), request.getRunDurationSeconds() > 0);
         currentSession.set(session);
 
         try
@@ -92,11 +101,12 @@ public class TaskBatchLaunchService
             {
                 stopScheduler.schedule(() -> stopSession(session), request.getRunDurationSeconds(), TimeUnit.SECONDS);
             }
-            return new BatchTaskLaunchResult(request.getTerminalCount(), windows.size(), request.getRunDurationSeconds() > 0, preflight);
+            return new BatchTaskLaunchResult(request.getTerminalCount(), windows.size(), request.getRunDurationSeconds() > 0, preflight, creation.getTaskGroupId(), creation.getTaskGroupDisplayName());
         }
         catch(RuntimeException ex)
         {
             session.fail(ex);
+            taskGroupMonitorService.recordLaunchFailure(creation.getTaskGroupId(), ex);
             stopSession(session);
             throw new RuntimeException("批量任务启动失败，已请求终止已启动任务", ex);
         }
@@ -246,9 +256,10 @@ public class TaskBatchLaunchService
                 TerminalIdentity identity = identities.get(i);
                 Route route = routes.get(i % routes.size());
                 long taskId = taskGateway.nextTaskId();
-                taskGateway.run(taskId, params(request, identity), route.getId(), request.getReportIntervalSeconds());
+                taskGateway.run(taskId, params(request, identity), route.getId(), request.getReportIntervalSeconds(), taskGroupMonitorService.observer(session.taskGroupId));
                 session.taskIds.add(taskId);
                 session.startedTasks.incrementAndGet();
+                taskGroupMonitorService.recordTaskStarted(session.taskGroupId, taskId);
                 if (session.stopping.get())
                 {
                     TaskStopResult result = taskGateway.terminateTasks(List.of(taskId));
@@ -256,11 +267,13 @@ public class TaskBatchLaunchService
                 }
             }
             session.recordWindowExecuted();
+            taskGroupMonitorService.recordLaunchWindowExecuted(session.taskGroupId);
         }
         catch(RuntimeException ex)
         {
             logger.error("批量任务启动窗口失败: startIndex={}, endIndex={}, delayMillis={}", window.getStartIndex(), window.getEndIndex(), window.getDelayMillis(), ex);
             session.fail(ex);
+            taskGroupMonitorService.recordLaunchFailure(session.taskGroupId, ex);
             stopSession(session);
             throw ex;
         }
@@ -292,6 +305,7 @@ public class TaskBatchLaunchService
         List<Long> taskIds = new ArrayList<>(session.taskIds);
         TaskStopResult result = taskGateway.terminateTasks(taskIds);
         session.recordStopResult(taskIds, result);
+        taskGroupMonitorService.recordLaunchStopped(session.taskGroupId);
         if (result.getFailed() > 0)
         {
             logger.error("批量任务自动停止存在失败: succeeded={}, failed={}, failures={}", result.getSucceeded(), result.getFailed(), result.getFailures());
@@ -304,7 +318,7 @@ public class TaskBatchLaunchService
 
         long nextTaskId();
 
-        void run(long taskId, Map<String, String> params, Long routeId, int reportIntervalSeconds);
+        void run(long taskId, Map<String, String> params, Long routeId, int reportIntervalSeconds, TaskLifecycleObserver lifecycleObserver);
 
         TaskStopResult terminateTasks(Collection<Long> taskIds);
     }
@@ -338,9 +352,9 @@ public class TaskBatchLaunchService
         }
 
         @Override
-        public void run(long taskId, Map<String, String> params, Long routeId, int reportIntervalSeconds)
+        public void run(long taskId, Map<String, String> params, Long routeId, int reportIntervalSeconds, TaskLifecycleObserver lifecycleObserver)
         {
-            TaskManager.getInstance().run(taskId, params, routeId, reportIntervalSeconds, null);
+            TaskManager.getInstance().run(taskId, params, routeId, reportIntervalSeconds, lifecycleObserver);
         }
 
         @Override
@@ -394,6 +408,7 @@ public class TaskBatchLaunchService
     private static class LaunchSession
     {
         private final int targetTasks;
+        private final String taskGroupId;
         private final int rampUpWindowCount;
         private final boolean autoStopScheduled;
         private final AtomicBoolean stopping = new AtomicBoolean(false);
@@ -409,8 +424,9 @@ public class TaskBatchLaunchService
         private final AtomicLong stopSucceeded = new AtomicLong();
         private final AtomicLong stopFailed = new AtomicLong();
 
-        private LaunchSession(int targetTasks, int rampUpWindowCount, boolean autoStopScheduled)
+        private LaunchSession(String taskGroupId, int targetTasks, int rampUpWindowCount, boolean autoStopScheduled)
         {
+            this.taskGroupId = taskGroupId;
             this.targetTasks = targetTasks;
             this.rampUpWindowCount = rampUpWindowCount;
             this.autoStopScheduled = autoStopScheduled;

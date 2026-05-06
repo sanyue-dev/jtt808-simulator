@@ -1,28 +1,19 @@
 package cn.org.hentai.simulator.web.controller;
 
-import cn.org.hentai.simulator.domain.model.DrivePlan;
-import cn.org.hentai.simulator.service.RouteManager;
-import cn.org.hentai.simulator.service.ScheduleTaskManager;
-import cn.org.hentai.simulator.engine.core.SimpleDriveTask;
-import cn.org.hentai.simulator.service.TaskManager;
 import cn.org.hentai.simulator.domain.entity.Route;
-import cn.org.hentai.simulator.domain.entity.ScheduleTask;
 import cn.org.hentai.simulator.service.RouteService;
-import cn.org.hentai.simulator.service.ScheduleTaskService;
+import cn.org.hentai.simulator.service.task.SingleTaskLaunchRequest;
+import cn.org.hentai.simulator.service.task.SingleTaskLaunchService;
 import cn.org.hentai.simulator.web.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by houcheng when 2018/11/25.
@@ -36,6 +27,9 @@ public class TaskController
 
     @Autowired
     RouteService routeService;
+
+    @Autowired
+    SingleTaskLaunchService singleTaskLaunchService;
 
     @Value("${vehicle-server.addr}")
     String vehicleServerAddr;
@@ -67,44 +61,16 @@ public class TaskController
         Result result = new Result();
         try
         {
-            if (StringUtils.isEmpty(vehicleNumber) || vehicleNumber.matches("^[\u4e00-\u9fa5]\\w{6,7}$") == false)
-                throw new RuntimeException("请填写正确的车牌号");
-
-            if (StringUtils.isEmpty(deviceSn) || deviceSn.matches("^\\w{7,30}$") == false)
-                throw new RuntimeException("请填写正确的终端ID");
-
-            if (StringUtils.isEmpty(simNumber) || simNumber.matches("^\\d{11,12}$") == false)
-                throw new RuntimeException("请填写正确的SIM卡号");
-
-            if (StringUtils.isEmpty(serverPort) || serverPort.matches("^\\d{1,5}$") == false)
-                throw new RuntimeException("请填写正确的服务器端口");
-
-            if (simNumber.length() < 12) simNumber = ("0000000000000" + simNumber).replaceAll("^0+(\\d{12})$", "$1");
-
-            int kilometers = 0;
-            if (StringUtils.isEmpty(mileages) == false)
-            {
-                if (mileages.matches("^\\d+$")) kilometers = Integer.parseInt(mileages);
-                else throw new RuntimeException("请填写正确的初始里程数，必须为整数，如：“100”表示100公里。");
-            }
-            final int km = kilometers <= 0 ? 0 : kilometers;
-
-            final String sim = simNumber;
-
-            Map<String, String> params = new HashMap()
-            {
-                {
-                    put("vehicle.number", vehicleNumber);
-                    put("device.sn", deviceSn);
-                    put("device.sim", sim);
-                    put("server.address", serverAddress);
-                    put("server.port", serverPort);
-                    put("mode", mode);
-                    put("mileages", km);
-                }
-            };
-
-            TaskManager.getInstance().run(params, routeId);
+            SingleTaskLaunchRequest request = new SingleTaskLaunchRequest();
+            request.setRouteId(routeId);
+            request.setVehicleNumber(vehicleNumber);
+            request.setDeviceSn(deviceSn);
+            request.setSimNumber(simNumber);
+            request.setMileages(mileages);
+            request.setServerAddress(serverAddress);
+            request.setServerPort(serverPort);
+            request.setMode(mode);
+            result.setData(singleTaskLaunchService.launch(request));
         }
         catch(Exception ex)
         {

@@ -1,6 +1,7 @@
 package cn.org.hentai.simulator.service.task;
 
 import cn.org.hentai.simulator.domain.entity.Route;
+import cn.org.hentai.simulator.domain.model.TaskLifecycleObserver;
 import cn.org.hentai.simulator.service.RouteService;
 import cn.org.hentai.simulator.service.monitor.TaskStopResult;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,8 @@ class TaskBatchLaunchServiceTest
     private final RecordingScheduler launchScheduler = new RecordingScheduler();
     private final RecordingScheduler stopScheduler = new RecordingScheduler();
     private final RecordingCapacityProbe capacityProbe = new RecordingCapacityProbe();
-    private final TaskBatchLaunchService service = new TaskBatchLaunchService(new FakeRouteService(), taskGateway, launchScheduler, stopScheduler, capacityProbe);
+    private final TaskGroupMonitorService taskGroupMonitorService = new TaskGroupMonitorService(() -> null);
+    private final TaskBatchLaunchService service = new TaskBatchLaunchService(new FakeRouteService(), taskGateway, launchScheduler, stopScheduler, capacityProbe, taskGroupMonitorService);
 
     @Test
     void validatesGeneralBatchLaunchConfig()
@@ -168,6 +170,39 @@ class TaskBatchLaunchServiceTest
     }
 
     @Test
+    void batchLaunchCreatesTaskGroupVisibleInMonitorSnapshot()
+    {
+        BatchTaskLaunchRequest request = validRequest();
+        request.setTerminalCount(3);
+        request.setRampUpBatchSize(2);
+        request.setRampUpIntervalMillis(1000);
+
+        BatchTaskLaunchResult result = service.launch(request);
+
+        assertEquals("TG-1", result.getTaskGroupId());
+        assertEquals("批量创建 3 台 #1", result.getTaskGroupDisplayName());
+
+        launchScheduler.runNext();
+
+        TaskGroupSummary group = taskGroupMonitorService.snapshot().getTaskGroups().get(0);
+        assertEquals(result.getTaskGroupId(), group.getTaskGroupId());
+        assertEquals("batch", group.getSource());
+        assertEquals(3, group.getTargetTasks());
+        assertEquals(2, group.getRampUpWindowCount());
+        assertEquals(1, group.getExecutedWindowCount());
+        assertEquals(2, group.getStartedTasks());
+        assertEquals(2, group.getActiveTasks());
+        assertEquals("creating", group.getState());
+
+        launchScheduler.runNext();
+
+        group = taskGroupMonitorService.snapshot().getTaskGroups().get(0);
+        assertEquals(3, group.getStartedTasks());
+        assertEquals(2, group.getExecutedWindowCount());
+        assertEquals("running", group.getState());
+    }
+
+    @Test
     void exposesCurrentBatchLaunchProgressWhileRampUpWindowsRun()
     {
         BatchTaskLaunchRequest request = validRequest();
@@ -243,6 +278,25 @@ class TaskBatchLaunchServiceTest
     }
 
     @Test
+    void recordsTaskGroupCompletedWhenAutoStopCancelsLaunchWindowBeforeTargetReached()
+    {
+        BatchTaskLaunchRequest request = validRequest();
+        request.setTerminalCount(3);
+        request.setRunDurationSeconds(30);
+        request.setRampUpBatchSize(3);
+        taskGateway.afterRun = stopScheduler::runAll;
+
+        service.launch(request);
+        launchScheduler.runNext();
+
+        TaskGroupSummary group = taskGroupMonitorService.snapshot().getTaskGroups().get(0);
+        assertEquals(1, group.getStartedTasks());
+        assertEquals(0, group.getActiveTasks());
+        assertEquals(1, group.getTerminatedTasks());
+        assertEquals("completed", group.getState());
+    }
+
+    @Test
     void recordsLaunchFailureInCurrentBatchLaunchProgress()
     {
         BatchTaskLaunchRequest request = validRequest();
@@ -259,6 +313,21 @@ class TaskBatchLaunchServiceTest
         assertEquals("failed", progress.getState());
         assertEquals(0, progress.getStartedTasks());
         assertEquals("route start failed", progress.getFailureReason());
+    }
+
+    @Test
+    void recordsTaskGroupFailureWhenSchedulingFails()
+    {
+        BatchTaskLaunchRequest request = validRequest();
+        request.setTerminalCount(1);
+        launchScheduler.failOnSchedule = true;
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.launch(request));
+        assertEquals("批量任务启动失败，已请求终止已启动任务", ex.getMessage());
+
+        TaskGroupSummary group = taskGroupMonitorService.snapshot().getTaskGroups().get(0);
+        assertEquals("failed", group.getState());
+        assertEquals("scheduler rejected", group.getFailureReason());
     }
 
     @Test
@@ -319,10 +388,10 @@ class TaskBatchLaunchServiceTest
         }
 
         @Override
-        public void run(long taskId, Map<String, String> params, Long routeId, int reportIntervalSeconds)
+        public void run(long taskId, Map<String, String> params, Long routeId, int reportIntervalSeconds, TaskLifecycleObserver lifecycleObserver)
         {
             if (failOnRun) throw new RuntimeException("route start failed");
-            started.add(new StartedTask(taskId, params, routeId, reportIntervalSeconds));
+            started.add(new StartedTask(taskId, params, routeId, reportIntervalSeconds, lifecycleObserver));
             if (afterRun != null) afterRun.run();
         }
 
@@ -331,12 +400,18 @@ class TaskBatchLaunchServiceTest
         {
             terminatedTaskIds.addAll(taskIds);
             TaskStopResult result = new TaskStopResult();
-            taskIds.forEach(id -> result.recordSuccess());
+            taskIds.forEach(id -> {
+                result.recordSuccess();
+                started.stream()
+                        .filter(task -> task.taskId == id)
+                        .findFirst()
+                        .ifPresent(task -> task.lifecycleObserver.onTerminated(new cn.org.hentai.simulator.domain.model.TaskInfo().withId(id)));
+            });
             return result;
         }
     }
 
-    private record StartedTask(long taskId, Map<String, String> params, Long routeId, int reportIntervalSeconds)
+    private record StartedTask(long taskId, Map<String, String> params, Long routeId, int reportIntervalSeconds, TaskLifecycleObserver lifecycleObserver)
     {
     }
 
@@ -344,10 +419,12 @@ class TaskBatchLaunchServiceTest
     {
         private final List<Long> delays = new ArrayList<>();
         private final List<Runnable> tasks = new ArrayList<>();
+        private boolean failOnSchedule = false;
 
         @Override
         public ScheduledFuture<?> schedule(Runnable task, long delay, TimeUnit unit)
         {
+            if (failOnSchedule) throw new RuntimeException("scheduler rejected");
             delays.add(unit.toMillis(delay));
             tasks.add(task);
             return new CompletedFuture();
