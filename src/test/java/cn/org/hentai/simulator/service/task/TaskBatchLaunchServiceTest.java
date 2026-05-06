@@ -25,7 +25,7 @@ class TaskBatchLaunchServiceTest
     private final RecordingScheduler launchScheduler = new RecordingScheduler();
     private final RecordingScheduler stopScheduler = new RecordingScheduler();
     private final RecordingCapacityProbe capacityProbe = new RecordingCapacityProbe();
-    private final TaskGroupMonitorService taskGroupMonitorService = new TaskGroupMonitorService(() -> null);
+    private final TaskGroupMonitorService taskGroupMonitorService = new TaskGroupMonitorService(() -> null, taskGateway::terminateTasks);
     private final TaskBatchLaunchService service = new TaskBatchLaunchService(new FakeRouteService(), taskGateway, launchScheduler, stopScheduler, capacityProbe, taskGroupMonitorService);
 
     @Test
@@ -297,6 +297,33 @@ class TaskBatchLaunchServiceTest
     }
 
     @Test
+    void stoppingTaskGroupCancelsPendingRampUpWindows()
+    {
+        BatchTaskLaunchRequest request = validRequest();
+        request.setTerminalCount(3);
+        request.setRampUpBatchSize(1);
+        request.setRampUpIntervalMillis(1000);
+
+        BatchTaskLaunchResult result = service.launch(request);
+        launchScheduler.runNext();
+
+        TaskStopResult stopResult = taskGroupMonitorService.stopTaskGroup(result.getTaskGroupId());
+        launchScheduler.runAll();
+
+        assertEquals(1L, stopResult.getSucceeded());
+        BatchTaskLaunchProgress progress = service.currentProgress();
+        assertEquals("completed", progress.getState());
+        assertEquals(1L, progress.getStopSucceeded());
+        assertEquals(0L, progress.getStopFailed());
+        assertEquals(1, taskGateway.started.size());
+        assertEquals(Set.of(1L), taskGateway.terminatedTaskIds);
+        TaskGroupSummary group = taskGroupMonitorService.snapshot().getTaskGroups().get(0);
+        assertEquals(1, group.getStartedTasks());
+        assertEquals(1, group.getTerminatedTasks());
+        assertEquals("completed", group.getState());
+    }
+
+    @Test
     void recordsLaunchFailureInCurrentBatchLaunchProgress()
     {
         BatchTaskLaunchRequest request = validRequest();
@@ -418,7 +445,7 @@ class TaskBatchLaunchServiceTest
     private static class RecordingScheduler implements TaskBatchLaunchService.TaskScheduler
     {
         private final List<Long> delays = new ArrayList<>();
-        private final List<Runnable> tasks = new ArrayList<>();
+        private final List<RecordingFuture> tasks = new ArrayList<>();
         private boolean failOnSchedule = false;
 
         @Override
@@ -426,13 +453,14 @@ class TaskBatchLaunchServiceTest
         {
             if (failOnSchedule) throw new RuntimeException("scheduler rejected");
             delays.add(unit.toMillis(delay));
-            tasks.add(task);
-            return new CompletedFuture();
+            RecordingFuture future = new RecordingFuture(task);
+            tasks.add(future);
+            return future;
         }
 
         void runAll()
         {
-            tasks.forEach(Runnable::run);
+            tasks.forEach(RecordingFuture::run);
         }
 
         void runNext()
@@ -466,13 +494,29 @@ class TaskBatchLaunchServiceTest
         }
     }
 
-    private static class CompletedFuture implements ScheduledFuture<Object>
+    private static class RecordingFuture implements ScheduledFuture<Object>
     {
+        private final Runnable task;
+        private boolean cancelled = false;
+        private boolean done = false;
+
+        private RecordingFuture(Runnable task)
+        {
+            this.task = task;
+        }
+
+        private void run()
+        {
+            if (cancelled || done) return;
+            done = true;
+            task.run();
+        }
+
         @Override public long getDelay(TimeUnit unit) { return 0; }
         @Override public int compareTo(java.util.concurrent.Delayed o) { return 0; }
-        @Override public boolean cancel(boolean mayInterruptIfRunning) { return false; }
-        @Override public boolean isCancelled() { return false; }
-        @Override public boolean isDone() { return true; }
+        @Override public boolean cancel(boolean mayInterruptIfRunning) { cancelled = true; done = true; return true; }
+        @Override public boolean isCancelled() { return cancelled; }
+        @Override public boolean isDone() { return done; }
         @Override public Object get() { return null; }
         @Override public Object get(long timeout, TimeUnit unit) { return null; }
     }
