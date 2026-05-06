@@ -27,6 +27,18 @@ class TaskGroupMonitorTemplateTest
     {
         String template = read("/templates/task-group-monitor.ftlh");
 
+        assertThat(template).contains("任务状态");
+        assertThat(template).contains("协议运行");
+        assertThat(template).contains("资源占用");
+        assertThat(template).contains("调度健康");
+        assertThat(template).contains("data-field=\"runtimeSummary.terminated\"");
+        assertThat(template).contains("data-field=\"runtimeSummary.runtimeResources.heapUsedBytes\"");
+        assertThat(template).contains("data-field=\"runtimeSummary.runtimeResources.heapMaxBytes\"");
+        assertThat(template).contains("data-field=\"runtimeSummary.runtimeResources.threadCount\"");
+        assertThat(template).contains("data-field=\"runtimeSummary.runtimeResources.openFileDescriptorCount\"");
+        assertThat(template).contains("data-field=\"runtimeSummary.runtimeResources.maxFileDescriptorCount\"");
+        assertThat(template).contains("data-field=\"runtimeSummary.schedulerDelay.averageDelayMillis\"");
+        assertThat(template).contains("data-field=\"runtimeSummary.schedulerDelay.maxDelayMillis\"");
         assertThat(template).contains("data-field=\"runtimeSummary.registrationSucceeded\"");
         assertThat(template).contains("data-field=\"runtimeSummary.registrationFailed\"");
         assertThat(template).contains("data-field=\"runtimeSummary.authenticationFailed\"");

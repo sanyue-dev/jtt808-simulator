@@ -14,21 +14,49 @@
             </div>
             <div class="page-body">
                 <div class="monitor-summary" id="task-group-runtime-summary">
-                    <div class="monitor-summary__item"><span>总任务数</span><strong data-field="runtimeSummary.totalTasks">0</strong></div>
-                    <div class="monitor-summary__item"><span>未终止</span><strong data-field="runtimeSummary.activeTasks">0</strong></div>
-                    <div class="monitor-summary__item"><span>停车中</span><strong data-field="runtimeSummary.parkingTasks">0</strong></div>
-                    <div class="monitor-summary__item"><span>已终止</span><strong data-field="runtimeSummary.terminatedTasks">0</strong></div>
-                    <div class="monitor-summary__item"><span>连接成功</span><strong data-field="runtimeSummary.connectionSucceeded">0</strong></div>
-                    <div class="monitor-summary__item"><span>连接失败</span><strong data-field="runtimeSummary.connectionFailed">0</strong></div>
-                    <div class="monitor-summary__item"><span>注册成功</span><strong data-field="runtimeSummary.registrationSucceeded">0</strong></div>
-                    <div class="monitor-summary__item"><span>注册失败</span><strong data-field="runtimeSummary.registrationFailed">0</strong></div>
-                    <div class="monitor-summary__item"><span>鉴权成功</span><strong data-field="runtimeSummary.authenticationSucceeded">0</strong></div>
-                    <div class="monitor-summary__item"><span>鉴权失败</span><strong data-field="runtimeSummary.authenticationFailed">0</strong></div>
-                    <div class="monitor-summary__item"><span>位置上报</span><strong data-field="runtimeSummary.locationReportSent">0</strong></div>
-                    <div class="monitor-summary__item"><span>位置上报/s</span><strong data-field="runtimeSummary.locationReportRate" data-format="rate">0</strong></div>
-                    <div class="monitor-summary__item"><span>断连</span><strong data-field="runtimeSummary.disconnected">0</strong></div>
-                    <div class="monitor-summary__item"><span>发送失败</span><strong data-field="runtimeSummary.sendFailed">0</strong></div>
-                    <div class="monitor-summary__item"><span>协议异常</span><strong data-field="runtimeSummary.protocolExceptions">0</strong></div>
+                    <section class="monitor-summary__section">
+                        <h3>任务状态</h3>
+                        <div class="monitor-summary__grid">
+                            <div class="monitor-summary__item"><span>总任务数</span><strong data-field="runtimeSummary.totalTasks">0</strong></div>
+                            <div class="monitor-summary__item"><span>未终止</span><strong data-field="runtimeSummary.activeTasks">0</strong></div>
+                            <div class="monitor-summary__item"><span>停车中</span><strong data-field="runtimeSummary.parkingTasks">0</strong></div>
+                            <div class="monitor-summary__item"><span>已终止</span><strong data-field="runtimeSummary.terminatedTasks">0</strong></div>
+                        </div>
+                    </section>
+                    <section class="monitor-summary__section">
+                        <h3>协议运行</h3>
+                        <div class="monitor-summary__grid">
+                            <div class="monitor-summary__item"><span>连接成功</span><strong data-field="runtimeSummary.connectionSucceeded">0</strong></div>
+                            <div class="monitor-summary__item"><span>连接失败</span><strong data-field="runtimeSummary.connectionFailed">0</strong></div>
+                            <div class="monitor-summary__item"><span>注册成功</span><strong data-field="runtimeSummary.registrationSucceeded">0</strong></div>
+                            <div class="monitor-summary__item"><span>注册失败</span><strong data-field="runtimeSummary.registrationFailed">0</strong></div>
+                            <div class="monitor-summary__item"><span>鉴权成功</span><strong data-field="runtimeSummary.authenticationSucceeded">0</strong></div>
+                            <div class="monitor-summary__item"><span>鉴权失败</span><strong data-field="runtimeSummary.authenticationFailed">0</strong></div>
+                            <div class="monitor-summary__item"><span>位置上报</span><strong data-field="runtimeSummary.locationReportSent">0</strong></div>
+                            <div class="monitor-summary__item"><span>位置上报/s</span><strong data-field="runtimeSummary.locationReportRate" data-format="rate">0</strong></div>
+                            <div class="monitor-summary__item"><span>断连</span><strong data-field="runtimeSummary.disconnected">0</strong></div>
+                            <div class="monitor-summary__item"><span>终止事件</span><strong data-field="runtimeSummary.terminated">0</strong></div>
+                            <div class="monitor-summary__item"><span>发送失败</span><strong data-field="runtimeSummary.sendFailed">0</strong></div>
+                            <div class="monitor-summary__item"><span>协议异常</span><strong data-field="runtimeSummary.protocolExceptions">0</strong></div>
+                        </div>
+                    </section>
+                    <section class="monitor-summary__section">
+                        <h3>资源占用</h3>
+                        <div class="monitor-summary__grid">
+                            <div class="monitor-summary__item"><span>Heap 使用</span><strong data-field="runtimeSummary.runtimeResources.heapUsedBytes" data-format="bytes">0</strong></div>
+                            <div class="monitor-summary__item"><span>Heap 上限</span><strong data-field="runtimeSummary.runtimeResources.heapMaxBytes" data-format="bytes">0</strong></div>
+                            <div class="monitor-summary__item"><span>线程数</span><strong data-field="runtimeSummary.runtimeResources.threadCount">0</strong></div>
+                            <div class="monitor-summary__item"><span>FD 使用</span><strong data-field="runtimeSummary.runtimeResources.openFileDescriptorCount">0</strong></div>
+                            <div class="monitor-summary__item"><span>FD 上限</span><strong data-field="runtimeSummary.runtimeResources.maxFileDescriptorCount">0</strong></div>
+                        </div>
+                    </section>
+                    <section class="monitor-summary__section">
+                        <h3>调度健康</h3>
+                        <div class="monitor-summary__grid">
+                            <div class="monitor-summary__item"><span>调度延迟均值</span><strong data-field="runtimeSummary.schedulerDelay.averageDelayMillis" data-format="millis">0</strong></div>
+                            <div class="monitor-summary__item"><span>调度延迟最大</span><strong data-field="runtimeSummary.schedulerDelay.maxDelayMillis" data-format="millis">0</strong></div>
+                        </div>
+                    </section>
                 </div>
 
                 <div class="task-group-table">
@@ -56,10 +84,21 @@
 <#include "inc/footer.ftlh">
 <style>
     .monitor-summary {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-bottom: 16px;
+    }
+    .monitor-summary__section h3 {
+        margin: 0 0 8px;
+        font-size: 14px;
+        color: var(--color-text-primary);
+        font-weight: 600;
+    }
+    .monitor-summary__grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
         gap: 10px;
-        margin-bottom: 16px;
     }
     .monitor-summary__item {
         border: 1px solid var(--color-border);
@@ -152,6 +191,8 @@
                 var field = $(this).attr('data-field');
                 var value = getValue(data, field);
                 if ($(this).attr('data-format') === 'rate') value = Number(value || 0).toFixed(2);
+                if ($(this).attr('data-format') === 'bytes') value = formatBytes(value);
+                if ($(this).attr('data-format') === 'millis') value = Number(value || 0).toFixed(2) + ' ms';
                 $(this).text(value == null ? 0 : value);
             });
 
@@ -253,6 +294,16 @@
         function formatRate(value)
         {
             return Number(value || 0).toFixed(2);
+        }
+
+        function formatBytes(value)
+        {
+            var n = Number(value || 0);
+            if (n < 0) return 'N/A';
+            if (n < 1024) return n + ' B';
+            if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+            if (n < 1024 * 1024 * 1024) return (n / 1024 / 1024).toFixed(1) + ' MB';
+            return (n / 1024 / 1024 / 1024).toFixed(1) + ' GB';
         }
 
         function getValue(data, path)
