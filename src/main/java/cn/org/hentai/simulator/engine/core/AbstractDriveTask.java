@@ -202,6 +202,11 @@ public abstract class AbstractDriveTask implements Driveable
         return this.state;
     }
 
+    protected final boolean isTerminated()
+    {
+        return terminated.get();
+    }
+
     @Override
     public void terminate()
     {
