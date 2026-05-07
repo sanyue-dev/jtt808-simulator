@@ -186,6 +186,10 @@ _Avoid_: Per-page skin, one-off redesign
 A startup pacing unit that controls how many trip tasks are submitted per interval during task group creation.
 _Avoid_: Batch, batch size
 
+**Trip Task Filter Toolbar**:
+A compact set of controls for narrowing the trip task list by status, keyword, and task group context.
+_Avoid_: Full-width search section, runtime summary controls
+
 ## UI Relationships
 
 - UI redesign starts by establishing the **Global Design Baseline** before rebuilding individual business pages.
@@ -207,3 +211,5 @@ _Avoid_: Batch, batch size
 - Route-editing UI follows the same control baseline as task pages; event category choices on trouble segments use the shared custom dropdown pattern instead of native select controls.
 - Task group list rows identify task groups by **Task Group Display Name** by default; the stable task group identifier may appear only in expanded details or diagnostic copy fields.
 - UI labels for startup pacing use **Ramp-up Window** language; do not call ramp-up windows "batches" because task grouping is already represented by **Task Group**.
+- The **Trip Task Filter Toolbar** is compact and single-row-first on desktop; keyword search for vehicle plate, SIM, or terminal ID uses a fixed desktop control width and must sit with status filtering and actions instead of becoming a full-width standalone row.
+- Trip task list layout primarily targets desktop operation; narrow screens may stack filter controls when necessary, but responsive fallback must not define the desktop layout.
