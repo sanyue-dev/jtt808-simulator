@@ -55,6 +55,7 @@ class TaskGroupMonitorTemplateTest
         assertThat(template).contains("data-field=\"runtimeSummary.registrationFailed\"");
         assertThat(template).contains("data-field=\"runtimeSummary.authenticationFailed\"");
         assertThat(template).contains("data-field=\"runtimeSummary.locationReportSent\"");
+        assertThat(template).doesNotContain("runtimeSummary.locationReportRate");
         assertThat(template).contains("data-field=\"runtimeSummary.sendFailed\"");
         assertThat(template).contains("data-field=\"runtimeSummary.protocolExceptions\"");
         assertThat(template).contains("连接成功：' + (group.connectionSucceeded || 0)");

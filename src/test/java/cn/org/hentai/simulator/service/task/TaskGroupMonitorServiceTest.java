@@ -200,7 +200,7 @@ class TaskGroupMonitorServiceTest
         @Override
         public TaskRuntimeSummary getRuntimeSummary()
         {
-            return new TaskRuntimeSummary(7L, 5L, 0L, 2L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0D, 0L, 0L, 0L, 0L, null, null);
+            return new TaskRuntimeSummary(7L, 5L, 0L, 2L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, null, null);
         }
     }
 

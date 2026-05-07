@@ -239,7 +239,7 @@ class ConnectionPoolTest
         @Override
         public TaskRuntimeSummary getRuntimeSummary()
         {
-            return new TaskRuntimeSummary(0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0D, 0L, 0L, 0L, 0L, null, null);
+            return new TaskRuntimeSummary(0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, null, null);
         }
     }
 

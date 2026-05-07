@@ -15,7 +15,6 @@ public class TaskRuntimeSummary
     private final long authenticationSucceeded;
     private final long authenticationFailed;
     private final long locationReportSent;
-    private final double locationReportRate;
     private final long disconnected;
     private final long terminated;
     private final long sendFailed;
@@ -34,7 +33,6 @@ public class TaskRuntimeSummary
                               long authenticationSucceeded,
                               long authenticationFailed,
                               long locationReportSent,
-                              double locationReportRate,
                               long disconnected,
                               long terminated,
                               long sendFailed,
@@ -53,7 +51,6 @@ public class TaskRuntimeSummary
         this.authenticationSucceeded = authenticationSucceeded;
         this.authenticationFailed = authenticationFailed;
         this.locationReportSent = locationReportSent;
-        this.locationReportRate = locationReportRate;
         this.disconnected = disconnected;
         this.terminated = terminated;
         this.sendFailed = sendFailed;
@@ -73,7 +70,6 @@ public class TaskRuntimeSummary
     public long getAuthenticationSucceeded() { return authenticationSucceeded; }
     public long getAuthenticationFailed() { return authenticationFailed; }
     public long getLocationReportSent() { return locationReportSent; }
-    public double getLocationReportRate() { return locationReportRate; }
     public long getDisconnected() { return disconnected; }
     public long getTerminated() { return terminated; }
     public long getSendFailed() { return sendFailed; }

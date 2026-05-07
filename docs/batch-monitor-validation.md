@@ -86,7 +86,7 @@ curl -X POST 'http://127.0.0.1:18888/monitor/list/terminate-all'
 - `runtimeResources.availableProcessors` / `systemLoadAverage` / `processCpuLoad`：CPU 可用核数、系统 load 和进程 CPU load；无法读取时可能为负值。
 - `runtimeResources.openFileDescriptorCount` / `maxFileDescriptorCount`：当前进程 fd 使用量和上限；非 Unix 平台可能为 `-1`。
 - `schedulerDelay.samples`：全局调度器已记录的 planned-vs-actual 样本数。
-- `schedulerDelay.averageDelayMillis` / `maxDelayMillis`：任务调度平均延迟和最大延迟。10k 验证中如果位置上报速率下降且调度延迟升高，优先排查客户端调度线程、CPU 和 GC。
+- `schedulerDelay.averageDelayMillis` / `maxDelayMillis`：任务调度平均延迟和最大延迟。10k 验证中如果任务组位置上报速率下降且调度延迟升高，优先排查客户端调度线程、CPU 和 GC。
 
 ## 10k 验证记录
 
@@ -95,7 +95,8 @@ curl -X POST 'http://127.0.0.1:18888/monitor/list/terminate-all'
 - 启动参数：终端数量、目标服务端、上报间隔、ramp-up、运行时长、身份规则和线路选择。
 - `/batch/run` 返回的 `preflight.failures`、`preflight.warnings`、fd 和临时端口容量字段。
 - `/monitor/list/summary` 的连接、注册、鉴权、位置上报、失败和终止指标。
-- `/monitor/list/summary` 的 JVM heap、线程数、fd、CPU load、位置上报速率和调度延迟。
+- `/monitor/list/summary` 的 JVM heap、线程数、fd、CPU load 和调度延迟。
+- `/task-groups/snapshot` 中任务组 summary 的位置上报速率。
 - `/monitor/list/index` 明细中的失败阶段和失败原因样本。
 - 停止方式：自动停止、单任务停止或停止全部未终止任务。
 - 验证时间、Git commit、目标服务端版本和机器资源。

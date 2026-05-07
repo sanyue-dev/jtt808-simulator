@@ -6,8 +6,6 @@ import org.yzh.protocol.commons.JT808;
 import org.yzh.protocol.t808.T0100;
 import org.yzh.protocol.t808.T0200;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TaskRuntimeMetricsTest
@@ -65,22 +63,6 @@ class TaskRuntimeMetricsTest
         metrics.onLocationReported(taskInfo, locationReport);
 
         assertEquals(1L, metrics.summary(0L, 0L, 0L, 0L).getLocationReportSent());
-    }
-
-    @Test
-    void calculatesLocationReportRatePerSecond()
-    {
-        AtomicLong now = new AtomicLong(1_000L);
-        TaskRuntimeMetrics metrics = new TaskRuntimeMetrics(now::get);
-        TaskInfo taskInfo = new TaskInfo().withId(1L);
-        T0200 locationReport = new T0200();
-        locationReport.setMessageId(JT808.位置信息汇报);
-
-        metrics.onLocationReported(taskInfo, locationReport);
-        metrics.onLocationReported(taskInfo, locationReport);
-        now.set(3_000L);
-
-        assertEquals(1.0D, metrics.summary(0L, 0L, 0L, 0L).getLocationReportRate());
     }
 
     @Test

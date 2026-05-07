@@ -81,7 +81,8 @@ _Avoid_: Runtime summary, task group stop
 - A **Task Group Monitor** centers on all **Task Groups** currently known by the simulator process.
 - A **Runtime Summary** is separate from any one **Task Group** and represents the simulator process as a whole.
 - A **Runtime Summary** includes all **Trip Tasks** known by the current process, including completed trip tasks.
-- A **Runtime Summary** includes task counts, protocol-stage counts, reporting throughput, failure counts, runtime resource usage, and scheduler delay.
+- A **Runtime Summary** includes task counts, protocol-stage counts, cumulative protocol event counts, failure counts, runtime resource usage, and scheduler delay.
+- A **Runtime Summary** does not include reporting throughput; reporting throughput belongs to each **Task Group Summary** because it is meaningful only within an observation boundary.
 - A **Runtime Summary** is displayed as grouped process-level metrics: task status, protocol runtime, resource usage, and scheduler health.
 - A **Task Group Monitor** presents a **Runtime Summary** and a **Task Group List**.
 - A **Task Group Monitor** is the only UI page that presents the **Runtime Summary**.
@@ -172,6 +173,7 @@ _Avoid_: Runtime summary, task group stop
 - "task group" means the boundary created by a creation action; it does not mean a manually managed fleet, label, or saved collection.
 - Completed task group data is historical within the current process; it must not be presented as the current active run.
 - "summary" must distinguish **Runtime Summary** from task-group-level progress or result metrics.
+- "reporting throughput" must not be treated as a global runtime summary field; the resolved boundary is **Task Group Summary**.
 - **Runtime Summary** must not be duplicated on the **Trip Task List**; otherwise users have two competing places for process-level truth.
 - Task group details must distinguish launch-side data from current runtime data, even when they are shown together in one expanded row.
 - "runtime overview" was too generic; the resolved product term is **Task Group Monitor** because the page is centered on task groups.

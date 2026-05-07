@@ -9,13 +9,10 @@ import org.yzh.protocol.commons.JT808;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.LongSupplier;
 
 public class TaskRuntimeMetrics implements TaskLifecycleObserver
 {
-    private final LongSupplier clock;
     private final RuntimeResourceProbe runtimeResourceProbe;
-    private final long startedAtMillis;
     private final AtomicLong connectionSucceeded = new AtomicLong();
     private final AtomicLong connectionFailed = new AtomicLong();
     private final AtomicLong registrationSucceeded = new AtomicLong();
@@ -31,19 +28,7 @@ public class TaskRuntimeMetrics implements TaskLifecycleObserver
 
     public TaskRuntimeMetrics()
     {
-        this(System::currentTimeMillis, new RuntimeResourceProbe());
-    }
-
-    TaskRuntimeMetrics(LongSupplier clock)
-    {
-        this(clock, new RuntimeResourceProbe());
-    }
-
-    TaskRuntimeMetrics(LongSupplier clock, RuntimeResourceProbe runtimeResourceProbe)
-    {
-        this.clock = clock;
-        this.runtimeResourceProbe = runtimeResourceProbe;
-        this.startedAtMillis = clock.getAsLong();
+        this.runtimeResourceProbe = new RuntimeResourceProbe();
     }
 
     @Override
@@ -141,7 +126,6 @@ public class TaskRuntimeMetrics implements TaskLifecycleObserver
                 authenticationSucceeded.get(),
                 authenticationFailed.get(),
                 locationReportSent.get(),
-                locationReportRate(),
                 disconnected.get(),
                 terminated.get(),
                 sendFailed.get(),
@@ -149,12 +133,6 @@ public class TaskRuntimeMetrics implements TaskLifecycleObserver
                 runtimeResourceProbe.snapshot(),
                 RunnerManager.getInstance().getSchedulerDelaySummary()
         );
-    }
-
-    private double locationReportRate()
-    {
-        long elapsedMillis = Math.max(clock.getAsLong() - startedAtMillis, 1L);
-        return locationReportSent.get() * 1000D / elapsedMillis;
     }
 
     private void recordFailure(TaskInfo taskInfo, String stage, String reason)

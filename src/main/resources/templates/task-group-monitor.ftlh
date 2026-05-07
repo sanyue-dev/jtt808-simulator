@@ -203,7 +203,6 @@
                             <div class="monitor-summary__item"><span>鉴权成功</span><strong data-field="runtimeSummary.authenticationSucceeded">0</strong></div>
                             <div class="monitor-summary__item"><span>鉴权失败</span><strong data-field="runtimeSummary.authenticationFailed">0</strong></div>
                             <div class="monitor-summary__item"><span>位置上报</span><strong data-field="runtimeSummary.locationReportSent">0</strong></div>
-                            <div class="monitor-summary__item"><span>位置上报/s</span><strong data-field="runtimeSummary.locationReportRate" data-format="rate">0</strong></div>
                             <div class="monitor-summary__item"><span>断连</span><strong data-field="runtimeSummary.disconnected">0</strong></div>
                             <div class="monitor-summary__item"><span>终止事件</span><strong data-field="runtimeSummary.terminated">0</strong></div>
                             <div class="monitor-summary__item"><span>发送失败</span><strong data-field="runtimeSummary.sendFailed">0</strong></div>
