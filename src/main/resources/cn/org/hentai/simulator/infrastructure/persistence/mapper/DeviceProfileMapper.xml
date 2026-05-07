@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.org.hentai.simulator.infrastructure.persistence.mapper.DeviceProfileMapper">
+  <resultMap id="BaseResultMap" type="cn.org.hentai.simulator.domain.entity.DeviceProfile">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="vehicleNumber" jdbcType="VARCHAR" property="vehicleNumber" />
+    <result column="deviceSn" jdbcType="VARCHAR" property="deviceSn" />
+    <result column="simNumber" jdbcType="VARCHAR" property="simNumber" />
+    <result column="authToken" jdbcType="VARCHAR" property="authToken" />
+    <result column="authMode" jdbcType="VARCHAR" property="authMode" />
+    <result column="defaultRouteId" jdbcType="BIGINT" property="defaultRouteId" />
+    <result column="serverAddress" jdbcType="VARCHAR" property="serverAddress" />
+    <result column="serverPort" jdbcType="INTEGER" property="serverPort" />
+    <result column="initialMileage" jdbcType="INTEGER" property="initialMileage" />
+    <result column="remark" jdbcType="VARCHAR" property="remark" />
+    <result column="enabled" jdbcType="INTEGER" property="enabled" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, name, vehicleNumber, deviceSn, simNumber, authToken, authMode, defaultRouteId,
+    serverAddress, serverPort, initialMileage, remark, enabled
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" /> from x_device_profile where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="find" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" />
+    from x_device_profile
+    <where>
+      <if test="keyword != null and keyword != ''">
+        and (name like concat('%', #{keyword}, '%')
+          or vehicleNumber like concat('%', #{keyword}, '%')
+          or deviceSn like concat('%', #{keyword}, '%')
+          or simNumber like concat('%', #{keyword}, '%'))
+      </if>
+    </where>
+    order by id desc
+    limit ${offset}, ${limit}
+  </select>
+  <select id="count" resultType="java.lang.Long">
+    select count(*)
+    from x_device_profile
+    <where>
+      <if test="keyword != null and keyword != ''">
+        and (name like concat('%', #{keyword}, '%')
+          or vehicleNumber like concat('%', #{keyword}, '%')
+          or deviceSn like concat('%', #{keyword}, '%')
+          or simNumber like concat('%', #{keyword}, '%'))
+      </if>
+    </where>
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from x_device_profile where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" parameterType="cn.org.hentai.simulator.domain.entity.DeviceProfile" keyProperty="id" useGeneratedKeys="true">
+    insert into x_device_profile
+      (id, name, vehicleNumber, deviceSn, simNumber, authToken, authMode, defaultRouteId,
+       serverAddress, serverPort, initialMileage, remark, enabled)
+    values
+      (#{id,jdbcType=BIGINT}, #{name,jdbcType=VARCHAR}, #{vehicleNumber,jdbcType=VARCHAR},
+       #{deviceSn,jdbcType=VARCHAR}, #{simNumber,jdbcType=VARCHAR}, #{authToken,jdbcType=VARCHAR},
+       #{authMode,jdbcType=VARCHAR}, #{defaultRouteId,jdbcType=BIGINT}, #{serverAddress,jdbcType=VARCHAR},
+       #{serverPort,jdbcType=INTEGER}, #{initialMileage,jdbcType=INTEGER}, #{remark,jdbcType=VARCHAR},
+       #{enabled,jdbcType=INTEGER})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="cn.org.hentai.simulator.domain.entity.DeviceProfile">
+    update x_device_profile
+    set name = #{name,jdbcType=VARCHAR},
+      vehicleNumber = #{vehicleNumber,jdbcType=VARCHAR},
+      deviceSn = #{deviceSn,jdbcType=VARCHAR},
+      simNumber = #{simNumber,jdbcType=VARCHAR},
+      authToken = #{authToken,jdbcType=VARCHAR},
+      authMode = #{authMode,jdbcType=VARCHAR},
+      defaultRouteId = #{defaultRouteId,jdbcType=BIGINT},
+      serverAddress = #{serverAddress,jdbcType=VARCHAR},
+      serverPort = #{serverPort,jdbcType=INTEGER},
+      initialMileage = #{initialMileage,jdbcType=INTEGER},
+      remark = #{remark,jdbcType=VARCHAR},
+      enabled = #{enabled,jdbcType=INTEGER}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateEnabled">
+    update x_device_profile
+    set enabled = #{enabled,jdbcType=INTEGER}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

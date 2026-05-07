@@ -63,3 +63,23 @@ CREATE TABLE if not exists `x_trouble_segment` (
 ) COMMENT='线路问题路段';
 
 create index if not exists idx_trouble_segment_route_id on x_trouble_segment(routeId);
+
+CREATE TABLE if not exists `x_device_profile` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL COMMENT '设备名称',
+  `vehicleNumber` varchar(32) NOT NULL COMMENT '车牌号',
+  `deviceSn` varchar(64) NOT NULL COMMENT '终端ID',
+  `simNumber` varchar(32) NOT NULL COMMENT 'SIM卡号',
+  `authToken` varchar(128) DEFAULT NULL COMMENT '鉴权码',
+  `authMode` varchar(20) NOT NULL COMMENT '上线方式：direct/register',
+  `defaultRouteId` bigint(20) DEFAULT NULL COMMENT '默认线路ID',
+  `serverAddress` varchar(128) NOT NULL COMMENT '网关地址',
+  `serverPort` int(11) NOT NULL COMMENT '网关端口',
+  `initialMileage` int(11) DEFAULT 0 COMMENT '初始里程，公里',
+  `remark` varchar(500) DEFAULT NULL COMMENT '备注',
+  `enabled` int(11) NOT NULL DEFAULT 1 COMMENT '是否启用',
+  PRIMARY KEY (`id`)
+) COMMENT='设备档案';
+
+create unique index if not exists uk_device_profile_device_sn on x_device_profile(deviceSn);
+create unique index if not exists uk_device_profile_sim_number on x_device_profile(simNumber);
