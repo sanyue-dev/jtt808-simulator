@@ -62,7 +62,6 @@
                 <div class="task-group-monitor__section-heading">
                     <div>
                         <h3>任务组列表</h3>
-                        <p>Task Group List</p>
                     </div>
                 </div>
 
@@ -169,10 +168,6 @@
         color: var(--color-text-primary);
         font-weight: 600;
         font-size: 13px;
-    }
-    .task-group-row__meta {
-        color: var(--color-text-secondary);
-        font-size: 12px;
     }
     .task-group-row__metrics {
         display: grid;
@@ -316,7 +311,7 @@
                 actions += '</div>';
                 rows.push('<tr class="task-group-row__primary" data-task-group-id="' + escapeHtml(group.taskGroupId) + '">' +
                     '<td><span class="task-group-state task-group-state--' + stateClass(group.state) + '">' + formatState(group.state) + '</span></td>' +
-                    '<td><div class="task-group-row__identity"><strong class="task-group-row__display-name">' + escapeHtml(group.displayName) + '</strong><span class="task-group-row__meta">' + escapeHtml(group.taskGroupId) + '</span></div></td>' +
+                    '<td><div class="task-group-row__identity"><strong class="task-group-row__display-name">' + escapeHtml(group.displayName) + '</strong></div></td>' +
                     '<td>' + escapeHtml(group.sourceText || group.source) + '</td>' +
                     '<td colspan="4"><div class="task-group-row__metrics">' +
                     '<div class="task-group-row__metric task-group-row__metric--target"><span>目标数</span><strong>' + (group.targetTasks || 0) + '</strong></div>' +
@@ -335,13 +330,14 @@
         {
             return '<tr class="task-group-table__details"><td colspan="8">' +
                 '<div class="task-group-detail">' +
-                '<div class="task-group-detail__section task-group-detail__section--launch"><h4>启动情况<span>Task Group Launch Status</span></h4>' +
+                '<div class="task-group-detail__section task-group-detail__section--launch"><h4>启动情况</h4>' +
+                '<p>任务组标识：' + escapeHtml(group.taskGroupId) + '</p>' +
                 '<p>目标任务数：' + (group.targetTasks || 0) + '</p>' +
                 '<p>已启动任务：' + (group.startedTasks || 0) + '</p>' +
                 '<p>ramp-up：' + (group.executedWindowCount || 0) + ' / ' + (group.rampUpWindowCount || 0) + '</p>' +
                 '<p>失败原因：' + escapeHtml(group.failureReason || '无') + '</p>' +
                 '</div>' +
-                '<div class="task-group-detail__section task-group-detail__section--current"><h4>当前运行情况<span>Task Group Current Status</span></h4>' +
+                '<div class="task-group-detail__section task-group-detail__section--current"><h4>当前运行情况</h4>' +
                 '<p>状态：' + formatState(group.state) + '</p>' +
                 '<p>活动中：' + (group.activeTasks || 0) + '</p>' +
                 '<p>已终止：' + (group.terminatedTasks || 0) + '</p>' +

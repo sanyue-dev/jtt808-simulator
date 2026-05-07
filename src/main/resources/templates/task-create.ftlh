@@ -88,7 +88,7 @@
 
             <!-- 提交 -->
             <div class="task__creation-note">
-                启动后会生成 Task Group，并进入任务组监控页观察启动与运行状态。
+                启动后会生成任务组，并进入任务组监控页观察启动与运行状态。
             </div>
             <div class="card-section__actions">
                 <button class="btn btn--blue task__primary-action" id="btn-run">启动</button>

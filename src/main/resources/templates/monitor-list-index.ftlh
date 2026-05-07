@@ -35,7 +35,7 @@
                     <button class="btn btn--sm btn--red" type="button" id="btn-terminate-all">停止全部未终止任务</button>
                 </form>
                 <div class="monitor-filter-context" id="task-group-filter-context">
-                    <span>当前按 Task Group 过滤：</span>
+                    <span>当前按任务组过滤：</span>
                     <strong id="task-group-filter-value"></strong>
                     <a id="task-group-filter-link" href="/task-groups/monitor">查看任务组监控</a>
                 </div>

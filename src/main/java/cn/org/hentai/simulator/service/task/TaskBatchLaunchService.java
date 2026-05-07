@@ -148,7 +148,7 @@ public class TaskBatchLaunchService
         if (request.getRunDurationSeconds() < 0) result.fail("运行时长不能小于 0 秒");
 
         int batchSize = effectiveRampUpBatchSize(request);
-        if (batchSize < 1) result.fail("ramp-up 批次大小必须大于 0");
+        if (batchSize < 1) result.fail("ramp-up 窗口大小必须大于 0");
         if (request.getRampUpIntervalMillis() < 1) result.fail("ramp-up 间隔必须大于 0 毫秒");
         if (request.getRunDurationSeconds() > 0 && request.getTerminalCount() > 0 && batchSize > 0)
         {
