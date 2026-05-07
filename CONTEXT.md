@@ -182,6 +182,10 @@ _Avoid_: Runtime summary, task group stop
 The shared visual and interaction foundation used by all simulator pages.
 _Avoid_: Per-page skin, one-off redesign
 
+**Ramp-up Window**:
+A startup pacing unit that controls how many trip tasks are submitted per interval during task group creation.
+_Avoid_: Batch, batch size
+
 ## UI Relationships
 
 - UI redesign starts by establishing the **Global Design Baseline** before rebuilding individual business pages.
@@ -199,3 +203,7 @@ _Avoid_: Per-page skin, one-off redesign
 - Page-level UI redesign follows the product priority of task group observation and trip task control before route editing or map-specific presentation.
 - The first UI redesign batch is split into three slices: establish the **Global Design Baseline**, refine the **Task Group Monitor**, then refine the **Trip Task List** and trip task creation pages.
 - Route editing and map-specific visual polish are intentionally deferred until the core stress-test observation and control workflow has a stable baseline.
+- User-facing Chinese UI uses Chinese domain labels such as "任务组" and "行程任务"; English canonical terms such as **Task Group** are for documentation and engineering discussion, not explanatory text on operation pages.
+- Route-editing UI follows the same control baseline as task pages; event category choices on trouble segments use the shared custom dropdown pattern instead of native select controls.
+- Task group list rows identify task groups by **Task Group Display Name** by default; the stable task group identifier may appear only in expanded details or diagnostic copy fields.
+- UI labels for startup pacing use **Ramp-up Window** language; do not call ramp-up windows "batches" because task grouping is already represented by **Task Group**.
