@@ -29,6 +29,18 @@ public final class EventDispatcher
     // 事件委托
     public void dispatch(AbstractDriveTask driveTask, String tag, String attachment, final Object data)
     {
+        RunnerManager.getInstance().execute(driveTask, new Executable()
+        {
+            @Override
+            public void execute(AbstractDriveTask driveTask)
+            {
+                dispatchNow(driveTask, tag, attachment, data);
+            }
+        });
+    }
+
+    public void dispatchNow(AbstractDriveTask driveTask, String tag, String attachment, final Object data)
+    {
         try
         {
             attachment = attachment == null ? "" : attachment;
@@ -46,27 +58,20 @@ public final class EventDispatcher
 
             // TODO: 暂时只有一个参数或没有参数，后面再想办法做参数类型匹配，按需赋值，就跟spring一样
 
-            RunnerManager.getInstance().execute(driveTask, new Executable()
+            Object[] args = new Object[method.getParameterCount()];
+            if (args.length == 1) args[0] = data;
+
+            try
             {
-                @Override
-                public void execute(AbstractDriveTask driveTask)
+                // 触发一下message_received事件的回调
+                if (gMethod != null && gMethod.equals(method) == false)
                 {
-                    Object[] args = new Object[method.getParameterCount()];
-                    if (args.length == 1) args[0] = data;
-
-                    try
-                    {
-                        // 触发一下message_received事件的回调
-                        if (gMethod != null && gMethod.equals(method) == false)
-                        {
-                            gMethod.invoke(driveTask, args);
-                        }
-                    }
-                    catch(Exception e) { e.printStackTrace(); }
-
-                    try { method.invoke(driveTask, args); } catch(Exception e) { e.printStackTrace(); }
+                    gMethod.invoke(driveTask, args);
                 }
-            });
+            }
+            catch(Exception e) { e.printStackTrace(); }
+
+            try { method.invoke(driveTask, args); } catch(Exception e) { e.printStackTrace(); }
         }
         catch(Exception ex)
         {
