@@ -61,6 +61,18 @@ class MonitorTemplateTest
         assertThat(template).contains("$.post('/monitor/list/terminate-all'");
     }
 
+    @Test
+    void tripTaskFilterToolbarKeepsKeywordInputCompactOnDesktop() throws Exception
+    {
+        String template = read("/templates/monitor-list-index.ftlh");
+
+        assertThat(template).contains("<form class=\"monitor-toolbar\"");
+        assertThat(template).contains("class=\"monitor-toolbar__input\"");
+        assertThat(template).contains(".monitor-toolbar .monitor-toolbar__input");
+        assertThat(template).contains("width: 260px;");
+        assertThat(template).contains("flex: 0 0 260px;");
+    }
+
     private String read(String path) throws Exception
     {
         return new String(getClass().getResourceAsStream(path).readAllBytes(), StandardCharsets.UTF_8);
