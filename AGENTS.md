@@ -159,7 +159,6 @@ Do not add silent fallback paths, mock success behavior, or arbitrary guardrails
 - `simulator.mode` configures the simulation mode; the current mode is `stress`.
 - After changing JS/CSS under `static/`, browser caches may still serve old files. Verify with a hard refresh or DevTools `ignoreCache`.
 - `TaskController`'s create page template is `task-create.ftlh`, and its URL path is `/task/index`, not `/task/create`.
-- Follow `.claude/rules/frontend/ui-components.md` and `.claude/rules/frontend/map-pages.md` when touching matching frontend areas.
 
 ## Agent skills
 
