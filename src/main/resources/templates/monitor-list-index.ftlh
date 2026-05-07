@@ -55,8 +55,9 @@
         margin-bottom: 12px;
         flex-wrap: wrap;
     }
-    .monitor-toolbar__input {
-        width: 220px;
+    .monitor-toolbar .monitor-toolbar__input {
+        width: 260px;
+        flex: 0 0 260px;
         height: 32px;
         border: 1px solid var(--color-border);
         background: var(--color-bg-panel);
