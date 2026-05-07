@@ -9,7 +9,7 @@
 <#include "inc/sidebar.ftlh">
     <div class="layui-body app-body">
         <div class="app-page">
-            <div class="page-header layui-bg-gray">
+            <div class="page-header">
                 <h2>线路管理</h2>
                 <a href="/route/create" class="layui-btn layui-btn-sm"><i class="layui-icon layui-icon-add-1"></i>创建新线路</a>
             </div>

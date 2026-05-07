@@ -186,7 +186,7 @@ html.sidebar-collapsed .app-sidebar-toggle__expand { display: inline-block; }
     background: var(--app-panel);
     border-bottom: 1px solid var(--app-border);
 }
-.page-header h2 { margin: 0; font-size: 18px; font-weight: 600; }
+.page-header h2 { margin: 0; color: inherit; font-size: 18px; font-weight: 600; }
 .page-body {
     flex: 1;
     overflow: auto;

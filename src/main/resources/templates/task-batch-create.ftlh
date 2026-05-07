@@ -9,7 +9,7 @@
     <#include "inc/sidebar.ftlh">
     <div class="layui-body app-body">
         <div class="app-page">
-            <div class="page-header layui-bg-gray">
+            <div class="page-header">
                 <h2>批量创建行程任务</h2>
             </div>
             <div class="page-body">

@@ -35,6 +35,16 @@ class TaskGroupMonitorTemplateTest
     }
 
     @Test
+    void monitorUsesDefaultPageHeaderWithoutLayuiGrayUtility() throws Exception
+    {
+        String template = read("/templates/task-group-monitor.ftlh");
+
+        assertThat(template).doesNotContain("<#include \"inc/header.ftlh\">");
+        assertThat(template).contains("<div class=\"page-header\">");
+        assertThat(template).doesNotContain("page-header layui-bg-gray");
+    }
+
+    @Test
     void monitorShowsGlobalAndTaskGroupRuntimeMetricsWithoutTripTaskRows() throws Exception
     {
         String template = read("/templates/task-group-monitor.ftlh");

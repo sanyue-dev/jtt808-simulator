@@ -15,6 +15,7 @@ class GlobalDesignBaselineTest
 
         assertThat(css).contains("--app-side-width: 200px;");
         assertThat(css).contains("--app-side-collapsed-width: 60px;");
+        assertThat(css).contains("--app-header-height: 56px;");
         assertThat(css).contains("--app-primary: #16baaa;");
         assertThat(css).contains("--app-danger: #ff5722;");
         assertThat(css).contains("--color-primary: var(--app-primary);");
@@ -52,6 +53,22 @@ class GlobalDesignBaselineTest
         assertThat(css).doesNotContain(".grid__col");
         assertThat(css).doesNotContain("@import url(");
         assertThat(css).doesNotContain("@font-face");
+    }
+
+    @Test
+    void applicationShellUsesDefaultPageHeaderWithoutEmptyLayuiAdminHeader() throws Exception
+    {
+        String css = read("/static/css/common.css");
+        String taskGroup = read("/templates/task-group-monitor.ftlh");
+
+        assertThat(css).contains(".app-sidebar {\n    top: 0 !important;");
+        assertThat(css).contains(".app-body {\n    position: absolute;\n    left: var(--app-side-width) !important;\n    top: 0 !important;");
+        assertThat(css).contains("border-bottom: 1px solid rgba(255,255,255,.08);");
+        assertThat(css).contains(".page-header h2 { margin: 0; color: inherit;");
+        assertThat(css).doesNotContain(".app-header");
+        assertThat(css).doesNotContain(".page-header.layui-bg-gray");
+        assertThat(taskGroup).doesNotContain("<#include \"inc/header.ftlh\">");
+        assertThat(taskGroup).doesNotContain("page-header layui-bg-gray");
     }
 
     @Test
