@@ -37,8 +37,7 @@
                     <a id="task-group-filter-link" href="/task-groups/monitor" class="layui-font-blue">查看任务组监控</a>
                 </blockquote>
                 <div class="app-table-panel">
-                    <div id="route-table"></div>
-                    <div id="monitor-page" class="app-pagination"></div>
+                    <table id="monitor-table" lay-filter="monitor-table"></table>
                 </div>
             </div>
         </div>
@@ -65,78 +64,121 @@
             $('#task-group-filter-context').show();
         }
 
-        function reloadTable()
+        function filterParams()
         {
-            window.monitorTable.reload();
+            var values = {};
+            $('#monitor-filter').serializeArray().forEach(function(item)
+            {
+                values[item.name] = item.value;
+            });
+            return values;
         }
 
-        window.monitorTable = appTable.render({
-            elem: '#route-table',
-            pageElem: '#monitor-page',
-            url: '/monitor/list/json',
-            form: $('#monitor-filter'),
-            fields: [
-                { name: 'state', title: '状态', align: 'center' },
+        function reloadTable(resetPage)
+        {
+            var options = { where: filterParams() };
+            if (resetPage) options.page = { curr: 1 };
+            layui.table.reload('monitor-table', options);
+        }
+
+        layui.use('table', function()
+        {
+            var table = layui.table;
+            window.monitorTable = table.render({
+                elem: '#monitor-table',
+                url: '/monitor/list/json',
+                method: 'post',
+                page: true,
+                limit: 20,
+                where: filterParams(),
+                request: { pageName: 'pageIndex', limitName: 'pageSize' },
+                parseData: function(result)
                 {
-                    name: 'taskGroupDisplayName',
-                    title: '任务组',
-                    align: 'left',
-                    formatter: function(i, v) { return v ? escapeHtml(v) : '--'; }
-                },
-                { name: 'routeName', title: '线路名称', align: 'left' },
-                {
-                    name : 'routeMileages',
-                    title : '线路里程',
-                    align : 'right',
-                    formatter : function(i, v) { return parseInt(v / 1000) + ' km'; }
-                },
-                { name: 'vehicleNumber', title: '车牌号', align: 'center' },
-                { name: 'simNumber', title: 'SIM卡号', align: 'center' },
-                { name: 'deviceSn', title: '终端ID', align: 'center' },
-                {
-                    name: 'failureStage',
-                    title: '失败阶段',
-                    align: 'center',
-                    formatter: function(i, v) { return v ? escapeHtml(v) : '--'; }
-                },
-                {
-                    name: 'failureReason',
-                    title: '失败原因',
-                    align: 'left',
-                    formatter: function(i, v) { return v ? escapeHtml(v) : '--'; }
-                },
-                {
-                    name : 'startTime',
-                    title : '启动时间',
-                    align : 'center',
-                    formatter : function(i, v) { return new Date(v).format('yyyy-MM-dd hh:mm:ss'); }
-                },
-                {
-                    name : 'longitude',
-                    title : '经度',
-                    align : 'right',
-                    formatter : function(i, v) { return v ? String(v).replace(/^(\d+\.\d{6})\d+$/gi, '$1') : '--'; }
-                },
-                {
-                    name : 'latitude',
-                    title : '纬度',
-                    align : 'right',
-                    formatter : function(i, v) { return v ? String(v).replace(/^(\d+\.\d{6})\d+$/gi, '$1') : '--'; }
-                },
-                {
-                    name: 'id',
-                    title: '操作',
-                    align: 'center',
-                    width : '170px',
-                    formatter: function (i, v, r)
+                    if (result.error && result.error.code)
                     {
-                        var html = '';
-                        html += '<a href="/monitor/view?id=' + v + '" target="_blank" class="layui-btn layui-btn-xs">详情</a>';
-                        if (r.state !== '行驶终止') html += ' <a href="javascript:;" data-id="' + v + '" class="layui-btn layui-btn-xs layui-btn-primary btn-terminate">停止</a>';
-                        return html;
+                        return { code: result.error.code, msg: result.error.reason, count: 0, data: [] };
                     }
-                }
-            ]
+                    var page = result.data || {};
+                    return { code: 0, msg: '', count: page.recordCount || 0, data: page.list || [] };
+                },
+                cols: [[
+                    { field: 'state', title: '状态', align: 'center' },
+                    {
+                        field: 'taskGroupDisplayName',
+                        title: '任务组',
+                        align: 'left',
+                        templet: function(r) { return r.taskGroupDisplayName ? escapeHtml(r.taskGroupDisplayName) : '--'; }
+                    },
+                    {
+                        field: 'routeName',
+                        title: '线路名称',
+                        align: 'left',
+                        templet: function(r) { return escapeHtml(r.routeName); }
+                    },
+                    {
+                        field: 'routeMileages',
+                        title: '线路里程',
+                        align: 'right',
+                        templet: function(r) { return parseInt(r.routeMileages / 1000) + ' km'; }
+                    },
+                    { field: 'vehicleNumber', title: '车牌号', align: 'center' },
+                    { field: 'simNumber', title: 'SIM卡号', align: 'center' },
+                    { field: 'deviceSn', title: '终端ID', align: 'center' },
+                    {
+                        field: 'failureStage',
+                        title: '失败阶段',
+                        align: 'center',
+                        templet: function(r) { return r.failureStage ? escapeHtml(r.failureStage) : '--'; }
+                    },
+                    {
+                        field: 'failureReason',
+                        title: '失败原因',
+                        align: 'left',
+                        templet: function(r) { return r.failureReason ? escapeHtml(r.failureReason) : '--'; }
+                    },
+                    {
+                        field: 'startTime',
+                        title: '启动时间',
+                        align: 'center',
+                        templet: function(r) { return new Date(r.startTime).format('yyyy-MM-dd hh:mm:ss'); }
+                    },
+                    {
+                        field: 'longitude',
+                        title: '经度',
+                        align: 'right',
+                        templet: function(r) { return r.longitude ? String(r.longitude).replace(/^(\d+\.\d{6})\d+$/gi, '$1') : '--'; }
+                    },
+                    {
+                        field: 'latitude',
+                        title: '纬度',
+                        align: 'right',
+                        templet: function(r) { return r.latitude ? String(r.latitude).replace(/^(\d+\.\d{6})\d+$/gi, '$1') : '--'; }
+                    },
+                    {
+                        title: '操作',
+                        align: 'center',
+                        width: 170,
+                        templet: function(r)
+                        {
+                            var html = '';
+                            html += '<a href="/monitor/view?id=' + r.id + '" target="_blank" class="layui-btn layui-btn-xs">详情</a>';
+                            if (r.state !== '行驶终止') html += ' <a href="javascript:;" lay-event="terminate" class="layui-btn layui-btn-xs layui-btn-primary">停止</a>';
+                            return html;
+                        }
+                    }
+                ]]
+            });
+
+            table.on('tool(monitor-table)', function(obj)
+            {
+                if (obj.event === 'terminate') terminateTask(obj.data.id);
+            });
+        });
+
+        $('#monitor-filter').submit(function()
+        {
+            reloadTable(true);
+            return false;
         });
 
         $('#btn-clear-filter').click(function()
@@ -145,12 +187,11 @@
             $('#monitor-filter input[name="taskGroupId"]').val('');
             $('#task-group-filter-context').hide();
             layui.form.render();
-            reloadTable();
+            reloadTable(true);
         });
 
-        $('#route-table').on('click', '.btn-terminate', function()
+        function terminateTask(id)
         {
-            var id = $(this).attr('data-id');
             appConfirm('确定停止这个行程任务？', function()
             {
                 $.post('/monitor/list/terminate', { id: id }, function(result)
@@ -160,7 +201,7 @@
                     reloadTable();
                 });
             });
-        });
+        }
 
         $('#btn-terminate-all').click(function()
         {

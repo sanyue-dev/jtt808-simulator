@@ -15,8 +15,7 @@
             </div>
             <div class="page-body">
                 <div class="app-table-panel">
-                    <div id="route-table"></div>
-                    <div id="route-page" class="app-pagination"></div>
+                    <table id="route-table" lay-filter="route-table"></table>
                 </div>
             </div>
         </div>
@@ -28,75 +27,89 @@
     $(document).ready(function()
     {
         setCurrentMenu('route');
-        window.routeTable = appTable.render({
-            elem: '#route-table',
-            pageElem: '#route-page',
-            url: '/route/list',
-            fields: [
+        layui.use('table', function()
+        {
+            var table = layui.table;
+            window.routeTable = table.render({
+                elem: '#route-table',
+                url: '/route/list',
+                method: 'post',
+                page: true,
+                limit: 20,
+                request: { pageName: 'pageIndex', limitName: 'pageSize' },
+                parseData: function(result)
                 {
-                    name: 'id',
-                    title: '线路ID',
-                    align: 'center',
-                    width: '160px',
-                    formatter: function (i, v, r)
+                    if (result.error && result.error.code)
                     {
-                        return v;
+                        return { code: result.error.code, msg: result.error.reason, count: 0, data: [] };
                     }
+                    var page = result.data || {};
+                    return { code: 0, msg: '', count: page.recordCount || 0, data: page.list || [] };
                 },
-                {
-                    name: 'name',
-                    title: '线路名称',
-                    align: 'left',
-                    formatter: function (i, v, r)
+                cols: [[
                     {
-
-                        return v;
-                    }
-                },
-                {
-                    name: 'minSpeed',
-                    title: '最低速度',
-                    align: 'right',
-                    width : '160px',
-                    formatter: function (i, v, r)
+                        field: 'id',
+                        title: '线路ID',
+                        align: 'center',
+                        width: 160
+                    },
                     {
-                        return v + ' km/h';
-                    }
-                },
-                {
-                    name: 'maxSpeed',
-                    title: '最高速度',
-                    align: 'right',
-                    width : '160px',
-                    formatter: function (i, v, r)
+                        field: 'name',
+                        title: '线路名称',
+                        align: 'left',
+                        templet: function(r)
+                        {
+                            return escapeHtml(r.name);
+                        }
+                    },
                     {
-                        return v + ' km/h';
-                    }
-                },
-                {
-                    name: 'mileages',
-                    title: '里程',
-                    align: 'right',
-                    width : '160px',
-                    formatter: function (i, v, r)
+                        field: 'minSpeed',
+                        title: '最低速度',
+                        align: 'right',
+                        width: 160,
+                        templet: function(r)
+                        {
+                            return escapeHtml(r.minSpeed) + ' km/h';
+                        }
+                    },
                     {
-                        return v ? (v / 1000).toFixed(1) + ' km' : '--';
-                    }
-                },
-                {
-                    name: 'id',
-                    title: '操作',
-                    align: 'center',
-                    width : '160px',
-                    formatter: function (i, v, r)
+                        field: 'maxSpeed',
+                        title: '最高速度',
+                        align: 'right',
+                        width: 160,
+                        templet: function(r)
+                        {
+                            return escapeHtml(r.maxSpeed) + ' km/h';
+                        }
+                    },
                     {
-                        var html = '';
-                        html += '<a href="/route/edit?id=' + v + '" class="layui-btn layui-btn-xs">编辑</a>';
-                        html += '<a href="javascript:;" onclick="remove(\'' + v + '\')" class="layui-btn layui-btn-xs layui-btn-danger">删除</a>';
-                        return html;
+                        field: 'mileages',
+                        title: '里程',
+                        align: 'right',
+                        width: 160,
+                        templet: function(r)
+                        {
+                            return r.mileages ? (r.mileages / 1000).toFixed(1) + ' km' : '--';
+                        }
+                    },
+                    {
+                        title: '操作',
+                        align: 'center',
+                        width: 160,
+                        templet: function(r)
+                        {
+                            var html = '';
+                            html += '<a href="/route/edit?id=' + r.id + '" class="layui-btn layui-btn-xs">编辑</a>';
+                            html += '<a href="javascript:;" lay-event="remove" class="layui-btn layui-btn-xs layui-btn-danger">删除</a>';
+                            return html;
+                        }
                     }
-                }
-            ]
+                ]]
+            });
+            table.on('tool(route-table)', function(obj)
+            {
+                if (obj.event === 'remove') remove(obj.data.id);
+            });
         });
     });
 
@@ -108,7 +121,7 @@
             {
                 if (result.error && result.error.code) return appNotify('error', result.error.reason);
                 appNotify('success', '删除成功');
-                window.routeTable.reload();
+                layui.table.reload('route-table');
             });
         });
     }

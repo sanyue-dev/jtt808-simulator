@@ -54,8 +54,10 @@ class MonitorTemplateTest
     {
         String template = read("/templates/monitor-list-index.ftlh");
 
-        assertThat(template).contains("window.monitorTable = appTable.render({");
-        assertThat(template).contains("pageElem: '#monitor-page'");
+        assertThat(template).contains("window.monitorTable = table.render({");
+        assertThat(template).contains("elem: '#monitor-table'");
+        assertThat(template).contains("parseData: function(result)");
+        assertThat(template).contains("request: { pageName: 'pageIndex', limitName: 'pageSize' }");
         assertThat(template).contains("name=\"taskGroupId\"");
         assertThat(template).contains("id=\"task-group-filter-context\"");
         assertThat(template).contains("id=\"task-group-filter-value\"");
@@ -63,6 +65,8 @@ class MonitorTemplateTest
         assertThat(template).contains("new URLSearchParams(window.location.search).get('taskGroupId')");
         assertThat(template).contains("taskGroupDisplayName");
         assertThat(template).contains("title: '任务组'");
+        assertThat(template).doesNotContain("appTable.render");
+        assertThat(template).doesNotContain("id=\"monitor-page\"");
         assertThat(template).doesNotContain("$.fn.paginate");
         assertThat(template).doesNotContain(".paginate(");
     }

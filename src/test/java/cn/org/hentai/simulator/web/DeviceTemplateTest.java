@@ -63,26 +63,32 @@ class DeviceTemplateTest
     {
         String template = read("/templates/devices.ftlh");
 
-        assertThat(template).contains("{ name: 'vehicleNumber', title: '车牌号', align: 'left'");
-        assertThat(template).contains("{ name: 'deviceSn', title: '终端ID', align: 'left'");
-        assertThat(template).contains("{ name: 'simNumber', title: 'SIM卡号', align: 'left'");
-        assertThat(template).contains("{ name: 'authMode', title: '上线方式', align: 'left'");
-        assertThat(template).contains("{ name: 'serverAddress', title: '网关', align: 'left'");
-        assertThat(template).contains("<div id=\"device-table\" class=\"layui-form\"></div>");
+        assertThat(template).contains("window.deviceTable = table.render({");
+        assertThat(template).contains("elem: '#device-table'");
+        assertThat(template).contains("parseData: function(result)");
+        assertThat(template).contains("request: { pageName: 'pageIndex', limitName: 'pageSize' }");
+        assertThat(template).contains("{ field: 'vehicleNumber', title: '车牌号', align: 'left'");
+        assertThat(template).contains("{ field: 'deviceSn', title: '终端ID', align: 'left'");
+        assertThat(template).contains("{ field: 'simNumber', title: 'SIM卡号', align: 'left'");
+        assertThat(template).contains("{ field: 'authMode', title: '上线方式', align: 'left'");
+        assertThat(template).contains("{ field: 'serverAddress', title: '网关', align: 'left'");
+        assertThat(template).contains("<table id=\"device-table\" lay-filter=\"device-table\"></table>");
         assertThat(template).contains("lay-skin=\"switch\"");
         assertThat(template).contains("title=\"启用|停用\"");
         assertThat(template).doesNotContain("lay-text=\"启用|停用\"");
         assertThat(template).contains("lay-filter=\"device-status\"");
-        assertThat(template).contains("title: '状态',\n                    align: 'left'");
+        assertThat(template).contains("title: '状态'");
+        assertThat(template).contains("field: 'enabled'");
         assertThat(template).contains("layui.form.on('switch(device-status)'");
         assertThat(template).doesNotContain("class=\"layui-btn layui-btn-xs layui-btn-primary btn-status\"");
         assertThat(template).doesNotContain("layui-badge layui-bg-gray");
         assertThat(template).doesNotContain("layui-badge layui-bg-green");
+        assertThat(template).doesNotContain("appTable.render");
 
         int switchStart = template.indexOf("layui.form.on('switch(device-status)'");
-        int switchEnd = template.indexOf("$('#device-table').on('click', '.btn-remove'", switchStart);
+        int switchEnd = template.indexOf("function removeDevice", switchStart);
         String switchHandler = template.substring(switchStart, switchEnd);
-        assertThat(switchHandler).doesNotContain("window.deviceTable.reload()");
+        assertThat(switchHandler).doesNotContain("reloadTable()");
     }
 
     @Test
@@ -92,9 +98,12 @@ class DeviceTemplateTest
 
         assertThat(template).contains(".device-actions");
         assertThat(template).contains("display: inline-flex;");
-        assertThat(template).contains("title: '操作',\n                    align: 'left',\n                    width: '96px'");
-        assertThat(template).contains("class=\"device-action-link btn-edit\">编辑");
-        assertThat(template).contains("class=\"device-action-link device-action-danger btn-remove\">删除");
+        assertThat(template).contains("title: '操作'");
+        assertThat(template).contains("align: 'left'");
+        assertThat(template).contains("width: 120");
+        assertThat(template).contains("lay-event=\"edit\" class=\"device-action-link\">编辑");
+        assertThat(template).contains("lay-event=\"remove\" class=\"device-action-link device-action-danger\">删除");
+        assertThat(template).contains("table.on('tool(device-table)'");
         assertThat(template).doesNotContain("class=\"layui-btn layui-btn-primary layui-btn-xs btn-edit\"");
         assertThat(template).doesNotContain("class=\"layui-btn layui-btn-danger layui-btn-xs btn-remove\"");
         assertThat(template).doesNotContain("title: '操作',\n                    align: 'center',\n                    width: '220px'");

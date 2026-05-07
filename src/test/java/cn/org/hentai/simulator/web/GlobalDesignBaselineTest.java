@@ -94,8 +94,8 @@ class GlobalDesignBaselineTest
 
         assertThat(script).contains("function appNotify(type, text, timeout)");
         assertThat(script).contains("function appConfirm(text, onOk, onCancel)");
-        assertThat(script).contains("var appTable = (function()");
-        assertThat(script).contains("layui.laypage.render({");
+        assertThat(script).doesNotContain("var appTable = (function()");
+        assertThat(script).doesNotContain("layui.laypage.render({");
         assertThat(script).doesNotContain("$.fn.paginate");
         assertThat(script).doesNotContain("confirmDialog");
         assertThat(script).doesNotContain("toastr");

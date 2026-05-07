@@ -97,8 +97,7 @@
                     </div>
                 </div>
                 <div class="app-table-panel">
-                    <div id="device-table" class="layui-form"></div>
-                    <div id="device-page" class="app-pagination"></div>
+                    <table id="device-table" lay-filter="device-table"></table>
                 </div>
             </div>
         </div>
@@ -176,60 +175,103 @@
     {
         setCurrentMenu('device');
 
-        window.deviceTable = appTable.render({
-            elem: '#device-table',
-            pageElem: '#device-page',
-            url: '/device/list',
-            form: $('#device-filter'),
-            fields: [
-                { name: 'name', title: '设备名称', align: 'left', formatter: function(i, v) { return escapeHtml(v); } },
-                { name: 'vehicleNumber', title: '车牌号', align: 'left', width: '120px', formatter: function(i, v) { return escapeHtml(v); } },
-                { name: 'deviceSn', title: '终端ID', align: 'left', formatter: function(i, v) { return escapeHtml(v); } },
-                { name: 'simNumber', title: 'SIM卡号', align: 'left', formatter: function(i, v) { return escapeHtml(v); } },
-                { name: 'authMode', title: '上线方式', align: 'left', width: '110px', formatter: function(i, v) { return v === 'register' ? '注册后鉴权' : '直接鉴权'; } },
-                { name: 'serverAddress', title: '网关', align: 'left', formatter: function(i, v, r) { return escapeHtml(v) + ':' + escapeHtml(r.serverPort); } },
+        function filterParams()
+        {
+            var values = {};
+            $('#device-filter').serializeArray().forEach(function(item)
+            {
+                values[item.name] = item.value;
+            });
+            return values;
+        }
+
+        function reloadTable(resetPage)
+        {
+            var options = { where: filterParams() };
+            if (resetPage) options.page = { curr: 1 };
+            layui.table.reload('device-table', options);
+        }
+
+        layui.use(['table', 'form'], function()
+        {
+            var table = layui.table;
+            var form = layui.form;
+            window.deviceTable = table.render({
+                elem: '#device-table',
+                url: '/device/list',
+                method: 'post',
+                page: true,
+                limit: 20,
+                where: filterParams(),
+                request: { pageName: 'pageIndex', limitName: 'pageSize' },
+                parseData: function(result)
                 {
-                    name: 'enabled',
-                    title: '状态',
-                    align: 'left',
-                    width: '120px',
-                    formatter: function(i, v, r)
+                    if (result.error && result.error.code)
                     {
-                        return '<input type="checkbox" name="enabled" title="启用|停用" lay-skin="switch" lay-filter="device-status" data-id="' + r.id + '"' + (v === 0 ? '' : ' checked') + '>';
+                        return { code: result.error.code, msg: result.error.reason, count: 0, data: [] };
                     }
+                    var page = result.data || {};
+                    return { code: 0, msg: '', count: page.recordCount || 0, data: page.list || [] };
                 },
+                done: function()
                 {
-                    name: 'id',
-                    title: '操作',
-                    align: 'left',
-                    width: '96px',
-                    formatter: function(i, v, r)
+                    form.render('checkbox');
+                },
+                cols: [[
+                    { field: 'name', title: '设备名称', align: 'left', templet: function(r) { return escapeHtml(r.name); } },
+                    { field: 'vehicleNumber', title: '车牌号', align: 'left', width: 120, templet: function(r) { return escapeHtml(r.vehicleNumber); } },
+                    { field: 'deviceSn', title: '终端ID', align: 'left', templet: function(r) { return escapeHtml(r.deviceSn); } },
+                    { field: 'simNumber', title: 'SIM卡号', align: 'left', templet: function(r) { return escapeHtml(r.simNumber); } },
+                    { field: 'authMode', title: '上线方式', align: 'left', width: 110, templet: function(r) { return r.authMode === 'register' ? '注册后鉴权' : '直接鉴权'; } },
+                    { field: 'serverAddress', title: '网关', align: 'left', templet: function(r) { return escapeHtml(r.serverAddress) + ':' + escapeHtml(r.serverPort); } },
                     {
-                        var row = encodeURIComponent(JSON.stringify(r));
-                        var html = '<span class="device-actions">';
-                        html += '<a href="javascript:;" data-row="' + row + '" class="device-action-link btn-edit">编辑</a>';
-                        html += '<a href="javascript:;" data-id="' + v + '" class="device-action-link device-action-danger btn-remove">删除</a>';
-                        html += '</span>';
-                        return html;
+                        field: 'enabled',
+                        title: '状态',
+                        align: 'left',
+                        width: 120,
+                        templet: function(r)
+                        {
+                            return '<input type="checkbox" name="enabled" title="启用|停用" lay-skin="switch" lay-filter="device-status" data-id="' + r.id + '"' + (r.enabled === 0 ? '' : ' checked') + '>';
+                        }
+                    },
+                    {
+                        title: '操作',
+                        align: 'left',
+                        width: 120,
+                        templet: function()
+                        {
+                            var html = '<span class="device-actions">';
+                            html += '<a href="javascript:;" lay-event="edit" class="device-action-link">编辑</a>';
+                            html += '<a href="javascript:;" lay-event="remove" class="device-action-link device-action-danger">删除</a>';
+                            html += '</span>';
+                            return html;
+                        }
                     }
-                }
-            ]
+                ]]
+            });
+
+            table.on('tool(device-table)', function(obj)
+            {
+                if (obj.event === 'edit') openDeviceForm(obj.data);
+                if (obj.event === 'remove') removeDevice(obj.data.id);
+            });
+        });
+
+        $('#device-filter').submit(function()
+        {
+            reloadTable(true);
+            return false;
         });
 
         $('#btn-clear-filter').click(function()
         {
             $('#device-filter').get(0).reset();
-            window.deviceTable.reload();
+            reloadTable(true);
         });
 
         $('#btn-create-device').click(function()
         {
             openDeviceForm(null);
-        });
-
-        $('#device-table').on('click', '.btn-edit', function()
-        {
-            openDeviceForm(JSON.parse(decodeURIComponent($(this).attr('data-row'))));
         });
 
         layui.form.on('switch(device-status)', function(data)
@@ -246,19 +288,18 @@
             });
         });
 
-        $('#device-table').on('click', '.btn-remove', function()
+        function removeDevice(id)
         {
-            var id = $(this).attr('data-id');
             appConfirm('确定删除这个设备档案？', function()
             {
                 $.post('/device/remove', { id: id }, function(result)
                 {
                     if (result.error && result.error.code) return appNotify('error', result.error.reason);
                     appNotify('success', '删除成功');
-                    window.deviceTable.reload();
+                    reloadTable();
                 });
             });
-        });
+        }
 
         function openDeviceForm(row)
         {
@@ -290,7 +331,7 @@
                         if (result.error && result.error.code) return appNotify('error', result.error.reason);
                         layui.layer.close(index);
                         appNotify('success', '保存成功');
-                        window.deviceTable.reload();
+                        reloadTable();
                     });
                 }
             });
