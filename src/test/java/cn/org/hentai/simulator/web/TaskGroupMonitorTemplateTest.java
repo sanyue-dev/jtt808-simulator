@@ -89,15 +89,25 @@ class TaskGroupMonitorTemplateTest
         assertThat(template).contains("任务组列表");
         assertThat(template).contains("task-group-row__identity");
         assertThat(template).contains("task-group-row__display-name");
-        assertThat(template).contains("task-group-row__meta");
         assertThat(template).contains("task-group-row__metrics");
         assertThat(template).contains("task-group-row__metric--target");
         assertThat(template).contains("task-group-state task-group-state--' + stateClass(group.state)");
-        assertThat(template).contains("Task Group Launch Status");
-        assertThat(template).contains("Task Group Current Status");
         assertThat(template).contains("task-group-detail__section--launch");
         assertThat(template).contains("task-group-detail__section--current");
         assertThat(template).contains("task-group-actions");
+    }
+
+    @Test
+    void monitorUsesChineseOperationTermsAndKeepsRawIdentifierInDetailsOnly() throws Exception
+    {
+        String template = read("/templates/task-group-monitor.ftlh");
+
+        assertThat(template).doesNotContain("Task Group List");
+        assertThat(template).doesNotContain("Task Group Launch Status");
+        assertThat(template).doesNotContain("Task Group Current Status");
+        assertThat(template).doesNotContain("task-group-row__meta");
+        assertThat(template).doesNotContain("<strong class=\"task-group-row__display-name\">' + escapeHtml(group.displayName) + '</strong><span");
+        assertThat(template).contains("任务组标识：' + escapeHtml(group.taskGroupId)");
     }
 
     private String read(String path) throws Exception

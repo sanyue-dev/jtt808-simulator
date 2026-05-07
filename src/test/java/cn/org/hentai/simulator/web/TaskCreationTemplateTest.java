@@ -65,6 +65,24 @@ class TaskCreationTemplateTest
         assertThat(batchCreate).doesNotContain("card-section-header");
     }
 
+    @Test
+    void creationPagesUseChineseTaskGroupAndRampUpWindowTerms() throws Exception
+    {
+        String taskCreate = read("/templates/task-create.ftlh");
+        String batchCreate = read("/templates/task-batch-create.ftlh");
+        String monitorList = read("/templates/monitor-list-index.ftlh");
+
+        assertThat(taskCreate).contains("启动后会生成任务组");
+        assertThat(batchCreate).contains("创建后会生成任务组");
+        assertThat(monitorList).contains("当前按任务组过滤");
+        assertThat(batchCreate).contains("ramp-up 窗口大小");
+        assertThat(batchCreate).contains("0 表示一次性提交全部任务");
+        assertThat(taskCreate).doesNotContain("Task Group");
+        assertThat(batchCreate).doesNotContain("Task Group");
+        assertThat(monitorList).doesNotContain("Task Group");
+        assertThat(batchCreate).doesNotContain("ramp-up 批次大小");
+    }
+
     private String read(String path) throws Exception
     {
         return new String(getClass().getResourceAsStream(path).readAllBytes(), StandardCharsets.UTF_8);

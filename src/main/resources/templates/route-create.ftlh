@@ -30,6 +30,9 @@
         #panel .grid__row { min-height: 44px; line-height: 40px; font-size: 13px; }
         #panel .grid__col--7 input[type=text] { min-width: 200px; }
         #panel #btn-locate-point { margin-right: 5px; }
+        #panel .route-event-dropdown { text-align: left; margin-top: 4px; }
+        #panel .route-event-dropdown .task__dropdown-trigger { height: 32px; line-height: normal; }
+        #panel .route-event-dropdown .task__dropdown-menu { line-height: normal; }
         #map { width: 100%; height: 100%; }
         .anchorBL { display: none !important; }
 
@@ -748,14 +751,26 @@
 
         __generate_event_types : function(currentValue)
         {
-            var shtml = '<select id="eventCode">';
-            shtml += '<option value="">请选择事件分类</option>';
+            var selectedName = '请选择事件分类';
             for (var i = 0; i < eventTypes.length; i++)
             {
                 var type = eventTypes[i];
-                shtml += '<option value="' + type.code + '" ' + (currentValue == type.code ? 'selected' : '') + '>' + type.name + '</option>';
+                if (currentValue == type.code) selectedName = type.name;
             }
-            shtml += '</select>';
+            var shtml = '<div class="task__dropdown task__dropdown--compact route-event-dropdown' + (currentValue ? '' : ' is-unselected') + '" data-role="eventCode" tabindex="0">';
+            shtml += '<input type="hidden" data-role="eventCode" value="' + escapeHtml(currentValue || '') + '" />';
+            shtml += '<div class="task__dropdown-trigger">';
+            shtml += '<span class="task__dropdown-text">' + escapeHtml(selectedName) + '</span>';
+            shtml += '<span class="task__dropdown-arrow"><i class="fa fa-angle-down"></i></span>';
+            shtml += '</div>';
+            shtml += '<div class="task__dropdown-menu">';
+            shtml += '<div class="task__dropdown-option' + (currentValue ? '' : ' is-selected') + '" data-value="">请选择事件分类</div>';
+            for (var j = 0; j < eventTypes.length; j++)
+            {
+                var eventType = eventTypes[j];
+                shtml += '<div class="task__dropdown-option' + (currentValue == eventType.code ? ' is-selected' : '') + '" data-value="' + escapeHtml(eventType.code) + '">' + escapeHtml(eventType.name) + '</div>';
+            }
+            shtml += '</div></div>';
             return shtml;
         },
 
@@ -786,6 +801,26 @@
     function v(v)
     {
         return v == null || typeof(v) == 'undefined' ? '' : v;
+    }
+
+    function escapeHtml(value)
+    {
+        return $('<div>').text(value == null ? '' : String(value)).html();
+    }
+
+    function selectRouteEventOption(option)
+    {
+        var opt = $(option);
+        var dropdown = opt.closest('.route-event-dropdown');
+        var value = opt.attr('data-value') || '';
+        var row = opt.closest('.grid__row');
+        dropdown.find('.task__dropdown-option').removeClass('is-selected');
+        opt.addClass('is-selected');
+        dropdown.find('input[data-role="eventCode"]').val(value);
+        dropdown.find('.task__dropdown-text').text(opt.text());
+        dropdown.toggleClass('is-unselected', value === '');
+        dropdown.removeClass('is-open');
+        route.setTroubleSegmentValues(row.attr('x-id'), { eventCode : value }, false);
     }
 
     $(document).ready(function()
@@ -899,12 +934,53 @@
             route.setTroubleSegmentValues(id, values, false);
         });
 
-        $(document).on('change', 'select[id=eventCode]', function()
+        $(document).on('click', '.route-event-dropdown .task__dropdown-trigger', function(e)
         {
-            var el = $(this);
-            var val = $.trim(el.val());
-            var id = el.parents('.grid__row').attr('x-id');
-            route.setTroubleSegmentValues(id, { eventCode : val }, false);
+            e.stopPropagation();
+            var dropdown = $(this).closest('.route-event-dropdown');
+            $('.route-event-dropdown').not(dropdown).removeClass('is-open');
+            dropdown.toggleClass('is-open');
+        });
+
+        $(document).on('click', '.route-event-dropdown .task__dropdown-option', function(e)
+        {
+            e.stopPropagation();
+            selectRouteEventOption(this);
+        });
+
+        $(document).on('keydown', '.route-event-dropdown', function(e)
+        {
+            var dropdown = $(this);
+            var options = dropdown.find('.task__dropdown-option:visible');
+            var idx = options.index(options.filter('.is-selected'));
+            if (e.key === 'Escape') { dropdown.removeClass('is-open'); return; }
+            if (!dropdown.hasClass('is-open'))
+            {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dropdown.addClass('is-open'); }
+                return;
+            }
+            if (e.key === 'ArrowDown')
+            {
+                e.preventDefault();
+                idx = idx < options.length - 1 ? idx + 1 : 0;
+                selectRouteEventOption(options.eq(idx));
+            }
+            else if (e.key === 'ArrowUp')
+            {
+                e.preventDefault();
+                idx = idx > 0 ? idx - 1 : options.length - 1;
+                selectRouteEventOption(options.eq(idx));
+            }
+            else if (e.key === 'Enter' || e.key === ' ')
+            {
+                e.preventDefault();
+                dropdown.removeClass('is-open');
+            }
+        });
+
+        $(document).on('click', function()
+        {
+            $('.route-event-dropdown').removeClass('is-open');
         });
 
         // 删除路段

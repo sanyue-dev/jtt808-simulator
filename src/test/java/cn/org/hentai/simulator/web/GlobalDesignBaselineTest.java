@@ -58,6 +58,17 @@ class GlobalDesignBaselineTest
         assertThat(template).doesNotContain("#panel .grid__row { height: 36px;");
     }
 
+    @Test
+    void routeEditorTroubleSegmentEventCategoryUsesSharedCustomDropdown() throws Exception
+    {
+        String template = read("/templates/route-create.ftlh");
+
+        assertThat(template).contains("task__dropdown task__dropdown--compact route-event-dropdown");
+        assertThat(template).contains("data-role=\"eventCode\"");
+        assertThat(template).contains("selectRouteEventOption");
+        assertThat(template).doesNotContain("<select id=\"eventCode\"");
+    }
+
     private String read(String path) throws Exception
     {
         return new String(getClass().getResourceAsStream(path).readAllBytes(), StandardCharsets.UTF_8);

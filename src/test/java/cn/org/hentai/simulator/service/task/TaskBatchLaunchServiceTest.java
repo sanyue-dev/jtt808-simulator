@@ -58,7 +58,7 @@ class TaskBatchLaunchServiceTest
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> service.validate(request));
 
-        assertEquals("终端数量必须在 1 到 100000 之间; ramp-up 批次大小必须大于 0", ex.getMessage());
+        assertEquals("终端数量必须在 1 到 100000 之间; ramp-up 窗口大小必须大于 0", ex.getMessage());
     }
 
     @Test

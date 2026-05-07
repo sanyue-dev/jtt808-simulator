@@ -109,9 +109,9 @@
                         <span class="card-section__field-hint">0 表示不自动停止</span>
                     </div>
                     <div class="card-section__field">
-                        <label class="card-section__label">ramp-up 批次大小</label>
+                        <label class="card-section__label">ramp-up 窗口大小</label>
                         <input type="number" name="rampUpBatchSize" id="rampUpBatchSize" class="card-section__input" min="0" value="0" />
-                        <span class="card-section__field-hint">0 表示一次性提交</span>
+                        <span class="card-section__field-hint">0 表示一次性提交全部任务</span>
                     </div>
                     <div class="card-section__field">
                         <label class="card-section__label">ramp-up 间隔（毫秒）</label>
@@ -122,7 +122,7 @@
 
             <!-- 提交 -->
             <div class="batch__creation-note">
-                创建后会生成 Task Group，并进入任务组监控页观察批量启动进度。
+                创建后会生成任务组，并进入任务组监控页观察启动进度。
             </div>
             <div class="card-section__actions">
                 <button class="btn btn--blue batch__primary-action" id="btn-run">创建任务</button>
