@@ -62,7 +62,7 @@
                             <button type="button" class="task__regen-btn" data-target="simNumber" title="重新生成"><i class="fa fa-refresh"></i></button>
                         </div>
                     </div>
-                    <div class="card-section__field" style="max-width: 180px;">
+                    <div class="card-section__field card-section__field--narrow">
                         <label class="card-section__label">初始里程数</label>
                         <input type="text" name="mileages" id="mileages" class="card-section__input" placeholder="公里，默认0" />
                     </div>
@@ -79,7 +79,7 @@
                         <label class="card-section__label">808 网关地址</label>
                         <input type="text" name="serverAddress" id="serverAddress" class="card-section__input" value="${vehicleServerAddr}" />
                     </div>
-                    <div class="card-section__field" style="max-width: 180px;">
+                    <div class="card-section__field card-section__field--narrow">
                         <label class="card-section__label">端口</label>
                         <input type="text" name="serverPort" id="serverPort" class="card-section__input" value="${vehicleServerPort}" />
                     </div>
@@ -87,8 +87,11 @@
             </div>
 
             <!-- 提交 -->
+            <div class="task__creation-note">
+                启动后会生成 Task Group，并进入任务组监控页观察启动与运行状态。
+            </div>
             <div class="card-section__actions">
-                <button class="btn btn--blue" id="btn-run" style="min-width: 120px; height: 38px; line-height: 38px; font-size: 14px;">启动</button>
+                <button class="btn btn--blue task__primary-action" id="btn-run">启动</button>
             </div>
 
                 </div>
@@ -100,65 +103,10 @@
 <#include "inc/footer.ftlh">
 <style>
     .task { max-width: 860px; }
-    /* ── custom dropdown ── */
-    .task__dropdown { position: relative; width: 100%; }
-    .task__dropdown-trigger {
-        height: 40px; width: 100%; padding: 0 36px 0 14px;
-        box-sizing: border-box;
-        border: 1px solid var(--color-border); border-radius: var(--radius-sm);
-        background: var(--color-bg-panel); color: var(--color-text-primary);
-        font-size: 13px; cursor: pointer;
-        display: flex; align-items: center;
-        transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-    }
-    .task__dropdown-trigger:hover { border-color: var(--color-border-strong); }
-    .task__dropdown.is-open .task__dropdown-trigger {
-        border-color: var(--color-text-primary);
-        border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-    }
-    .task__dropdown-text {
-        flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
-    .task__dropdown.is-unselected .task__dropdown-text { color: var(--color-text-secondary); opacity: .6; }
-    .task__dropdown-arrow {
-        position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-        color: var(--color-text-secondary); font-size: 12px;
-        transition: transform var(--transition-fast);
-        pointer-events: none;
-    }
-    .task__dropdown.is-open .task__dropdown-arrow { transform: translateY(-50%) rotate(180deg); }
-
-    .task__dropdown-menu {
-        position: absolute; left: 0; right: 0; top: 100%;
-        opacity: 0; visibility: hidden;
-        max-height: 240px; overflow-y: auto;
-        background: var(--color-bg-panel);
-        border: 1px solid var(--color-text-primary); border-top: none;
-        box-sizing: border-box;
-        border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-        z-index: 100;
-        box-shadow: 0 4px 12px rgba(0,0,0,.08);
-        transition: opacity .15s ease, visibility .15s ease;
-    }
-    .task__dropdown.is-open .task__dropdown-menu {
-        opacity: 1; visibility: visible;
-    }
-    .task__dropdown-option {
-        padding: 9px 14px; font-size: 13px; color: var(--color-text-primary);
-        cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        transition: background var(--transition-fast), color var(--transition-fast);
-    }
-    .task__dropdown-option:hover { background: var(--color-bg-sidebar-hover); }
-    .task__dropdown-option.is-selected {
-        background: var(--color-bg-sidebar-active); color: var(--color-text-inverse);
-    }
-    .task__dropdown-option.is-selected:hover { background: var(--color-primary-hover); }
-
     .task__input-row { display: flex; align-items: center; }
-    .task__input-row .card-section__input { flex: 1; border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+    .task__input-row .card-section__input { flex: 1; }
     .task__regen-btn {
-        width: 36px; height: 36px; border: 1px solid var(--color-border);
-        border-left: none; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        width: 40px; height: 40px; border: 0; border-bottom: 1px solid var(--color-border);
         background: var(--color-bg-panel-muted); color: var(--color-text-secondary);
         cursor: pointer; display: flex; align-items: center; justify-content: center;
         transition: background var(--transition-fast), color var(--transition-fast);
@@ -168,13 +116,20 @@
     .task__regen-btn:active i { transform: rotate(180deg); }
 
     .task__regen-all {
-        background: none; border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+        background: var(--color-bg-panel); border: 1px solid var(--color-border); border-radius: var(--radius-none);
         cursor: pointer; font-size: 11px; color: var(--color-text-secondary);
         padding: 4px 10px; display: flex; align-items: center; gap: 5px;
         transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
     }
     .task__regen-all:hover { background: var(--color-bg-muted); color: var(--color-text-primary); border-color: var(--color-border-strong); }
     .task__regen-all i { font-size: 10px; }
+    .task__creation-note {
+        color: var(--color-text-secondary);
+        font-size: 12px;
+        line-height: 1.5;
+        margin-top: 12px;
+    }
+    .task__primary-action { min-width: 120px; }
 </style>
 <script type="text/javascript">
     $(document).ready(function()
