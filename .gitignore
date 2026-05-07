@@ -6,5 +6,6 @@ target
 .java-version
 .ace-tool/
 .playwright-mcp/
+.codex/
 .claude/settings.local.json
 CLAUDE.local.md
