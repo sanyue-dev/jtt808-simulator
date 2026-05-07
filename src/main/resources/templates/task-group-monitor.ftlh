@@ -37,20 +37,13 @@
             color: var(--color-text-primary);
             font-size: 18px;
         }
-        .task-group-table table {
-            width: 100%;
-            border-collapse: collapse;
-            background: var(--color-bg-panel);
-            border: 1px solid var(--color-border);
+        .task-group-table {
+            overflow-x: auto;
         }
-        .task-group-table th,
-        .task-group-table td {
-            padding: 10px 12px;
-            border-bottom: 1px solid var(--color-border);
-            text-align: left;
-            font-size: 13px;
+        .task-group-table .layui-table {
+            min-width: 960px;
+            margin: 0;
         }
-        .task-group-table th { color: var(--color-text-secondary); font-weight: 500; }
         .task-group-monitor__section-heading {
             display: flex;
             align-items: flex-end;
@@ -71,7 +64,7 @@
             font-size: 12px;
         }
         .task-group-row__primary td {
-            vertical-align: top;
+            vertical-align: middle;
         }
         .task-group-row__identity {
             display: flex;
@@ -84,61 +77,34 @@
             font-weight: 600;
             font-size: 13px;
         }
-        .task-group-row__metrics {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(72px, 1fr));
-            gap: 8px;
-            min-width: 360px;
-        }
-        .task-group-row__metric {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-            border-left: 2px solid var(--color-border);
-            padding-left: 8px;
-        }
-        .task-group-row__metric span {
-            color: var(--color-text-secondary);
-            font-size: 11px;
-        }
-        .task-group-row__metric strong {
+        .task-group-row__number {
             color: var(--color-text-primary);
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
         }
-        .task-group-state {
-            display: inline-flex;
-            align-items: center;
-            min-width: 64px;
-            height: 24px;
-            padding: 0 8px;
-            border-left: 3px solid var(--color-border-strong);
-            background: var(--color-bg-panel-muted);
-            color: var(--color-text-primary);
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .task-group-state--running { border-left-color: var(--color-success); }
-        .task-group-state--creating,
-        .task-group-state--stopping { border-left-color: var(--color-primary); }
-        .task-group-state--completed { border-left-color: var(--color-border-strong); color: var(--color-text-secondary); }
-        .task-group-state--failed { border-left-color: var(--color-danger); }
         .task-group-table__details td { background: var(--color-bg-panel-muted); }
         .task-group-detail {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: minmax(260px, .72fr) minmax(420px, 1.28fr);
             gap: 12px;
         }
         .task-group-detail__section {
             border: 1px solid var(--color-border);
             border-radius: var(--radius-sm);
-            padding: 10px;
+            padding: 12px;
             background: var(--color-bg-panel);
         }
         .task-group-detail__section h4 {
-            margin: 0 0 8px;
-            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0 0 10px;
+            font-size: 14px;
             color: var(--color-text-primary);
+        }
+        .task-group-detail__section h4 .layui-icon {
+            color: var(--color-primary);
+            font-size: 15px;
         }
         .task-group-detail__section h4 span {
             display: block;
@@ -147,31 +113,51 @@
             font-size: 11px;
             font-weight: 400;
         }
-        .task-group-detail__section p {
-            margin: 4px 0;
-            font-size: 12px;
+        .task-group-detail__grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+            gap: 8px;
+            margin: 0;
+        }
+        .task-group-detail__item {
+            min-width: 0;
+            margin: 0;
+            padding: 8px 10px;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            background: var(--color-bg-panel-muted);
+        }
+        .task-group-detail__item--wide {
+            grid-column: 1 / -1;
+        }
+        .task-group-detail__item dt {
+            margin-bottom: 4px;
             color: var(--color-text-secondary);
+            font-size: 12px;
+            line-height: 18px;
+        }
+        .task-group-detail__item dd {
+            margin: 0;
+            color: var(--color-text-primary);
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 20px;
+            overflow-wrap: anywhere;
+        }
+        .task-group-detail__item--muted dd {
+            color: var(--color-text-secondary);
+            font-size: 13px;
+            font-weight: 400;
+        }
+        @media screen and (max-width: 1100px) {
+            .task-group-detail {
+                grid-template-columns: 1fr;
+            }
         }
         .task-group-actions {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
             min-width: 208px;
         }
-        .task-group-table__btn {
-            border: 1px solid var(--color-border);
-            background: var(--color-bg-panel-muted);
-            border-radius: var(--radius-sm);
-            height: 28px;
-            padding: 0 10px;
-            cursor: pointer;
-            color: var(--color-text-primary);
-        }
-        .task-group-table__btn i { margin-right: 4px; }
-        .task-group-table__btn:hover {
-            border-color: var(--color-border-strong);
-            background: var(--color-bg-muted);
-        }
+        .task-group-actions .layui-btn i { margin-right: 3px; }
     </style>
 </head>
 <body>
@@ -291,7 +277,7 @@
             (data.taskGroups || []).forEach(function(group)
             {
                 var expanded = !!expandedTaskGroupIds[group.taskGroupId];
-                var actions = '<div class="task-group-actions">';
+                var actions = '<div class="layui-btn-group task-group-actions">';
                 actions += '<button type="button" class="layui-btn layui-btn-primary layui-btn-xs" data-action="toggle"><i class="layui-icon ' + (expanded ? 'layui-icon-up' : 'layui-icon-down') + '"></i>' + (expanded ? '收起' : '展开') + '</button>';
                 actions += '<button type="button" class="layui-btn layui-btn-primary layui-btn-xs" data-action="view-tasks"><i class="layui-icon layui-icon-list"></i>查看行程任务</button>';
                 if (canStop(group))
@@ -300,15 +286,13 @@
                 }
                 actions += '</div>';
                 rows.push('<tr class="task-group-row__primary" data-task-group-id="' + escapeHtml(group.taskGroupId) + '">' +
-                    '<td><span class="task-group-state task-group-state--' + stateClass(group.state) + '">' + formatState(group.state) + '</span></td>' +
+                    '<td><span class="layui-badge ' + stateClass(group.state) + '">' + formatState(group.state) + '</span></td>' +
                     '<td><div class="task-group-row__identity"><strong class="task-group-row__display-name">' + escapeHtml(group.displayName) + '</strong></div></td>' +
                     '<td>' + escapeHtml(group.sourceText || group.source) + '</td>' +
-                    '<td colspan="4"><div class="task-group-row__metrics">' +
-                    '<div class="task-group-row__metric task-group-row__metric--target"><span>目标数</span><strong>' + (group.targetTasks || 0) + '</strong></div>' +
-                    '<div class="task-group-row__metric"><span>已启动</span><strong>' + (group.startedTasks || 0) + '</strong></div>' +
-                    '<div class="task-group-row__metric"><span>活动中</span><strong>' + (group.activeTasks || 0) + '</strong></div>' +
-                    '<div class="task-group-row__metric"><span>已终止</span><strong>' + (group.terminatedTasks || 0) + '</strong></div>' +
-                    '</div></td>' +
+                    '<td><span class="task-group-row__number">' + (group.targetTasks || 0) + '</span></td>' +
+                    '<td><span class="task-group-row__number">' + (group.startedTasks || 0) + '</span></td>' +
+                    '<td><span class="task-group-row__number">' + (group.activeTasks || 0) + '</span></td>' +
+                    '<td><span class="task-group-row__number">' + (group.terminatedTasks || 0) + '</span></td>' +
                     '<td>' + actions + '</td>' +
                     '</tr>');
                 if (expanded) rows.push(detailRow(group));
@@ -320,34 +304,46 @@
         {
             return '<tr class="task-group-table__details"><td colspan="8">' +
                 '<div class="task-group-detail">' +
-                '<div class="task-group-detail__section task-group-detail__section--launch"><h4>启动情况</h4>' +
-                '<p>任务组标识：' + escapeHtml(group.taskGroupId) + '</p>' +
-                '<p>目标任务数：' + (group.targetTasks || 0) + '</p>' +
-                '<p>已启动任务：' + (group.startedTasks || 0) + '</p>' +
-                '<p>ramp-up：' + (group.executedWindowCount || 0) + ' / ' + (group.rampUpWindowCount || 0) + '</p>' +
-                '<p>失败原因：' + escapeHtml(group.failureReason || '无') + '</p>' +
+                '<div class="task-group-detail__section task-group-detail__section--launch"><h4><i class="layui-icon layui-icon-release"></i>启动情况</h4>' +
+                '<dl class="task-group-detail__grid">' +
+                detailItem('任务组标识', escapeHtml(group.taskGroupId), true) +
+                detailItem('目标任务数', group.targetTasks || 0) +
+                detailItem('已启动任务', group.startedTasks || 0) +
+                detailItem('ramp-up', (group.executedWindowCount || 0) + ' / ' + (group.rampUpWindowCount || 0)) +
+                detailItem('失败原因', escapeHtml(group.failureReason || '无'), true, true) +
+                '</dl>' +
                 '</div>' +
-                '<div class="task-group-detail__section task-group-detail__section--current"><h4>当前运行情况</h4>' +
-                '<p>状态：' + formatState(group.state) + '</p>' +
-                '<p>活动中：' + (group.activeTasks || 0) + '</p>' +
-                '<p>已终止：' + (group.terminatedTasks || 0) + '</p>' +
-                '<p>连接成功：' + (group.connectionSucceeded || 0) + '</p>' +
-                '<p>连接失败：' + (group.connectionFailed || 0) + '</p>' +
-                '<p>注册成功：' + (group.registrationSucceeded || 0) + '</p>' +
-                '<p>注册失败：' + (group.registrationFailed || 0) + '</p>' +
-                '<p>鉴权成功：' + (group.authenticationSucceeded || 0) + '</p>' +
-                '<p>鉴权失败：' + (group.authenticationFailed || 0) + '</p>' +
-                '<p>位置上报：' + (group.locationReportSent || 0) + '</p>' +
-                '<p>上报速率/s：' + formatRate(group.locationReportRate) + '</p>' +
-                '<p>断连：' + (group.disconnected || 0) + '</p>' +
-                '<p>发送失败：' + (group.sendFailed || 0) + '</p>' +
-                '<p>协议异常：' + (group.protocolExceptions || 0) + '</p>' +
-                '<p>停止成功：' + (group.stopSucceeded || 0) + '</p>' +
-                '<p>停止失败：' + (group.stopFailed || 0) + '</p>' +
-                '<p>停止失败明细：' + formatStopFailures(group.stopFailures || []) + '</p>' +
+                '<div class="task-group-detail__section task-group-detail__section--current"><h4><i class="layui-icon layui-icon-chart-screen"></i>当前运行情况</h4>' +
+                '<dl class="task-group-detail__grid">' +
+                detailItem('状态', formatState(group.state)) +
+                detailItem('活动中', group.activeTasks || 0) +
+                detailItem('已终止', group.terminatedTasks || 0) +
+                detailItem('连接成功', group.connectionSucceeded || 0) +
+                detailItem('连接失败', group.connectionFailed || 0) +
+                detailItem('注册成功', group.registrationSucceeded || 0) +
+                detailItem('注册失败', group.registrationFailed || 0) +
+                detailItem('鉴权成功', group.authenticationSucceeded || 0) +
+                detailItem('鉴权失败', group.authenticationFailed || 0) +
+                detailItem('位置上报', group.locationReportSent || 0) +
+                detailItem('上报速率/s', formatRate(group.locationReportRate)) +
+                detailItem('断连', group.disconnected || 0) +
+                detailItem('发送失败', group.sendFailed || 0) +
+                detailItem('协议异常', group.protocolExceptions || 0) +
+                detailItem('停止成功', group.stopSucceeded || 0) +
+                detailItem('停止失败', group.stopFailed || 0) +
+                detailItem('停止失败明细', formatStopFailures(group.stopFailures || []), true, true) +
+                '</dl>' +
                 '</div>' +
                 '</div>' +
                 '</td></tr>';
+        }
+
+        function detailItem(label, value, wide, muted)
+        {
+            var className = 'task-group-detail__item';
+            if (wide) className += ' task-group-detail__item--wide';
+            if (muted) className += ' task-group-detail__item--muted';
+            return '<div class="' + className + '"><dt>' + escapeHtml(label) + '</dt><dd>' + value + '</dd></div>';
         }
 
         $('#task-group-list').on('click', '[data-action="toggle"]', function()
@@ -426,12 +422,12 @@
 
         function stateClass(state)
         {
-            if (state === 'creating') return 'creating';
-            if (state === 'running') return 'running';
-            if (state === 'stopping') return 'stopping';
-            if (state === 'completed') return 'completed';
-            if (state === 'failed') return 'failed';
-            return 'unknown';
+            if (state === 'creating') return 'layui-bg-blue';
+            if (state === 'running') return 'layui-bg-green';
+            if (state === 'stopping') return 'layui-bg-orange';
+            if (state === 'completed') return 'layui-bg-gray';
+            if (state === 'failed') return 'layui-bg-red';
+            return '';
         }
 
         function escapeHtml(value)

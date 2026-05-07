@@ -58,13 +58,13 @@ class TaskGroupMonitorTemplateTest
         assertThat(template).doesNotContain("runtimeSummary.locationReportRate");
         assertThat(template).contains("data-field=\"runtimeSummary.sendFailed\"");
         assertThat(template).contains("data-field=\"runtimeSummary.protocolExceptions\"");
-        assertThat(template).contains("连接成功：' + (group.connectionSucceeded || 0)");
-        assertThat(template).contains("注册失败：' + (group.registrationFailed || 0)");
-        assertThat(template).contains("鉴权失败：' + (group.authenticationFailed || 0)");
-        assertThat(template).contains("位置上报：' + (group.locationReportSent || 0)");
-        assertThat(template).contains("上报速率/s：' + formatRate(group.locationReportRate)");
-        assertThat(template).contains("发送失败：' + (group.sendFailed || 0)");
-        assertThat(template).contains("协议异常：' + (group.protocolExceptions || 0)");
+        assertThat(template).contains("detailItem('连接成功', group.connectionSucceeded || 0)");
+        assertThat(template).contains("detailItem('注册失败', group.registrationFailed || 0)");
+        assertThat(template).contains("detailItem('鉴权失败', group.authenticationFailed || 0)");
+        assertThat(template).contains("detailItem('位置上报', group.locationReportSent || 0)");
+        assertThat(template).contains("detailItem('上报速率/s', formatRate(group.locationReportRate))");
+        assertThat(template).contains("detailItem('发送失败', group.sendFailed || 0)");
+        assertThat(template).contains("detailItem('协议异常', group.protocolExceptions || 0)");
         assertThat(template).doesNotContain("taskGroup.tripTasks");
     }
 
@@ -87,9 +87,10 @@ class TaskGroupMonitorTemplateTest
         assertThat(template).contains("$.post('/task-groups/stop'");
         assertThat(template).contains("data-action=\"stop\"");
         assertThat(template).contains("data-action=\"view-tasks\"");
+        assertThat(template).contains("layui-btn-group task-group-actions");
         assertThat(template).contains("'/monitor/list/index?taskGroupId=' + encodeURIComponent(id)");
-        assertThat(template).contains("停止成功：");
-        assertThat(template).contains("停止失败：");
+        assertThat(template).contains("detailItem('停止成功', group.stopSucceeded || 0)");
+        assertThat(template).contains("detailItem('停止失败', group.stopFailed || 0)");
         assertThat(template).contains("return group.state === 'creating' || group.state === 'running'");
     }
 
@@ -102,12 +103,22 @@ class TaskGroupMonitorTemplateTest
         assertThat(template).contains("任务组列表");
         assertThat(template).contains("task-group-row__identity");
         assertThat(template).contains("task-group-row__display-name");
-        assertThat(template).contains("task-group-row__metrics");
-        assertThat(template).contains("task-group-row__metric--target");
-        assertThat(template).contains("task-group-state task-group-state--' + stateClass(group.state)");
+        assertThat(template).contains("task-group-row__number");
+        assertThat(template).contains("'<td><span class=\"task-group-row__number\">' + (group.targetTasks || 0) + '</span></td>'");
+        assertThat(template).contains("'<td><span class=\"task-group-row__number\">' + (group.startedTasks || 0) + '</span></td>'");
+        assertThat(template).contains("'<td><span class=\"task-group-row__number\">' + (group.activeTasks || 0) + '</span></td>'");
+        assertThat(template).contains("'<td><span class=\"task-group-row__number\">' + (group.terminatedTasks || 0) + '</span></td>'");
+        assertThat(template).contains("layui-badge ' + stateClass(group.state)");
+        assertThat(template).contains("if (state === 'running') return 'layui-bg-green'");
         assertThat(template).contains("task-group-detail__section--launch");
         assertThat(template).contains("task-group-detail__section--current");
+        assertThat(template).contains("task-group-detail__grid");
+        assertThat(template).contains("task-group-detail__item");
+        assertThat(template).contains("function detailItem(label, value, wide, muted)");
         assertThat(template).contains("task-group-actions");
+        assertThat(template).doesNotContain("task-group-row__metrics");
+        assertThat(template).doesNotContain("task-group-row__metric--target");
+        assertThat(template).doesNotContain("<td colspan=\"4\">");
     }
 
     @Test
@@ -120,7 +131,7 @@ class TaskGroupMonitorTemplateTest
         assertThat(template).doesNotContain("Task Group Current Status");
         assertThat(template).doesNotContain("task-group-row__meta");
         assertThat(template).doesNotContain("<strong class=\"task-group-row__display-name\">' + escapeHtml(group.displayName) + '</strong><span");
-        assertThat(template).contains("任务组标识：' + escapeHtml(group.taskGroupId)");
+        assertThat(template).contains("detailItem('任务组标识', escapeHtml(group.taskGroupId), true)");
     }
 
     private String read(String path) throws Exception
