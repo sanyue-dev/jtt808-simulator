@@ -120,21 +120,32 @@
             margin-left: 4px;
             color: var(--color-text-secondary);
         }
+        .monitor__grids
+        {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px;
+            margin-bottom: 14px;
+        }
         .monitor__grids div
         {
-            display: block;
+            display: flex;
+            align-items: center;
             width: 100%;
-            height: 24px;
-            line-height: 24px;
-            font-size: 10px;
-            font-family: consolas;
+            min-height: 30px;
+            line-height: 1.3;
+            font-size: 13px;
+            font-family: inherit;
+            font-variant-numeric: tabular-nums;
             text-align: left;
-            background-color: var(--color-bg-muted);
-            border: solid 1px var(--color-border-strong);
-            margin: 0px 4px 4px 0px;
-            padding-left: 4px;
+            background-color: var(--color-bg-panel);
+            border: solid 1px var(--color-border);
+            margin: 0px;
+            padding: 5px 8px;
             color: var(--color-text-primary);
             border-radius: 4px;
+            overflow: hidden;
+            transition: border-color var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast);
         }
         .monitor__grids div.active
         {
@@ -146,6 +157,7 @@
         {
             cursor: pointer;
             background-color: var(--color-bg-sidebar-hover);
+            border-color: var(--color-primary);
             color: var(--color-text-primary);
         }
         .monitor__grids div.active:hover
@@ -155,7 +167,11 @@
         }
         .monitor__grids div span
         {
-            margin-left: 4px;
+            min-width: 0;
+            margin-left: 6px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
     </style>
 </head>

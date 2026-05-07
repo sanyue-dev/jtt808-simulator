@@ -35,6 +35,21 @@ class MonitorTemplateTest
     }
 
     @Test
+    void monitorFlagControlsUseGlobalTypographyAndReadableSize() throws Exception
+    {
+        String template = read("/templates/monitor.ftlh");
+
+        assertThat(template).contains(".monitor__grids");
+        assertThat(template).contains("grid-template-columns: repeat(2, minmax(0, 1fr));");
+        assertThat(template).contains("font-family: inherit;");
+        assertThat(template).contains("font-size: 13px;");
+        assertThat(template).contains("min-height: 30px;");
+        assertThat(template).contains("text-overflow: ellipsis;");
+        assertThat(template).doesNotContain("font-size: 10px;");
+        assertThat(template).doesNotContain("font-family: consolas;");
+    }
+
+    @Test
     void tripTaskListKeepsTaskGroupFilterInPaginatedRequests() throws Exception
     {
         String template = read("/templates/monitor-list-index.ftlh");
