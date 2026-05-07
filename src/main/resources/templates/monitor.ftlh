@@ -2,19 +2,26 @@
 <html lang="en">
 <head>
 <#include "inc/resource.ftlh">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
     <title>行程任务详情</title>
     <style type="text/css">
         body { overflow: hidden; }
         .app-body
         {
-            padding: 0px 350px 300px 0px;
             position: relative;
+            padding: 0 !important;
         }
         .monitor__map
         {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            right: 350px;
+            bottom: 300px;
             background-color: var(--color-bg-page);
-            width: 100%;
-            height: 100%;
+            width: auto;
+            height: auto;
+            z-index: 0;
         }
         .monitor__log-panel
         {
@@ -24,7 +31,7 @@
             width: 100%;
             height: 300px;
             border-top: solid 1px var(--color-border);
-            z-index: 200;
+            z-index: 3;
             background-color: var(--color-bg-panel);
             box-shadow: none;
         }
@@ -36,7 +43,7 @@
             width: 350px;
             height: 100%;
             border-left: solid 1px var(--color-border);
-            z-index: 100;
+            z-index: 2;
             background-color: var(--color-bg-panel);
             padding-bottom: 300px;
             box-shadow: none;
@@ -293,7 +300,6 @@
 </div>
 </body>
 <#include "inc/footer.ftlh">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script type="text/javascript" src="/static/js/LeafletAutoCar.js"></script>
 <script type="text/javascript">

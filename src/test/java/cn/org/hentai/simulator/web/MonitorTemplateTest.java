@@ -19,6 +19,22 @@ class MonitorTemplateTest
     }
 
     @Test
+    void monitorDetailMapDoesNotOccupyPanels() throws Exception
+    {
+        String template = read("/templates/monitor.ftlh");
+
+        assertThat(template).contains(".monitor__map");
+        assertThat(template).contains("right: 350px;");
+        assertThat(template).contains("bottom: 300px;");
+        assertThat(template).contains(".monitor__info-panel");
+        assertThat(template).contains("z-index: 2;");
+        assertThat(template).contains(".monitor__log-panel");
+        assertThat(template).contains("z-index: 3;");
+        assertThat(template).contains("<link rel=\"stylesheet\" href=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.css\"");
+        assertThat(template.indexOf("leaflet.css")).isLessThan(template.indexOf("</head>"));
+    }
+
+    @Test
     void tripTaskListKeepsTaskGroupFilterInPaginatedRequests() throws Exception
     {
         String template = read("/templates/monitor-list-index.ftlh");
