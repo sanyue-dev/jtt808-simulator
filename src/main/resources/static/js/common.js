@@ -1,216 +1,189 @@
 Date.prototype.format = function (fmt) {
     var o = {
-        "M+": this.getMonth() + 1, //月份
-        "d+": this.getDate(), //日
-        "h+": this.getHours(), //小时
-        "m+": this.getMinutes(), //分
-        "s+": this.getSeconds(), //秒
-        "q+": Math.floor((this.getMonth() + 3) / 3), //季度
-        "S": this.getMilliseconds() //毫秒
+        "M+": this.getMonth() + 1,
+        "d+": this.getDate(),
+        "h+": this.getHours(),
+        "m+": this.getMinutes(),
+        "s+": this.getSeconds(),
+        "q+": Math.floor((this.getMonth() + 3) / 3),
+        "S": this.getMilliseconds()
     };
     fmt = fmt || 'yyyy-MM-dd hh:mm:ss';
     if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
     for (var k in o)
         if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
     return fmt;
+};
+
+function escapeHtml(value)
+{
+    return $('<div>').text(value == null ? '' : String(value)).html();
 }
 
-$.fn.paginate = function(param)
+function appNotify(type, text, timeout)
 {
-    var paginate = this;
-    if (typeof(param) == 'string' && param == 'reload')
+    layui.use('layer', function()
     {
-        this.paginate(this.get(0).parameters);
-        return;
-    }
-    var concatParam = function(param1, param2)
+        var icon = 0;
+        if (type === 'success') icon = 1;
+        else if (type === 'error') icon = 2;
+        else if (type === 'warning') icon = 0;
+        layui.layer.msg(text == null ? '' : String(text), { icon: icon, time: timeout || 5000 });
+    });
+}
+
+function appConfirm(text, onOk, onCancel)
+{
+    layui.use('layer', function()
+    {
+        layui.layer.confirm(text == null ? '' : String(text), { title: '提示', icon: 3 }, function(index)
+        {
+            layui.layer.close(index);
+            if (typeof(onOk) == 'function') onOk();
+        }, function(index)
+        {
+            layui.layer.close(index);
+            if (typeof(onCancel) == 'function') onCancel();
+        });
+    });
+}
+
+var appTable = (function()
+{
+    function concatParam(param1, param2)
     {
         if (param1 == '') return param2;
         if (param1.charAt(param1.length - 1) == '&') return param1 + param2;
-        else return param1 + '&' + param2;
-    };
+        return param1 + '&' + param2;
+    }
 
-    param = $.extend({
-        // 绑定此form表单的submit事件
-        form : null,
-        // 初始页码
-        pageIndex : 1,
-        // 是否不生成thead标题行
-        nothead : false,
-        // 表格样式
-        tableStyle : 'data-table',
-        // 页码参数名称
-        pageIndexName : 'pageIndex',
-        // 分页元素容器
-        pagination : $('.pagination'),
-        // 加载中的提示
-        loading : '正在载入，请稍候...',
-        // 在加载前执行
-        onBefore : null
-    }, param);
-
-    if (param.form && typeof(this.get(0).parameters) == 'undefined') param.form.submit(function()
+    function create(options)
     {
-        paginate.get(0).parameters.pageIndex = 1;
-        paginate.paginate(paginate.get(0).parameters);
-        return false;
-    });
+        var instance = {
+            options: $.extend({
+                form : null,
+                pageIndex : 1,
+                nothead : false,
+                pageIndexName : 'pageIndex',
+                pageElem : null,
+                loading : '正在载入，请稍候...',
+                onBefore : null,
+                limit : 20
+            }, options),
 
-    this.parameters = param;
-    var container = $(this);
-    container.get(0).parameters = param;
-    var urlParameters = param.form;
-    if (param.form && param.form.serialize) urlParameters = param.form.serialize();
-    else urlParameters = '';
-    urlParameters = concatParam(urlParameters, param.pageIndexName + '=' + param.pageIndex);
-
-    if (param.onBefore && typeof(param.onBefore) == 'function') param.onBefore();
-
-    if (param.loading) container.html(param.loading);
-    if (param.pagination && param.pagination.html) param.pagination.html('');
-    $.post(param.url, urlParameters, function(result)
-    {
-        if (result.error.code)
-        {
-            if (param.error) param.error(result, param.url, urlParameters);
-            else console.log(result, param.url, urlParameters);
-            container.html('<div class="table-error">'+result.error.reason+'</div>');
-            return;
-        }
-
-        var shtml = '';
-        if (param.render && typeof(param.render) == 'function')
-        {
-            shtml = param.render(result.data.result);
-        }
-        else
-        {
-            shtml = '<table class="' + param.tableStyle + '">';
-            if (param.nothead == false) shtml += '<thead><tr>';
-            for (var i = 0; param.nothead == false && i < param.fields.length; i++)
+            reload: function()
             {
-                var field = param.fields[i];
-                field.align = field.align == null ? 'left' : field.align;
-                shtml += '<th ' + (field.width == null ? '' : 'style="width:' + field.width + '"') + ' class="text-' + field.align + '">' + field.title + '</th>';
+                load(instance);
             }
-            if (param.nothead == false) shtml += '</tr></thead>';
+        };
 
-            shtml += '<tbody>';
-
-            for (var i = 0; result.data.list && i < result.data.list.length; i++)
+        if (instance.options.form)
+        {
+            instance.options.form.submit(function()
             {
-                var row = result.data.list[i];
-
-                shtml += '<tr>';
-                for (var k = 0; k < param.fields.length; k++)
-                {
-                    var field = param.fields[k];
-                    field.align = field.align == null ? 'left' : field.align;
-                    var content = row[field.name];
-                    if (typeof(field.formatter) == 'function') content = field.formatter(i, content, row);
-                    shtml += '<td ' + (field.width == null ? '' : 'style="width:' + field.width + '"') + ' class="text-' + field.align + '">' + content + '</td>';
-                }
-                shtml += '</tr>';
-            }
-            shtml += '</tbody></table>';
-        }
-
-        container.html(shtml);
-        if (typeof(param.onComplete) == 'function')
-        {
-            param.onComplete();
-        }
-
-        // 生成分页
-        shtml = '<li><a href="javascript:;" x-page="1">首页</a></li>';
-        shtml += '<li><a href="javascript:;" x-page="' + Math.max(1, result.data.pageIndex - 1) + '">&laquo;</a></li>';
-        for (var i = Math.max(1, result.data.pageIndex - 5), k = 0; i <= Math.min(result.data.pageIndex + 5, result.data.pageCount); i++)
-        {
-            shtml += '<li class="' + (i == result.data.pageIndex ? 'active' : '') + '"><a x-page="' + i + '" href="javascript:;">' + i + '</a></li>';
-        }
-        var totalPage = (result.data.pageCount == undefined ? 1 :result.data.pageCount);
-
-        shtml += '<li><a href="javascript:;" x-page="' + Math.min(result.data.pageIndex + 1, totalPage) + '">&raquo;</a></li>';
-        shtml += '<li><a href="javascript:;" x-page="' + totalPage + '">末页</a></li>';
-
-        param.pagination.html(shtml);
-        if (param.load) param.load();
-
-        setTimeout(function() {
-            param.pagination.find('a').each(function() {
-                $(this).click(function() {
-                    paginate.parameters.pageIndex = $(this).attr('x-page');
-                    container.paginate(paginate.parameters);
-                });
+                instance.options.pageIndex = 1;
+                load(instance);
+                return false;
             });
-        }, 0);
-    });
-}
+        }
 
-function toastr(type, text, timeout)
-{
-    if (!timeout) timeout = 5000;
-    $('.toast').remove();
-    var el = $('<div class="toast toast--' + type + '"><span></span></div>');
-    el.find('span').text(text == null ? '' : String(text));
-    $(document.body).append(el);
-    el.fadeIn();
-    setTimeout(function()
-    {
-        el.fadeOut(function()
-        {
-            el.remove();
-        });
-    }, timeout);
-}
+        load(instance);
+        return instance;
+    }
 
-function confirmDialog(text, onOk, onCancel)
-{
-    var mask = $('#x-confirm-dialog');
-    if (mask.length == 0)
+    function load(instance)
     {
-        mask = $('<div class="confirm" id="x-confirm-dialog">'
-            + '<div class="confirm__dialog" tabindex="-1">'
-            + '<h1 class="confirm__title">提示</h1>'
-            + '<div class="confirm__body"></div>'
-            + '<div class="confirm__actions">'
-            + '<a href="javascript:;" class="btn btn--sm btn--gray" data-role="cancel">取消</a>'
-            + '<a href="javascript:;" class="btn btn--sm btn--blue" data-role="ok">确定</a>'
-            + '</div>'
-            + '</div>'
-            + '</div>');
-        $(document.body).append(mask);
-        mask.on('click', function(e)
+        var param = instance.options;
+        var container = $(param.elem);
+        var pageContainer = param.pageElem ? $(param.pageElem) : $();
+        var urlParameters = param.form && param.form.serialize ? param.form.serialize() : '';
+        urlParameters = concatParam(urlParameters, param.pageIndexName + '=' + param.pageIndex);
+
+        if (param.onBefore && typeof(param.onBefore) == 'function') param.onBefore();
+        if (param.loading) container.html('<div class="layui-card"><div class="layui-card-body">' + escapeHtml(param.loading) + '</div></div>');
+        pageContainer.html('');
+
+        $.post(param.url, urlParameters, function(result)
         {
-            if ($(e.target).is('.confirm')) closeConfirmDialog(true);
-        });
-        mask.on('click', '[data-role=cancel]', function()
-        {
-            closeConfirmDialog(true);
-        });
-        mask.on('click', '[data-role=ok]', function()
-        {
-            closeConfirmDialog(false);
-        });
-        $(document).on('keydown', function(e)
-        {
-            if (e.key === 'Escape' && mask.is(':visible')) closeConfirmDialog(true);
+            if (result.error && result.error.code)
+            {
+                if (param.error) param.error(result, param.url, urlParameters);
+                else console.error(result, param.url, urlParameters);
+                container.html('<div class="table-error">'+escapeHtml(result.error.reason)+'</div>');
+                return;
+            }
+
+            var shtml = '';
+            if (param.render && typeof(param.render) == 'function')
+            {
+                shtml = param.render(result.data.result);
+            }
+            else
+            {
+                shtml = '<table class="layui-table" lay-skin="line">';
+                if (param.nothead == false) shtml += '<thead><tr>';
+                for (var i = 0; param.nothead == false && i < param.fields.length; i++)
+                {
+                    var field = param.fields[i];
+                    field.align = field.align == null ? 'left' : field.align;
+                    shtml += '<th ' + (field.width == null ? '' : 'style="width:' + field.width + '"') + ' class="text-' + field.align + '">' + field.title + '</th>';
+                }
+                if (param.nothead == false) shtml += '</tr></thead>';
+
+                shtml += '<tbody>';
+                for (var j = 0; result.data.list && j < result.data.list.length; j++)
+                {
+                    var row = result.data.list[j];
+                    shtml += '<tr>';
+                    for (var k = 0; k < param.fields.length; k++)
+                    {
+                        var f = param.fields[k];
+                        f.align = f.align == null ? 'left' : f.align;
+                        var content = row[f.name];
+                        if (typeof(f.formatter) == 'function') content = f.formatter(j, content, row);
+                        shtml += '<td ' + (f.width == null ? '' : 'style="width:' + f.width + '"') + ' class="text-' + f.align + '">' + (content == null ? '' : content) + '</td>';
+                    }
+                    shtml += '</tr>';
+                }
+                shtml += '</tbody></table>';
+            }
+
+            container.html(shtml);
+            if (typeof(param.onComplete) == 'function') param.onComplete();
+            layui.use(['form', 'laypage'], function()
+            {
+                layui.form.render();
+                renderPage(instance, result.data);
+            });
+            if (param.load) param.load();
         });
     }
-    mask.find('.confirm__body').text(text == null ? '' : String(text));
-    mask.data('onOk', onOk);
-    mask.data('onCancel', onCancel);
-    mask.fadeIn(120, function()
-    {
-        mask.find('[data-role=ok]').focus();
-    });
-}
 
-function closeConfirmDialog(cancelled)
-{
-    var mask = $('#x-confirm-dialog');
-    if (mask.length == 0) return;
-    var callback = cancelled ? mask.data('onCancel') : mask.data('onOk');
-    mask.removeData('onOk').removeData('onCancel').fadeOut(120);
-    if (typeof(callback) == 'function') callback();
-}
+    function renderPage(instance, data)
+    {
+        var param = instance.options;
+        var pageContainer = param.pageElem ? $(param.pageElem) : $();
+        if (!pageContainer.length) return;
+
+        var totalPage = data.pageCount == undefined ? 1 : data.pageCount;
+        var totalCount = data.totalCount || data.total || totalPage * param.limit;
+        layui.laypage.render({
+            elem: pageContainer.get(0),
+            curr: Number(data.pageIndex || param.pageIndex || 1),
+            count: totalCount,
+            limit: param.limit,
+            groups: 5,
+            layout: ['prev', 'page', 'next', 'skip'],
+            jump: function(obj, first)
+            {
+                if (first) return;
+                instance.options.pageIndex = obj.curr;
+                load(instance);
+            }
+        });
+    }
+
+    return {
+        render: create
+    };
+})();

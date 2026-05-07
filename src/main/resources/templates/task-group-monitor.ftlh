@@ -3,12 +3,182 @@
 <head>
     <#include "inc/resource.ftlh">
     <title>任务组监控</title>
+    <style>
+        .monitor-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+        .monitor-summary__section h3 {
+            margin: 0 0 8px;
+            font-size: 14px;
+            color: var(--color-text-primary);
+            font-weight: 600;
+        }
+        .monitor-summary__grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+        }
+        .monitor-summary__item {
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            background: var(--color-bg-panel);
+            padding: 10px 12px;
+        }
+        .monitor-summary__item span {
+            display: block;
+            color: var(--color-text-secondary);
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+        .monitor-summary__item strong {
+            color: var(--color-text-primary);
+            font-size: 18px;
+        }
+        .task-group-table table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--color-bg-panel);
+            border: 1px solid var(--color-border);
+        }
+        .task-group-table th,
+        .task-group-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--color-border);
+            text-align: left;
+            font-size: 13px;
+        }
+        .task-group-table th { color: var(--color-text-secondary); font-weight: 500; }
+        .task-group-monitor__section-heading {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin: 18px 0 8px;
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: 8px;
+        }
+        .task-group-monitor__section-heading h3 {
+            margin: 0;
+            color: var(--color-text-primary);
+            font-size: 15px;
+            font-weight: 600;
+        }
+        .task-group-monitor__section-heading p {
+            margin: 3px 0 0;
+            color: var(--color-text-secondary);
+            font-size: 12px;
+        }
+        .task-group-row__primary td {
+            vertical-align: top;
+        }
+        .task-group-row__identity {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 180px;
+        }
+        .task-group-row__display-name {
+            color: var(--color-text-primary);
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .task-group-row__metrics {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(72px, 1fr));
+            gap: 8px;
+            min-width: 360px;
+        }
+        .task-group-row__metric {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            border-left: 2px solid var(--color-border);
+            padding-left: 8px;
+        }
+        .task-group-row__metric span {
+            color: var(--color-text-secondary);
+            font-size: 11px;
+        }
+        .task-group-row__metric strong {
+            color: var(--color-text-primary);
+            font-size: 15px;
+            font-weight: 600;
+        }
+        .task-group-state {
+            display: inline-flex;
+            align-items: center;
+            min-width: 64px;
+            height: 24px;
+            padding: 0 8px;
+            border-left: 3px solid var(--color-border-strong);
+            background: var(--color-bg-panel-muted);
+            color: var(--color-text-primary);
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .task-group-state--running { border-left-color: var(--color-success); }
+        .task-group-state--creating,
+        .task-group-state--stopping { border-left-color: var(--color-primary); }
+        .task-group-state--completed { border-left-color: var(--color-border-strong); color: var(--color-text-secondary); }
+        .task-group-state--failed { border-left-color: var(--color-danger); }
+        .task-group-table__details td { background: var(--color-bg-panel-muted); }
+        .task-group-detail {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+        }
+        .task-group-detail__section {
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            padding: 10px;
+            background: var(--color-bg-panel);
+        }
+        .task-group-detail__section h4 {
+            margin: 0 0 8px;
+            font-size: 13px;
+            color: var(--color-text-primary);
+        }
+        .task-group-detail__section h4 span {
+            display: block;
+            margin-top: 2px;
+            color: var(--color-text-secondary);
+            font-size: 11px;
+            font-weight: 400;
+        }
+        .task-group-detail__section p {
+            margin: 4px 0;
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+        .task-group-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            min-width: 208px;
+        }
+        .task-group-table__btn {
+            border: 1px solid var(--color-border);
+            background: var(--color-bg-panel-muted);
+            border-radius: var(--radius-sm);
+            height: 28px;
+            padding: 0 10px;
+            cursor: pointer;
+            color: var(--color-text-primary);
+        }
+        .task-group-table__btn i { margin-right: 4px; }
+        .task-group-table__btn:hover {
+            border-color: var(--color-border-strong);
+            background: var(--color-bg-muted);
+        }
+    </style>
 </head>
 <body>
-<div class="layout">
+<div class="layui-layout layui-layout-admin app-layout">
     <#include "inc/sidebar.ftlh">
-    <div class="layout__content">
-        <div class="layout__page">
+    <div class="layui-body app-body">
+        <div class="app-page">
             <div class="page-header">
                 <h2>任务组监控</h2>
             </div>
@@ -66,7 +236,7 @@
                 </div>
 
                 <div class="task-group-table">
-                    <table class="data-table">
+                    <table class="layui-table" lay-skin="line">
                         <thead>
                         <tr>
                             <th>状态</th>
@@ -88,185 +258,6 @@
 </div>
 </body>
 <#include "inc/footer.ftlh">
-<style>
-    .monitor-summary {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        margin-bottom: 16px;
-    }
-    .monitor-summary__section h3 {
-        margin: 0 0 8px;
-        font-size: 14px;
-        color: var(--color-text-primary);
-        font-weight: 600;
-    }
-    .monitor-summary__grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-        gap: 10px;
-    }
-    .monitor-summary__item {
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-sm);
-        background: var(--color-bg-panel);
-        padding: 10px 12px;
-    }
-    .monitor-summary__item span {
-        display: block;
-        color: var(--color-text-secondary);
-        font-size: 12px;
-        margin-bottom: 6px;
-    }
-    .monitor-summary__item strong {
-        color: var(--color-text-primary);
-        font-size: 18px;
-    }
-    .task-group-table table {
-        width: 100%;
-        border-collapse: collapse;
-        background: var(--color-bg-panel);
-        border: 1px solid var(--color-border);
-    }
-    .task-group-table th,
-    .task-group-table td {
-        padding: 10px 12px;
-        border-bottom: 1px solid var(--color-border);
-        text-align: left;
-        font-size: 13px;
-    }
-    .task-group-table th { color: var(--color-text-secondary); font-weight: 500; }
-    .task-group-monitor__section-heading {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        margin: 18px 0 8px;
-        border-bottom: 1px solid var(--color-border);
-        padding-bottom: 8px;
-    }
-    .task-group-monitor__section-heading h3 {
-        margin: 0;
-        color: var(--color-text-primary);
-        font-size: 15px;
-        font-weight: 600;
-    }
-    .task-group-monitor__section-heading p {
-        margin: 3px 0 0;
-        color: var(--color-text-secondary);
-        font-size: 12px;
-    }
-    .task-group-row__primary td {
-        vertical-align: top;
-    }
-    .task-group-row__identity {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        min-width: 180px;
-    }
-    .task-group-row__display-name {
-        color: var(--color-text-primary);
-        font-weight: 600;
-        font-size: 13px;
-    }
-    .task-group-row__metrics {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(72px, 1fr));
-        gap: 8px;
-        min-width: 360px;
-    }
-    .task-group-row__metric {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-        border-left: 2px solid var(--color-border);
-        padding-left: 8px;
-    }
-    .task-group-row__metric span {
-        color: var(--color-text-secondary);
-        font-size: 11px;
-    }
-    .task-group-row__metric strong {
-        color: var(--color-text-primary);
-        font-size: 15px;
-        font-weight: 600;
-    }
-    .task-group-state {
-        display: inline-flex;
-        align-items: center;
-        min-width: 64px;
-        height: 24px;
-        padding: 0 8px;
-        border-left: 3px solid var(--color-border-strong);
-        background: var(--color-bg-panel-muted);
-        color: var(--color-text-primary);
-        font-size: 12px;
-        font-weight: 600;
-    }
-    .task-group-state--running { border-left-color: var(--color-success); }
-    .task-group-state--creating,
-    .task-group-state--stopping { border-left-color: var(--color-primary); }
-    .task-group-state--completed { border-left-color: var(--color-border-strong); color: var(--color-text-secondary); }
-    .task-group-state--failed { border-left-color: var(--color-danger); }
-    .task-group-table__details td { background: var(--color-bg-panel-muted); }
-    .task-group-detail {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 12px;
-    }
-    .task-group-detail__section {
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-sm);
-        padding: 10px;
-        background: var(--color-bg-panel);
-    }
-    .task-group-detail__section h4 {
-        margin: 0 0 8px;
-        font-size: 13px;
-        color: var(--color-text-primary);
-    }
-    .task-group-detail__section h4 span {
-        display: block;
-        margin-top: 2px;
-        color: var(--color-text-secondary);
-        font-size: 11px;
-        font-weight: 400;
-    }
-    .task-group-detail__section p {
-        margin: 4px 0;
-        font-size: 12px;
-        color: var(--color-text-secondary);
-    }
-    .task-group-actions {
-        display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-        min-width: 208px;
-    }
-    .task-group-table__btn {
-        border: 1px solid var(--color-border);
-        background: var(--color-bg-panel-muted);
-        border-radius: var(--radius-sm);
-        height: 28px;
-        padding: 0 10px;
-        cursor: pointer;
-        color: var(--color-text-primary);
-    }
-    .task-group-table__btn i { margin-right: 4px; }
-    .task-group-table__btn:hover {
-        border-color: var(--color-border-strong);
-        background: var(--color-bg-muted);
-    }
-    .task-group-table__btn--danger {
-        border-color: var(--color-danger);
-        color: var(--color-danger);
-    }
-    .task-group-table__btn--danger:hover {
-        background: var(--color-danger);
-        border-color: var(--color-danger);
-        color: var(--color-text-inverse);
-    }
-</style>
 <script type="text/javascript">
     $(document).ready(function()
     {
@@ -280,7 +271,7 @@
         {
             $.post('/task-groups/snapshot', function(result)
             {
-                if (result.error && result.error.code) return toastr('error', result.error.reason);
+                if (result.error && result.error.code) return appNotify('error', result.error.reason);
                 renderSnapshot(result.data || {});
             });
         }
@@ -302,11 +293,11 @@
             {
                 var expanded = !!expandedTaskGroupIds[group.taskGroupId];
                 var actions = '<div class="task-group-actions">';
-                actions += '<button type="button" class="task-group-table__btn" data-action="toggle"><i class="fa ' + (expanded ? 'fa-chevron-up' : 'fa-chevron-down') + '"></i>' + (expanded ? '收起' : '展开') + '</button>';
-                actions += '<button type="button" class="task-group-table__btn" data-action="view-tasks"><i class="fa fa-list-ul"></i>查看行程任务</button>';
+                actions += '<button type="button" class="layui-btn layui-btn-primary layui-btn-xs" data-action="toggle"><i class="layui-icon ' + (expanded ? 'layui-icon-up' : 'layui-icon-down') + '"></i>' + (expanded ? '收起' : '展开') + '</button>';
+                actions += '<button type="button" class="layui-btn layui-btn-primary layui-btn-xs" data-action="view-tasks"><i class="layui-icon layui-icon-list"></i>查看行程任务</button>';
                 if (canStop(group))
                 {
-                    actions += '<button type="button" class="task-group-table__btn task-group-table__btn--danger" data-action="stop"><i class="fa fa-stop-circle"></i>停止任务组</button>';
+                    actions += '<button type="button" class="layui-btn layui-btn-danger layui-btn-xs" data-action="stop"><i class="layui-icon layui-icon-pause"></i>停止任务组</button>';
                 }
                 actions += '</div>';
                 rows.push('<tr class="task-group-row__primary" data-task-group-id="' + escapeHtml(group.taskGroupId) + '">' +
@@ -372,7 +363,7 @@
             var id = $(this).closest('tr').attr('data-task-group-id');
             $.post('/task-groups/stop', { taskGroupId: id }, function(result)
             {
-                if (result.error && result.error.code) return toastr('error', result.error.reason);
+                if (result.error && result.error.code) return appNotify('error', result.error.reason);
                 loadSnapshot();
             });
         });

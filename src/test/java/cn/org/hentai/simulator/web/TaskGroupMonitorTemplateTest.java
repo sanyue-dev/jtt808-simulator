@@ -17,9 +17,21 @@ class TaskGroupMonitorTemplateTest
         assertThat(template).contains("setInterval(loadSnapshot, 1000)");
         assertThat(template).contains("expandedTaskGroupIds");
         assertThat(template).contains("data-field=\"runtimeSummary.totalTasks\"");
-        assertThat(template).contains("<table class=\"data-table\">");
+        assertThat(template).contains("<table class=\"layui-table\" lay-skin=\"line\">");
         assertThat(template).contains("id=\"task-group-list\"");
         assertThat(template).doesNotContain("paginate(");
+        assertThat(template).doesNotContain("toastr");
+        assertThat(template).contains("appNotify(");
+    }
+
+    @Test
+    void monitorPageSpecificStylesLoadBeforeBodyToAvoidUnstyledFirstPaint() throws Exception
+    {
+        String template = read("/templates/task-group-monitor.ftlh");
+
+        assertThat(template.indexOf("<style>")).isLessThan(template.indexOf("</head>"));
+        assertThat(template.indexOf("<style>")).isLessThan(template.indexOf("<body>"));
+        assertThat(template.indexOf("</body>")).isLessThan(template.indexOf("<script type=\"text/javascript\">"));
     }
 
     @Test

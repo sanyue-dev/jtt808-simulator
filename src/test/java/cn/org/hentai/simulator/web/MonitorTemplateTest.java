@@ -23,6 +23,8 @@ class MonitorTemplateTest
     {
         String template = read("/templates/monitor-list-index.ftlh");
 
+        assertThat(template).contains("window.monitorTable = appTable.render({");
+        assertThat(template).contains("pageElem: '#monitor-page'");
         assertThat(template).contains("name=\"taskGroupId\"");
         assertThat(template).contains("id=\"task-group-filter-context\"");
         assertThat(template).contains("id=\"task-group-filter-value\"");
@@ -30,6 +32,8 @@ class MonitorTemplateTest
         assertThat(template).contains("new URLSearchParams(window.location.search).get('taskGroupId')");
         assertThat(template).contains("taskGroupDisplayName");
         assertThat(template).contains("title: '任务组'");
+        assertThat(template).doesNotContain("$.fn.paginate");
+        assertThat(template).doesNotContain(".paginate(");
     }
 
     @Test
@@ -66,11 +70,10 @@ class MonitorTemplateTest
     {
         String template = read("/templates/monitor-list-index.ftlh");
 
-        assertThat(template).contains("<form class=\"monitor-toolbar\"");
-        assertThat(template).contains("class=\"monitor-toolbar__input\"");
-        assertThat(template).contains(".monitor-toolbar .monitor-toolbar__input");
+        assertThat(template).contains("<form class=\"layui-form toolbar\"");
+        assertThat(template).contains("class=\"layui-input\" type=\"text\" name=\"keyword\"");
+        assertThat(template).contains(".toolbar .layui-input-inline:nth-child(3)");
         assertThat(template).contains("width: 260px;");
-        assertThat(template).contains("flex: 0 0 260px;");
     }
 
     private String read(String path) throws Exception

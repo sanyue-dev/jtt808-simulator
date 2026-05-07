@@ -13,7 +13,8 @@ class TaskCreationTemplateTest
     {
         String template = read("/templates/task-create.ftlh");
 
-        assertThat(template).contains("id=\"routeDropdown\"");
+        assertThat(template).contains("class=\"layui-form task-form\"");
+        assertThat(template).contains("lay-search");
         assertThat(template).contains("id=\"routeId\"");
         assertThat(template).contains("id=\"vehicleNumber\"");
         assertThat(template).contains("id=\"deviceSn\"");
@@ -32,7 +33,13 @@ class TaskCreationTemplateTest
     {
         String template = read("/templates/task-batch-create.ftlh");
 
-        assertThat(template).contains("id=\"route-list\"");
+        assertThat(template).contains("id=\"route-transfer\"");
+        assertThat(template).contains("layui.use(['form', 'transfer']");
+        assertThat(template).contains("transfer.render({");
+        assertThat(template).contains("showSearch: true");
+        assertThat(template).contains("layui.transfer.getData('route-transfer')");
+        assertThat(template).contains("layui.transfer.reload('route-transfer'");
+        assertThat(template).contains("for=\"vehicleCount\"");
         assertThat(template).contains("id=\"btn-select-all\"");
         assertThat(template).contains("id=\"btn-clear-all\"");
         assertThat(template).contains("id=\"selected-count\"");
@@ -54,13 +61,15 @@ class TaskCreationTemplateTest
     }
 
     @Test
-    void creationPagesUseSharedCardSectionsInsteadOfLegacySectionHeaderClass() throws Exception
+    void creationPagesUseLayuiCardsInsteadOfLegacySectionHeaderClass() throws Exception
     {
         String taskCreate = read("/templates/task-create.ftlh");
         String batchCreate = read("/templates/task-batch-create.ftlh");
 
-        assertThat(taskCreate).contains("class=\"card-section__header\"");
-        assertThat(batchCreate).contains("class=\"card-section__header\"");
+        assertThat(taskCreate).contains("class=\"layui-card-header\"");
+        assertThat(batchCreate).contains("class=\"layui-card-header\"");
+        assertThat(taskCreate).doesNotContain("card-section");
+        assertThat(batchCreate).doesNotContain("card-section");
         assertThat(taskCreate).doesNotContain("card-section-header");
         assertThat(batchCreate).doesNotContain("card-section-header");
     }
@@ -74,6 +83,8 @@ class TaskCreationTemplateTest
 
         assertThat(taskCreate).contains("启动后会生成任务组");
         assertThat(batchCreate).contains("创建后会生成任务组");
+        assertThat(taskCreate).contains("class=\"app-form-note\"");
+        assertThat(batchCreate).contains("class=\"app-form-note\"");
         assertThat(monitorList).contains("当前按任务组过滤");
         assertThat(batchCreate).contains("ramp-up 窗口大小");
         assertThat(batchCreate).contains("0 表示一次性提交全部任务");

@@ -4,35 +4,81 @@
     <#include "inc/resource.ftlh">
     <title>${((pageMode!'create') == 'edit')?string('编辑线路', '创建新线路')}</title>
     <style type="text/css">
-        .layout__content
+        .route-editor-page
         {
             position: relative;
             padding-left: 400px;
+            background: var(--color-bg-muted);
         }
-        .layout__content #panel
+        .route-editor-page #panel
         {
             position: absolute;
             top: 0px;
             left: 0px;
             width: 400px;
             height: 100%;
-            background-color: var(--color-bg-panel);
-            border-right: solid 1px solid var(--color-border);
+            background-color: var(--color-bg-muted);
+            border-right: solid 1px var(--color-border);
             z-index: 20;
             overflow-y: auto;
             box-sizing: border-box;
         }
-        #panel h4 { height: 30px; line-height: 30px; margin: 20px 0px 10px 0px; padding-left: 12px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--color-text-secondary); border-bottom: solid 1px var(--color-border); }
-        #panel h4:first-child { margin-top: 0px !important; height: 48px; line-height: 48px; padding-right: 12px; box-sizing: border-box; font-size: 15px; color: var(--color-text-primary); text-transform: none; letter-spacing: 0; }
-        #panel h4:first-child button { margin-top: 10px; }
-        #panel h4 a { float: right; margin-right: 12px; }
-        #panel h4 button { float: right; }
-        #panel .grid__row { min-height: 44px; line-height: 40px; font-size: 13px; }
-        #panel .grid__col--7 input[type=text] { min-width: 200px; }
+        #panel h4 {
+            display: flex;
+            align-items: center;
+            min-height: 42px;
+            margin: 12px 0px 0px;
+            padding: 0px 12px;
+            background: var(--color-bg-panel);
+            border-top: solid 1px var(--color-border);
+            border-bottom: solid 1px var(--color-border);
+            box-sizing: border-box;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            letter-spacing: 0;
+        }
+        #panel h4:first-child {
+            margin-top: 0px !important;
+            min-height: 56px;
+            font-size: 18px;
+            border-top: 0;
+        }
+        #panel h4 a,
+        #panel h4 button { margin-left: auto; }
+        #panel h4 button + button { margin-left: 8px; }
+        #panel h4 a {
+            color: var(--color-primary);
+            font-weight: 500;
+        }
+        #panel h4 .layui-icon { margin-right: 4px; }
+        #panel .route-editor-row {
+            display: flex;
+            align-items: center;
+            min-height: 44px;
+            line-height: 40px;
+            padding: 4px 12px;
+            margin: 0;
+            background: var(--color-bg-panel);
+            border-bottom: solid 1px var(--color-border);
+            font-size: 13px;
+            color: var(--color-text-primary);
+        }
+        #panel .route-editor-row.text-center {
+            color: var(--color-text-secondary);
+            font-weight: 500;
+        }
+        #panel .text-right {
+            color: var(--color-text-secondary);
+        }
+        .route-editor-col { padding-left: 6px; padding-right: 6px; }
+        .route-editor-col--2 { width: 20%; }
+        .route-editor-col--3 { width: 30%; }
+        .route-editor-col--4 { width: 40%; }
+        .route-editor-col--7 { width: 70%; }
+        #panel .route-editor-col--7 input[type=text] { min-width: 200px; }
         #panel #btn-locate-point { margin-right: 5px; }
-        #panel .route-event-dropdown { text-align: left; margin-top: 4px; }
-        #panel .route-event-dropdown .task__dropdown-trigger { height: 32px; line-height: normal; }
-        #panel .route-event-dropdown .task__dropdown-menu { line-height: normal; }
+        #panel .route-event-select { text-align: left; margin-top: 4px; }
         #map { width: 100%; height: 100%; }
         .anchorBL { display: none !important; }
 
@@ -99,17 +145,23 @@
         }
         .route-actions
         {
-            padding: 10px 0px 10px 0px;
+            padding: 18px 12px 22px;
+            background: var(--color-bg-panel);
+            border-bottom: solid 1px var(--color-border);
             text-align: center;
         }
         .station
         {
             min-height: 44px;
             line-height: 40px;
+            padding: 4px 12px;
+            background: var(--color-bg-panel);
+            border-bottom: solid 1px var(--color-border);
+            color: var(--color-text-primary);
         }
         .station .station-title
         {
-            width: 100px;
+            width: 84px;
             min-height: 44px;
             line-height: 40px;
             float: left;
@@ -128,7 +180,7 @@
         }
         .station .station-action
         {
-            width: 80px;
+            width: 58px;
             min-height: 44px;
             line-height: 40px;
             text-align: center;
@@ -141,64 +193,64 @@
     </style>
 </head>
 <body>
-<div class="layout">
+<div class="layui-layout layui-layout-admin app-layout">
     <#include "inc/sidebar.ftlh">
-    <div class="layout__content">
-        <div id="panel">
+    <div class="layui-body app-body route-editor-page">
+        <div id="panel" class="layui-form">
             <h4>
                 ${((pageMode!'create') == 'edit')?string('编辑线路', '线路设置')}
-                <button id="btn-save" class="btn btn--sm btn--blue">保存</button>
-                <button id="btn-measure" class="btn btn--sm btn--gray">测距</button>
+                <button id="btn-measure" class="layui-btn layui-btn-xs layui-btn-primary">测距</button>
+                <button id="btn-save" class="layui-btn layui-btn-xs">保存</button>
             </h4>
-            <div class="grid__row">
-                <div class="grid__col--3 text-right">线路总里程：</div>
-                <div class="grid__col--7">
+            <div class="route-editor-row">
+                <div class="route-editor-col route-editor-col--3 text-right">线路总里程：</div>
+                <div class="route-editor-col route-editor-col--7">
                     <span id="route-distance">-</span>
                 </div>
             </div>
-            <div class="grid__row">
-                <div class="grid__col--3 text-right">行程耗时估计：</div>
-                <div class="grid__col--7"><span id="route-duration">-</span></div>
+            <div class="route-editor-row">
+                <div class="route-editor-col route-editor-col--3 text-right">行程耗时估计：</div>
+                <div class="route-editor-col route-editor-col--7"><span id="route-duration">-</span></div>
             </div>
-            <div class="grid__row">
-                <div class="grid__col--3 text-right">名称：</div>
-                <div class="grid__col--7"><input type="text" id="name" placeholder="比如：北京~上海 早班线路" value="" /></div>
+            <div class="route-editor-row">
+                <div class="route-editor-col route-editor-col--3 text-right">名称：</div>
+                <div class="route-editor-col route-editor-col--7"><input type="text" id="name" name="name" class="layui-input" placeholder="比如：北京~上海 早班线路" autocomplete="off" value="" /></div>
             </div>
-            <div class="grid__row">
-                <div class="grid__col--3 text-right">最低时速：</div>
-                <div class="grid__col--7"><input type="text" id="minSpeed" placeholder="公里/小时" value=""/></div>
+            <div class="route-editor-row">
+                <div class="route-editor-col route-editor-col--3 text-right">最低时速：</div>
+                <div class="route-editor-col route-editor-col--7"><input type="text" id="minSpeed" name="minSpeed" class="layui-input" placeholder="公里/小时" autocomplete="off" value=""/></div>
             </div>
-            <div class="grid__row">
-                <div class="grid__col--3 text-right">最高时速：</div>
-                <div class="grid__col--7"><input type="text" id="maxSpeed" placeholder="公里/小时" value=""/></div>
+            <div class="route-editor-row">
+                <div class="route-editor-col route-editor-col--3 text-right">最高时速：</div>
+                <div class="route-editor-col route-editor-col--7"><input type="text" id="maxSpeed" name="maxSpeed" class="layui-input" placeholder="公里/小时" autocomplete="off" value=""/></div>
             </div>
 
-            <h4>停留点<a href="javascript:;" id="btn-add-point"><i class="fa fa-crosshairs"></i> 添加</a></h4>
-            <div class="grid__row text-center">
-                <div class="grid__col--2">#</div>
-                <div class="grid__col--2">最短</div>
-                <div class="grid__col--2">最长</div>
-                <div class="grid__col--2">概率</div>
-                <div class="grid__col--2">-</div>
+            <h4>停留点<a href="javascript:;" id="btn-add-point"><i class="layui-icon layui-icon-location"></i> 添加</a></h4>
+            <div class="route-editor-row text-center">
+                <div class="route-editor-col route-editor-col--2">#</div>
+                <div class="route-editor-col route-editor-col--2">最短</div>
+                <div class="route-editor-col route-editor-col--2">最长</div>
+                <div class="route-editor-col route-editor-col--2">概率</div>
+                <div class="route-editor-col route-editor-col--2">-</div>
             </div>
             <div id="x-stay-points"></div>
 
-            <h4>问题路段<a href="javascript:;" id="btn-add-segment"><i class="fa fa-wheelchair-alt"></i> 添加</a></h4>
-            <div class="grid__row text-center">
-                <div class="grid__col--2">#</div>
-                <div class="grid__col--4">安全事件</div>
-                <div class="grid__col--2">概率</div>
-                <div class="grid__col--2">-</div>
+            <h4>问题路段<a href="javascript:;" id="btn-add-segment"><i class="layui-icon layui-icon-tips"></i> 添加</a></h4>
+            <div class="route-editor-row text-center">
+                <div class="route-editor-col route-editor-col--2">#</div>
+                <div class="route-editor-col route-editor-col--4">安全事件</div>
+                <div class="route-editor-col route-editor-col--2">概率</div>
+                <div class="route-editor-col route-editor-col--2">-</div>
             </div>
             <div id="x-trouble-segments"></div>
 
             <h4>
                 行驶线路规划
-                <button id="btn-add-station" class="btn btn--sm btn--blue">添加站点</button>
+                <button id="btn-add-station" class="layui-btn layui-btn-xs">添加站点</button>
             </h4>
             <div class="panel-body">
                 <div id="stations"></div>
-                <div class="route-actions"><button id="btn-plan" class="btn btn--blue">线路规划</button></div>
+                <div class="route-actions"><button id="btn-plan" class="layui-btn">线路规划</button></div>
             </div>
         </div>
         <div id="map"></div>
@@ -281,7 +333,7 @@
         if (startPoint == null)
         {
             startPoint = index;
-            toastr('success', '已选择起点（索引 ' + index + '）');
+            appNotify('success', '已选择起点（索引 ' + index + '）');
             return;
         }
         if (index === startPoint) return;
@@ -289,7 +341,7 @@
         var s = Math.min(startPoint, endPoint);
         var e = Math.max(startPoint, endPoint);
         route.addTroubleSegment(s, e);
-        toastr('success', '已设置问题路段：' + s + ' ~ ' + e);
+        appNotify('success', '已设置问题路段：' + s + ' ~ ' + e);
         startPoint = null;
         endPoint = null;
         mode = 'plan';
@@ -306,9 +358,9 @@
         var shtml = '';
         shtml += '<div class="station" x-index="' + index + '">';
         shtml += '  <div class="station-title">站点</div>';
-        shtml += '  <div class="station-value"><input type="text" class="station-name" placeholder="输入地名以搜索" value="' + (station.name || '') + '" /></div>';
+        shtml += '  <div class="station-value"><input type="text" id="station-name-' + station.id + '" name="stationName" class="layui-input station-name" placeholder="输入地名以搜索" autocomplete="off" value="' + (station.name || '') + '" /></div>';
         shtml += '  <div class="station-action">';
-        shtml += '      <a href="#" id="btn-remove-station"><i class="fa fa-times"></i></a>';
+        shtml += '      <a href="#" id="btn-remove-station"><i class="layui-icon layui-icon-close"></i></a>';
         shtml += '  </div>';
         shtml += '</div>';
         $('#stations').append(shtml);
@@ -485,7 +537,7 @@
         }
         if (coords.length < 2)
         {
-            toastr('error', '请至少选择两个有效站点');
+            appNotify('error', '请至少选择两个有效站点');
             return;
         }
 
@@ -525,7 +577,7 @@
                 {
                     if (!json || !json.routes || json.routes.length === 0)
                     {
-                        toastr('error', 'OSRM 无可用路径');
+                        appNotify('error', 'OSRM 无可用路径');
                         requestPair(i + 1);
                         return;
                     }
@@ -552,7 +604,7 @@
                 })
                 .catch(function()
                 {
-                    toastr('error', 'OSRM 请求失败');
+                    appNotify('error', 'OSRM 请求失败');
                     requestPair(i + 1);
                 });
         }
@@ -736,41 +788,30 @@
             for (var i = 0; i < this.troubleSegments.length; i++)
             {
                 var item = this.troubleSegments[i];
-                shtml += '<div class="grid__row text-center" x-id="' + item.id + '">';
-                shtml += '  <div class="grid__col--2">' + item.id + '</div>';
-                shtml += '  <div class="grid__col--4">' + this.__generate_event_types(item.eventCode) + '</div>';
-                shtml += '  <div class="grid__col--2"><input type="text" id="ratio" value="' + v(item.ratio) + '" placeholder="0~100" /></div>';
-                shtml += '  <div class="grid__col--2">';
-                shtml += '      <a href="#" id="btn-locate-segment" x-id="' + item.id + '"><i class="fa fa-map-pin"></i></a>';
-                shtml += '      <a href="#" id="btn-remove-segment" x-id="' + item.id + '"><i class="fa fa-times"></i></a>';
+                shtml += '<div class="route-editor-row text-center" x-id="' + item.id + '">';
+                shtml += '  <div class="route-editor-col route-editor-col--2">' + item.id + '</div>';
+                shtml += '  <div class="route-editor-col route-editor-col--4">' + this.__generate_event_types(item.eventCode) + '</div>';
+                shtml += '  <div class="route-editor-col route-editor-col--2"><input type="text" class="layui-input" id="ratio" value="' + v(item.ratio) + '" placeholder="0~100" /></div>';
+                shtml += '  <div class="route-editor-col route-editor-col--2">';
+                shtml += '      <a href="#" id="btn-locate-segment" x-id="' + item.id + '"><i class="layui-icon layui-icon-location"></i></a>';
+                shtml += '      <a href="#" id="btn-remove-segment" x-id="' + item.id + '"><i class="layui-icon layui-icon-close"></i></a>';
                 shtml += '  </div>';
                 shtml += '</div>';
             }
             $('#x-trouble-segments').html(shtml);
+            if (window.layui && layui.form) layui.form.render('select');
         },
 
         __generate_event_types : function(currentValue)
         {
-            var selectedName = '请选择事件分类';
-            for (var i = 0; i < eventTypes.length; i++)
-            {
-                var type = eventTypes[i];
-                if (currentValue == type.code) selectedName = type.name;
-            }
-            var shtml = '<div class="task__dropdown task__dropdown--compact route-event-dropdown' + (currentValue ? '' : ' is-unselected') + '" data-role="eventCode" tabindex="0">';
-            shtml += '<input type="hidden" data-role="eventCode" value="' + escapeHtml(currentValue || '') + '" />';
-            shtml += '<div class="task__dropdown-trigger">';
-            shtml += '<span class="task__dropdown-text">' + escapeHtml(selectedName) + '</span>';
-            shtml += '<span class="task__dropdown-arrow"><i class="fa fa-angle-down"></i></span>';
-            shtml += '</div>';
-            shtml += '<div class="task__dropdown-menu">';
-            shtml += '<div class="task__dropdown-option' + (currentValue ? '' : ' is-selected') + '" data-value="">请选择事件分类</div>';
+            var shtml = '<select class="route-event-select" data-role="eventCode" lay-filter="routeEvent">';
+            shtml += '<option value="">请选择事件分类</option>';
             for (var j = 0; j < eventTypes.length; j++)
             {
                 var eventType = eventTypes[j];
-                shtml += '<div class="task__dropdown-option' + (currentValue == eventType.code ? ' is-selected' : '') + '" data-value="' + escapeHtml(eventType.code) + '">' + escapeHtml(eventType.name) + '</div>';
+                shtml += '<option value="' + escapeHtml(eventType.code) + '"' + (currentValue == eventType.code ? ' selected' : '') + '>' + escapeHtml(eventType.name) + '</option>';
             }
-            shtml += '</div></div>';
+            shtml += '</select>';
             return shtml;
         },
 
@@ -781,14 +822,14 @@
             for (var i = 0; i < this.stayPoints.length; i++)
             {
                 var item = this.stayPoints[i];
-                shtml += '<div class="grid__row text-center" x-id="' + item.id + '">';
-                shtml += '  <div class="grid__col--2">' + item.id + '</div>';
-                shtml += '  <div class="grid__col--2"><input type="text" id="minTime" value="' + v(item.minTime) + '" placeholder="分钟" /></div>';
-                shtml += '  <div class="grid__col--2"><input type="text" id="maxTime" value="' + v(item.maxTime) + '" placeholder="分钟" /></div>';
-                shtml += '  <div class="grid__col--2"><input type="text" id="ratio" value="' + v(item.ratio) + '" placeholder="0~100" /></div>';
-                shtml += '  <div class="grid__col--2">';
-                shtml += '      <a href="javascript:;" id="btn-locate-point" x-id="' + item.id + '"><i class="fa fa-map-pin"></i></a>';
-                shtml += '      <a href="javascript:;" id="btn-remove-point" x-id="' + item.id + '"><i class="fa fa-times"></i></a>';
+                shtml += '<div class="route-editor-row text-center" x-id="' + item.id + '">';
+                shtml += '  <div class="route-editor-col route-editor-col--2">' + item.id + '</div>';
+                shtml += '  <div class="route-editor-col route-editor-col--2"><input type="text" class="layui-input" id="minTime" value="' + v(item.minTime) + '" placeholder="分钟" /></div>';
+                shtml += '  <div class="route-editor-col route-editor-col--2"><input type="text" class="layui-input" id="maxTime" value="' + v(item.maxTime) + '" placeholder="分钟" /></div>';
+                shtml += '  <div class="route-editor-col route-editor-col--2"><input type="text" class="layui-input" id="ratio" value="' + v(item.ratio) + '" placeholder="0~100" /></div>';
+                shtml += '  <div class="route-editor-col route-editor-col--2">';
+                shtml += '      <a href="javascript:;" id="btn-locate-point" x-id="' + item.id + '"><i class="layui-icon layui-icon-location"></i></a>';
+                shtml += '      <a href="javascript:;" id="btn-remove-point" x-id="' + item.id + '"><i class="layui-icon layui-icon-close"></i></a>';
                 shtml += '  </div>';
                 shtml += '</div>';
             }
@@ -808,24 +849,18 @@
         return $('<div>').text(value == null ? '' : String(value)).html();
     }
 
-    function selectRouteEventOption(option)
-    {
-        var opt = $(option);
-        var dropdown = opt.closest('.route-event-dropdown');
-        var value = opt.attr('data-value') || '';
-        var row = opt.closest('.grid__row');
-        dropdown.find('.task__dropdown-option').removeClass('is-selected');
-        opt.addClass('is-selected');
-        dropdown.find('input[data-role="eventCode"]').val(value);
-        dropdown.find('.task__dropdown-text').text(opt.text());
-        dropdown.toggleClass('is-unselected', value === '');
-        dropdown.removeClass('is-open');
-        route.setTroubleSegmentValues(row.attr('x-id'), { eventCode : value }, false);
-    }
-
     $(document).ready(function()
     {
         setCurrentMenu('route');
+        layui.use('form', function()
+        {
+            layui.form.render();
+            layui.form.on('select(routeEvent)', function(data)
+            {
+                var row = $(data.elem).closest('.route-editor-row');
+                route.setTroubleSegmentValues(row.attr('x-id'), { eventCode : data.value || '' }, false);
+            });
+        });
         map = L.map('map', { zoomControl: true, attributionControl: false });
         map.setView([35.86166, 104.195397], 5);
         $(window).on('resize', function()
@@ -888,14 +923,14 @@
             if (route.points.length == 0) return;
             markMode();
             mode = 'point';
-            toastr('success', '请在地图线路附近点击以设置停留点，尽量不超过线路小蓝点50米的距离');
+            appNotify('success', '请在地图线路附近点击以设置停留点，尽量不超过线路小蓝点50米的距离');
         });
 
         // 停留点的设值
         $(document).on('change', '#x-stay-points input', function()
         {
             var el = $(this);
-            var id = el.parents('.grid__row').attr('x-id');
+            var id = el.parents('.route-editor-row').attr('x-id');
             var val = $.trim(el.val());
             var type = el.attr('id');
             var values = { };
@@ -919,7 +954,7 @@
             endPoint = null;
             mode = 'segment';
             markMode();
-            toastr('success', '请在线路附近依次点击起点和终点，系统会自动吸附到最近的轨迹点。');
+            appNotify('success', '请在线路附近依次点击起点和终点，系统会自动吸附到最近的轨迹点。');
         });
 
         // 设置路段值
@@ -928,59 +963,10 @@
             var el = $(this);
             var type = el.attr('id');
             var val = $.trim(el.val());
-            var id = el.parents('.grid__row').attr('x-id');
+            var id = el.parents('.route-editor-row').attr('x-id');
             var values = {};
             values[type] = val;
             route.setTroubleSegmentValues(id, values, false);
-        });
-
-        $(document).on('click', '.route-event-dropdown .task__dropdown-trigger', function(e)
-        {
-            e.stopPropagation();
-            var dropdown = $(this).closest('.route-event-dropdown');
-            $('.route-event-dropdown').not(dropdown).removeClass('is-open');
-            dropdown.toggleClass('is-open');
-        });
-
-        $(document).on('click', '.route-event-dropdown .task__dropdown-option', function(e)
-        {
-            e.stopPropagation();
-            selectRouteEventOption(this);
-        });
-
-        $(document).on('keydown', '.route-event-dropdown', function(e)
-        {
-            var dropdown = $(this);
-            var options = dropdown.find('.task__dropdown-option:visible');
-            var idx = options.index(options.filter('.is-selected'));
-            if (e.key === 'Escape') { dropdown.removeClass('is-open'); return; }
-            if (!dropdown.hasClass('is-open'))
-            {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dropdown.addClass('is-open'); }
-                return;
-            }
-            if (e.key === 'ArrowDown')
-            {
-                e.preventDefault();
-                idx = idx < options.length - 1 ? idx + 1 : 0;
-                selectRouteEventOption(options.eq(idx));
-            }
-            else if (e.key === 'ArrowUp')
-            {
-                e.preventDefault();
-                idx = idx > 0 ? idx - 1 : options.length - 1;
-                selectRouteEventOption(options.eq(idx));
-            }
-            else if (e.key === 'Enter' || e.key === ' ')
-            {
-                e.preventDefault();
-                dropdown.removeClass('is-open');
-            }
-        });
-
-        $(document).on('click', function()
-        {
-            $('.route-event-dropdown').removeClass('is-open');
         });
 
         // 删除路段
@@ -1003,9 +989,9 @@
             var stayPointsJson = toJson(route.stayPoints);
             var segmentsJson = toJson(route.troubleSegments);
 
-            if (name.length == 0) return toastr('warning', '请输入线路名称');
-            if (isNaN(minSpeed) || isNaN(maxSpeed) || minSpeed.length == 0 || maxSpeed.length == 0) return toastr('warning', '请输入速度区间'), false;
-            if (points.length == 0) return toastr('warning', '你尚未设定线路轨迹'), false;
+            if (name.length == 0) return appNotify('warning', '请输入线路名称');
+            if (isNaN(minSpeed) || isNaN(maxSpeed) || minSpeed.length == 0 || maxSpeed.length == 0) return appNotify('warning', '请输入速度区间'), false;
+            if (points.length == 0) return appNotify('warning', '你尚未设定线路轨迹'), false;
 
             var saveUrl = pageMode === 'edit' ? '/route/edit/save' : '/route/create/save';
             var payload = { name : name, minSpeed : minSpeed, maxSpeed : maxSpeed,
@@ -1016,8 +1002,8 @@
             {
                 $.post(saveUrl, payload, function(result)
                 {
-                    if (result.error && result.error.code) return toastr('error', result.error.reason);
-                    toastr('success', '保存成功', 1200);
+                    if (result.error && result.error.code) return appNotify('error', result.error.reason);
+                    appNotify('success', '保存成功', 1200);
                     setTimeout(function()
                     {
                         location.href = '/route/index';
@@ -1027,11 +1013,11 @@
 
             if (route.stayPoints.length == 0)
             {
-                confirmDialog('你未设定停留点，是否继续保存？', function()
+                appConfirm('你未设定停留点，是否继续保存？', function()
                 {
                     if (route.troubleSegments.length == 0)
                     {
-                        confirmDialog('你未设定问题路段，是否继续保存？', submitSave);
+                        appConfirm('你未设定问题路段，是否继续保存？', submitSave);
                         return;
                     }
                     submitSave();
@@ -1040,7 +1026,7 @@
             }
             if (route.troubleSegments.length == 0)
             {
-                confirmDialog('你未设定问题路段，是否继续保存？', submitSave);
+                appConfirm('你未设定问题路段，是否继续保存？', submitSave);
                 return false;
             }
 
@@ -1119,18 +1105,18 @@
             if (route.troubleSegments.length > 0) resetTargets.push('问题路段');
             if (resetTargets.length > 0)
             {
-                confirmDialog('重新规划线路会清空当前' + resetTargets.join('和') + '，确认继续吗？', function()
+                appConfirm('重新规划线路会清空当前' + resetTargets.join('和') + '，确认继续吗？', function()
                 {
                     planWithOSRM(function()
                     {
-                        toastr('success', '线路规划完成');
+                        appNotify('success', '线路规划完成');
                     });
                 });
                 return;
             }
             planWithOSRM(function()
             {
-                toastr('success', '线路规划完成');
+                appNotify('success', '线路规划完成');
             });
         });
     });

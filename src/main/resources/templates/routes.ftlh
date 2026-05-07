@@ -5,17 +5,19 @@
     <title>线路管理</title>
 </head>
 <body>
-<div class="layout">
+<div class="layui-layout layui-layout-admin app-layout">
 <#include "inc/sidebar.ftlh">
-    <div class="layout__content">
-        <div class="layout__page">
-            <div class="page-header">
+    <div class="layui-body app-body">
+        <div class="app-page">
+            <div class="page-header layui-bg-gray">
                 <h2>线路管理</h2>
-                <a href="/route/create" class="btn btn--sm btn--blue">创建新线路</a>
+                <a href="/route/create" class="layui-btn layui-btn-sm"><i class="layui-icon layui-icon-add-1"></i>创建新线路</a>
             </div>
             <div class="page-body">
-                <div id="route-table"></div>
-                <ul class="pagination"></ul>
+                <div class="app-table-panel">
+                    <div id="route-table"></div>
+                    <div id="route-page" class="app-pagination"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -26,7 +28,9 @@
     $(document).ready(function()
     {
         setCurrentMenu('route');
-        $('#route-table').paginate({
+        window.routeTable = appTable.render({
+            elem: '#route-table',
+            pageElem: '#route-page',
             url: '/route/list',
             fields: [
                 {
@@ -87,8 +91,8 @@
                     formatter: function (i, v, r)
                     {
                         var html = '';
-                        html += '<a href="/route/edit?id=' + v + '" class="btn btn--sm btn--blue">编辑</a>';
-                        html += '<a href="javascript:;" onclick="remove(\'' + v + '\')" class="btn btn--sm btn--orange">删除</a>';
+                        html += '<a href="/route/edit?id=' + v + '" class="layui-btn layui-btn-xs">编辑</a>';
+                        html += '<a href="javascript:;" onclick="remove(\'' + v + '\')" class="layui-btn layui-btn-xs layui-btn-danger">删除</a>';
                         return html;
                     }
                 }
@@ -98,13 +102,13 @@
 
     function remove(id)
     {
-        confirmDialog('真的要删除吗？', function()
+        appConfirm('真的要删除吗？', function()
         {
             $.post('/route/remove', { id : id }, function(result)
             {
-                if (result.error && result.error.code) return toastr('error', result.error.reason);
-                toastr('success', '删除成功');
-                $('#route-table').paginate('reload');
+                if (result.error && result.error.code) return appNotify('error', result.error.reason);
+                appNotify('success', '删除成功');
+                window.routeTable.reload();
             });
         });
     }

@@ -5,96 +5,91 @@
     <title>创建临时行程</title>
 </head>
 <body>
-<div class="layout">
+<div class="layui-layout layui-layout-admin app-layout">
     <#include "inc/sidebar.ftlh">
-    <div class="layout__content">
-        <div class="layout__page">
-            <div class="page-header">
+    <div class="layui-body app-body">
+        <div class="app-page">
+            <div class="page-header layui-bg-gray">
                 <h2>创建临时行程任务</h2>
             </div>
             <div class="page-body">
-                <div class="task">
-
-            <!-- 线路选择 -->
-            <div class="card-section">
-                <div class="card-section__header">
-                    <h3>行驶线路</h3>
-                </div>
-                <div class="task__dropdown" id="routeDropdown" data-name="routeId">
-                    <div class="task__dropdown-trigger" id="routeDropdownTrigger">
-                        <span class="task__dropdown-text">请选择行驶线路</span>
-                        <span class="task__dropdown-arrow"><i class="fa fa-angle-down"></i></span>
-                    </div>
-                    <div class="task__dropdown-menu" id="routeDropdownMenu">
-                        <#list routes as item>
-                        <div class="task__dropdown-option" data-value="${item.id}">${item.name} - ${item.kilometers!'NaN'}公里</div>
-                        </#list>
-                    </div>
-                    <input type="hidden" name="routeId" id="routeId" value="0" />
-                </div>
-            </div>
-
-            <!-- 车辆信息 -->
-            <div class="card-section">
-                <div class="card-section__header">
-                    <h3>车辆信息</h3>
-                    <button type="button" class="task__regen-all" id="btn-regen-all" title="全部重新生成"><i class="fa fa-refresh"></i> 全部重新生成</button>
-                </div>
-                <div class="card-section__fields">
-                    <div class="card-section__field">
-                        <label class="card-section__label">车牌号</label>
-                        <div class="task__input-row">
-                            <input type="text" name="vehicleNumber" id="vehicleNumber" class="card-section__input" />
-                            <button type="button" class="task__regen-btn" data-target="vehicleNumber" title="重新生成"><i class="fa fa-refresh"></i></button>
+                <form class="layui-form task-form" lay-filter="task-form">
+                    <div class="layui-card">
+                        <div class="layui-card-header">行驶线路</div>
+                        <div class="layui-card-body">
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">线路</label>
+                                <div class="layui-input-block">
+                                    <select name="routeId" id="routeId" lay-search>
+                                        <option value="0">请选择行驶线路</option>
+                                        <#list routes as item>
+                                        <option value="${item.id}">${item.name} - ${item.kilometers!'NaN'}公里</option>
+                                        </#list>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="card-section__field">
-                        <label class="card-section__label">终端ID</label>
-                        <div class="task__input-row">
-                            <input type="text" name="deviceSn" id="deviceSn" class="card-section__input" />
-                            <button type="button" class="task__regen-btn" data-target="deviceSn" title="重新生成"><i class="fa fa-refresh"></i></button>
+
+                    <div class="layui-card">
+                        <div class="layui-card-header">
+                            <span>车辆信息</span>
+                            <button type="button" class="layui-btn layui-btn-primary layui-btn-sm" id="btn-regen-all"><i class="layui-icon layui-icon-refresh"></i>全部重新生成</button>
+                        </div>
+                        <div class="layui-card-body">
+                            <div class="form-grid">
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">车牌号</label>
+                                    <div class="layui-input-block task__input-row">
+                                        <input type="text" name="vehicleNumber" id="vehicleNumber" class="layui-input" />
+                                        <button type="button" class="layui-btn layui-btn-primary task__regen-btn" data-target="vehicleNumber" title="重新生成"><i class="layui-icon layui-icon-refresh"></i></button>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">终端ID</label>
+                                    <div class="layui-input-block task__input-row">
+                                        <input type="text" name="deviceSn" id="deviceSn" class="layui-input" />
+                                        <button type="button" class="layui-btn layui-btn-primary task__regen-btn" data-target="deviceSn" title="重新生成"><i class="layui-icon layui-icon-refresh"></i></button>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">SIM卡号</label>
+                                    <div class="layui-input-block task__input-row">
+                                        <input type="text" name="simNumber" id="simNumber" class="layui-input" />
+                                        <button type="button" class="layui-btn layui-btn-primary task__regen-btn" data-target="simNumber" title="重新生成"><i class="layui-icon layui-icon-refresh"></i></button>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">初始里程</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="mileages" id="mileages" class="layui-input" placeholder="公里，默认0" />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="card-section__field">
-                        <label class="card-section__label">终端SIM卡号</label>
-                        <div class="task__input-row">
-                            <input type="text" name="simNumber" id="simNumber" class="card-section__input" />
-                            <button type="button" class="task__regen-btn" data-target="simNumber" title="重新生成"><i class="fa fa-refresh"></i></button>
+
+                    <div class="layui-card">
+                        <div class="layui-card-header">服务器配置</div>
+                        <div class="layui-card-body">
+                            <div class="form-grid">
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">网关地址</label>
+                                    <div class="layui-input-block"><input type="text" name="serverAddress" id="serverAddress" class="layui-input" value="${vehicleServerAddr}" /></div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">端口</label>
+                                    <div class="layui-input-block"><input type="text" name="serverPort" id="serverPort" class="layui-input" value="${vehicleServerPort}" /></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="card-section__field card-section__field--narrow">
-                        <label class="card-section__label">初始里程数</label>
-                        <input type="text" name="mileages" id="mileages" class="card-section__input" placeholder="公里，默认0" />
-                    </div>
-                </div>
-            </div>
 
-            <!-- 服务器配置 -->
-            <div class="card-section">
-                <div class="card-section__header">
-                    <h3>服务器配置</h3>
-                </div>
-                <div class="card-section__fields">
-                    <div class="card-section__field">
-                        <label class="card-section__label">808 网关地址</label>
-                        <input type="text" name="serverAddress" id="serverAddress" class="card-section__input" value="${vehicleServerAddr}" />
+                    <div class="app-form-note">启动后会生成任务组，并进入任务组监控页观察启动与运行状态。</div>
+                    <div class="page-actions">
+                        <button type="button" class="layui-btn" id="btn-run"><i class="layui-icon layui-icon-play"></i>启动</button>
                     </div>
-                    <div class="card-section__field card-section__field--narrow">
-                        <label class="card-section__label">端口</label>
-                        <input type="text" name="serverPort" id="serverPort" class="card-section__input" value="${vehicleServerPort}" />
-                    </div>
-                </div>
-            </div>
-
-            <!-- 提交 -->
-            <div class="task__creation-note">
-                启动后会生成任务组，并进入任务组监控页观察启动与运行状态。
-            </div>
-            <div class="card-section__actions">
-                <button class="btn btn--blue task__primary-action" id="btn-run">启动</button>
-            </div>
-
-                </div>
+                </form>
             </div>
         </div>
     </div>
@@ -102,117 +97,20 @@
 </body>
 <#include "inc/footer.ftlh">
 <style>
-    .task { max-width: 860px; }
-    .task__input-row { display: flex; align-items: center; }
-    .task__input-row .card-section__input { flex: 1; }
-    .task__regen-btn {
-        width: 40px; height: 40px; border: 0; border-bottom: 1px solid var(--color-border);
-        background: var(--color-bg-panel-muted); color: var(--color-text-secondary);
-        cursor: pointer; display: flex; align-items: center; justify-content: center;
-        transition: background var(--transition-fast), color var(--transition-fast);
-    }
-    .task__regen-btn:hover { background: var(--color-bg-muted); color: var(--color-text-primary); }
-    .task__regen-btn i { font-size: 11px; transition: transform .3s ease; }
-    .task__regen-btn:active i { transform: rotate(180deg); }
-
-    .task__regen-all {
-        background: var(--color-bg-panel); border: 1px solid var(--color-border); border-radius: var(--radius-none);
-        cursor: pointer; font-size: 11px; color: var(--color-text-secondary);
-        padding: 4px 10px; display: flex; align-items: center; gap: 5px;
-        transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
-    }
-    .task__regen-all:hover { background: var(--color-bg-muted); color: var(--color-text-primary); border-color: var(--color-border-strong); }
-    .task__regen-all i { font-size: 10px; }
-    .task__creation-note {
-        color: var(--color-text-secondary);
-        font-size: 12px;
-        line-height: 1.5;
-        margin-top: 12px;
-    }
-    .task__primary-action { min-width: 120px; }
+    .task-form { max-width: 980px; }
+    .task__input-row { display: flex; }
+    .task__input-row .layui-input { flex: 1; }
+    .task__regen-btn { width: 38px; padding: 0; border-left: 0; }
 </style>
 <script type="text/javascript">
+    layui.use('form', function()
+    {
+        layui.form.render();
+    });
+
     $(document).ready(function()
     {
         setCurrentMenu("task");
-
-        // ── custom dropdown logic ──
-        (function()
-        {
-            var $dd = $('#routeDropdown');
-            var $trigger = $('#routeDropdownTrigger');
-            var $menu = $('#routeDropdownMenu');
-            var $input = $dd.find('input[name="routeId"]');
-            var $text = $dd.find('.task__dropdown-text');
-
-            $dd.addClass('is-unselected');
-
-            function open()
-            {
-                $dd.addClass('is-open');
-                $menu.find('.task__dropdown-option').first().focus();
-            }
-            function close()
-            {
-                $dd.removeClass('is-open');
-            }
-            function selectOption($opt)
-            {
-                $menu.find('.task__dropdown-option').removeClass('is-selected');
-                $opt.addClass('is-selected');
-                $input.val($opt.data('value'));
-                $text.text($opt.text());
-                $dd.removeClass('is-unselected');
-                close();
-            }
-
-            $trigger.on('click', function(e)
-            {
-                e.stopPropagation();
-                if ($dd.hasClass('is-open')) close(); else open();
-            });
-
-            $menu.on('click', '.task__dropdown-option', function(e)
-            {
-                e.stopPropagation();
-                selectOption($(this));
-            });
-
-            $(document).on('click', function() { close(); });
-
-            // keyboard support
-            $dd.on('keydown', function(e)
-            {
-                var $opts = $menu.find('.task__dropdown-option:visible');
-                var idx = $opts.index($opts.filter('.is-selected'));
-                if (e.key === 'Escape') { close(); return; }
-                if (!$dd.hasClass('is-open'))
-                {
-                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
-                    return;
-                }
-                if (e.key === 'ArrowDown')
-                {
-                    e.preventDefault();
-                    idx = idx < $opts.length - 1 ? idx + 1 : 0;
-                    selectOption($opts.eq(idx));
-                }
-                else if (e.key === 'ArrowUp')
-                {
-                    e.preventDefault();
-                    idx = idx > 0 ? idx - 1 : $opts.length - 1;
-                    selectOption($opts.eq(idx));
-                }
-                else if (e.key === 'Enter' || e.key === ' ')
-                {
-                    e.preventDefault();
-                    close();
-                }
-            });
-
-            // make dropdown focusable
-            $dd.attr('tabindex', '0');
-        })();
 
         function randHex(len)
         {
@@ -259,7 +157,7 @@
 
             $.post('./run', params, function(result)
             {
-                if (result.error && result.error.code) return toastr('error', result.error.reason);
+                if (result.error && result.error.code) return appNotify('error', result.error.reason);
                 window.location.href = '/task-groups/monitor?taskGroupId=' + result.data.taskGroupId;
             });
         });

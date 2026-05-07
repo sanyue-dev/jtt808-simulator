@@ -1,19 +1,18 @@
-<div class="layout__sidebar">
-    <div class="layout__logo"></div>
-    <ul class="layout__menu">
-        <li x-tag="route" title="线路管理"><i class="fa fa-road"></i> <a href="/route/index">线路管理</a></li>
-        <!--<li x-tag="schedule"><i class="fa fa-history"></i> <a href="/schdule/index">计划任务</a></li>-->
-        <li x-tag="task" title="创建行程"><i class="fa fa-location-arrow"></i> <a href="/task/index">创建行程</a></li>
-        <li x-tag="batch" title="压力测试"><i class="fa fa-bolt"></i> <a href="/batch/index">压力测试</a></li>
-        <li x-tag="task-group-monitor" title="任务组监控"><i class="fa fa-dashboard"></i> <a href="/task-groups/monitor">任务组监控</a></li>
-        <li x-tag="list-monitor" title="实时行程监控"><i class="fa fa-eye"></i> <a href="/monitor/list/index">实时行程监控</a></li>
-        <!--
-        <li x-tag="map-monitor"><i class="fa fa-globe"></i> <a href="/monitor/map/index">地图实时监控</a></li>
-        <li x-tag="setting"><i class="fa fa-gears"></i> <a href="/setting/index">系统参数</a></li>
-        -->
-    </ul>
-    <div class="layout__toggle" id="sidebarToggle" title="收起侧边栏">
-        <i class="fa fa-angle-double-left layout__toggle-icon--collapse"></i>
-        <i class="fa fa-angle-double-right layout__toggle-icon--expand" style="display:none"></i>
+<div class="layui-side layui-bg-black app-sidebar">
+    <div class="layui-side-scroll">
+        <div class="app-logo">
+            <span class="app-logo__text">JT/T 808 Simulator</span>
+        </div>
+        <ul class="layui-nav layui-nav-tree app-menu" lay-filter="sidebar-nav">
+            <li class="layui-nav-item" x-tag="route" title="线路管理"><a href="/route/index"><i class="layui-icon layui-icon-location"></i><span>线路管理</span></a></li>
+            <li class="layui-nav-item" x-tag="task" title="创建行程"><a href="/task/index"><i class="layui-icon layui-icon-release"></i><span>创建行程</span></a></li>
+            <li class="layui-nav-item" x-tag="batch" title="压力测试"><a href="/batch/index"><i class="layui-icon layui-icon-engine"></i><span>压力测试</span></a></li>
+            <li class="layui-nav-item" x-tag="task-group-monitor" title="任务组监控"><a href="/task-groups/monitor"><i class="layui-icon layui-icon-chart-screen"></i><span>任务组监控</span></a></li>
+            <li class="layui-nav-item" x-tag="list-monitor" title="实时行程监控"><a href="/monitor/list/index"><i class="layui-icon layui-icon-eye"></i><span>实时行程监控</span></a></li>
+        </ul>
     </div>
+    <button type="button" class="layui-btn layui-btn-primary app-sidebar-toggle" id="sidebarToggle" title="收起侧边栏">
+        <i class="layui-icon layui-icon-shrink-right app-sidebar-toggle__collapse"></i>
+        <i class="layui-icon layui-icon-spread-left app-sidebar-toggle__expand"></i>
+    </button>
 </div>

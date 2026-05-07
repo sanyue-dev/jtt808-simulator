@@ -5,7 +5,7 @@
     <title>行程任务详情</title>
     <style type="text/css">
         body { overflow: hidden; }
-        .layout__content
+        .app-body
         {
             padding: 0px 350px 300px 0px;
             position: relative;
@@ -80,11 +80,20 @@
             border-width: 1px 0px 0px 0px;
             border-color: var(--color-border);
         }
-        .monitor__panel-body .grid__col--3, .monitor__panel-body .grid__col--7 { height: 24px; line-height: 24px; color: var(--color-text-primary); }
-        .monitor__panel-body .grid__col--3
+        .monitor-detail-row {
+            display: grid;
+            grid-template-columns: 30% 70%;
+            min-height: 24px;
+            line-height: 24px;
+            color: var(--color-text-primary);
+        }
+        .monitor-detail-label
         {
             color: var(--color-text-secondary);
+            text-align: right;
+            padding-right: 6px;
         }
+        .monitor-detail-value { padding-left: 6px; }
         .anchorBL { display: none !important; }
         .autocar-icon { background: none !important; border: none !important; }
         .autocar-label { background-color: var(--color-primary) !important; color: var(--color-text-inverse) !important; border: none !important; padding: 2px 10px !important; text-align: center !important; font-size: 12px !important; }
@@ -144,15 +153,15 @@
     </style>
 </head>
 <body>
-<div class="layout">
+<div class="layui-layout layui-layout-admin app-layout">
 <#include "inc/sidebar.ftlh">
-    <div class="layout__content">
+    <div class="layui-body app-body">
         <div class="monitor__map" id="map"></div>
         <div class="monitor__log-panel">
             <div class="monitor__panel">
                 <h3>行程任务日志</h3>
                 <div class="monitor__panel-body">
-                    <table id="logs" class="data-table">
+                    <table id="logs" class="layui-table" lay-skin="line">
                         <thead>
                         <tr>
                             <th align="center">类型</th>
@@ -168,43 +177,43 @@
         </div>
         <div class="monitor__info-panel">
             <div class="monitor__panel">
-                <h3>行程任务详情<button class="btn btn--sm btn--blue" id="btn-stop">终止</button></h3>
+                <h3>行程任务详情<button class="layui-btn layui-btn-xs" id="btn-stop">终止</button></h3>
                 <div class="monitor__panel-body">
-                    <div class="grid__row">
-                        <div class="grid__col--3 text-right">线路：</div>
-                        <div class="grid__col--7" id="routeName">--</div>
+                    <div class="monitor-detail-row">
+                        <div class="monitor-detail-label">线路：</div>
+                        <div class="monitor-detail-value" id="routeName">--</div>
                     </div>
-                    <div class="grid__row">
-                        <div class="grid__col--3 text-right">线路里程：</div>
-                        <div class="grid__col--7" id="routeMileages">--</div>
+                    <div class="monitor-detail-row">
+                        <div class="monitor-detail-label">线路里程：</div>
+                        <div class="monitor-detail-value" id="routeMileages">--</div>
                     </div>
-                    <div class="grid__row">
-                        <div class="grid__col--3 text-right">车牌号：</div>
-                        <div class="grid__col--7" id="vehicleNumber">--</div>
+                    <div class="monitor-detail-row">
+                        <div class="monitor-detail-label">车牌号：</div>
+                        <div class="monitor-detail-value" id="vehicleNumber">--</div>
                     </div>
-                    <div class="grid__row">
-                        <div class="grid__col--3 text-right">终端ID：</div>
-                        <div class="grid__col--7" id="deviceSn">--</div>
+                    <div class="monitor-detail-row">
+                        <div class="monitor-detail-label">终端ID：</div>
+                        <div class="monitor-detail-value" id="deviceSn">--</div>
                     </div>
-                    <div class="grid__row">
-                        <div class="grid__col--3 text-right">SIM卡号：</div>
-                        <div class="grid__col--7" id="simNumber">--</div>
+                    <div class="monitor-detail-row">
+                        <div class="monitor-detail-label">SIM卡号：</div>
+                        <div class="monitor-detail-value" id="simNumber">--</div>
                     </div>
-                    <div class="grid__row">
-                        <div class="grid__col--3 text-right">启动时间：</div>
-                        <div class="grid__col--7" id="startTime">--</div>
+                    <div class="monitor-detail-row">
+                        <div class="monitor-detail-label">启动时间：</div>
+                        <div class="monitor-detail-value" id="startTime">--</div>
                     </div>
-                    <div class="grid__row">
-                        <div class="grid__col--3 text-right">最后上报：</div>
-                        <div class="grid__col--7" id="reportTime">--</div>
+                    <div class="monitor-detail-row">
+                        <div class="monitor-detail-label">最后上报：</div>
+                        <div class="monitor-detail-value" id="reportTime">--</div>
                     </div>
-                    <div class="grid__row">
-                        <div class="grid__col--3 text-right">当前位置：</div>
-                        <div class="grid__col--7" id="lng">--</div>
+                    <div class="monitor-detail-row">
+                        <div class="monitor-detail-label">当前位置：</div>
+                        <div class="monitor-detail-value" id="lng">--</div>
                     </div>
-                    <div class="grid__row">
-                        <div class="grid__col--3 text-right">&nbsp;</div>
-                        <div class="grid__col--7" id="lat">--</div>
+                    <div class="monitor-detail-row">
+                        <div class="monitor-detail-label">&nbsp;</div>
+                        <div class="monitor-detail-value" id="lat">--</div>
                     </div>
                     <hr />
                     <h4>报警标志<span>点击置位，高亮表示相应位为1</span></h4>
@@ -330,8 +339,8 @@
     {
         $.post('/monitor/terminate', { id : taskId }, function(result)
         {
-            if (result.error && result.error.code) return toastr('error', result.error.reason);
-            toastr('success', '已成功终止任务');
+            if (result.error && result.error.code) return appNotify('error', result.error.reason);
+            appNotify('success', '已成功终止任务');
         });
     }
 
@@ -344,7 +353,7 @@
     {
         $.post('/monitor/info', { id : taskId }, function(result)
         {
-            if (result.error && result.error.code) return toastr('error', result.error.reason);
+            if (result.error && result.error.code) return appNotify('error', result.error.reason);
             var info = result.data;
             $('#routeName').html(info.routeName);
             $('#routeMileages').html((info.routeMileages / 1000).toFixed(2) + ' km');
