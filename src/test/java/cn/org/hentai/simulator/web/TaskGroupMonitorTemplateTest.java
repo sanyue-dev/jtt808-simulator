@@ -69,6 +69,18 @@ class TaskGroupMonitorTemplateTest
     }
 
     @Test
+    void monitorRuntimeSummaryUsesCompactGroupedLayout() throws Exception
+    {
+        String template = read("/templates/task-group-monitor.ftlh");
+
+        assertThat(template).contains("grid-template-columns: minmax(180px, .85fr) minmax(360px, 1.75fr) minmax(260px, 1.25fr) minmax(180px, .85fr)");
+        assertThat(template).contains("monitor-summary__section monitor-summary__section--wide");
+        assertThat(template).contains("align-items: baseline");
+        assertThat(template).contains("font-size: 14px;");
+        assertThat(template).doesNotContain("padding: 10px 12px;\n        }\n        .monitor-summary__item");
+    }
+
+    @Test
     void creationPagesNavigateToTaskGroupMonitorAfterSuccess() throws Exception
     {
         String taskCreate = read("/templates/task-create.ftlh");

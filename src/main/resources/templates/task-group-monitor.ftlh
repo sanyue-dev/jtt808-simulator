@@ -5,37 +5,67 @@
     <title>任务组监控</title>
     <style>
         .monitor-summary {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            margin-bottom: 16px;
-        }
-        .monitor-summary__section h3 {
-            margin: 0 0 8px;
-            font-size: 14px;
-            color: var(--color-text-primary);
-            font-weight: 600;
-        }
-        .monitor-summary__grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 10px;
+            grid-template-columns: minmax(180px, .85fr) minmax(360px, 1.75fr) minmax(260px, 1.25fr) minmax(180px, .85fr);
+            gap: 12px;
+            margin-bottom: 12px;
         }
-        .monitor-summary__item {
+        .monitor-summary__section {
+            min-width: 0;
             border: 1px solid var(--color-border);
             border-radius: var(--radius-sm);
             background: var(--color-bg-panel);
             padding: 10px 12px;
         }
+        .monitor-summary__section h3 {
+            margin: 0 0 10px;
+            font-size: 13px;
+            color: var(--color-text-primary);
+            font-weight: 600;
+            line-height: 20px;
+        }
+        .monitor-summary__grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+            gap: 6px 10px;
+        }
+        .monitor-summary__section--wide .monitor-summary__grid {
+            grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+        }
+        .monitor-summary__item {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            min-width: 0;
+            gap: 8px;
+            border-bottom: 1px solid var(--color-border);
+            padding: 4px 0 6px;
+            line-height: 20px;
+        }
         .monitor-summary__item span {
-            display: block;
+            min-width: 0;
             color: var(--color-text-secondary);
             font-size: 12px;
-            margin-bottom: 6px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         .monitor-summary__item strong {
+            flex: 0 0 auto;
             color: var(--color-text-primary);
-            font-size: 18px;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        @media screen and (max-width: 1280px) {
+            .monitor-summary {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        @media screen and (max-width: 760px) {
+            .monitor-summary {
+                grid-template-columns: 1fr;
+            }
         }
         .task-group-table {
             overflow-x: auto;
@@ -179,7 +209,7 @@
                             <div class="monitor-summary__item"><span>已终止</span><strong data-field="runtimeSummary.terminatedTasks">0</strong></div>
                         </div>
                     </section>
-                    <section class="monitor-summary__section">
+                    <section class="monitor-summary__section monitor-summary__section--wide">
                         <h3>协议运行</h3>
                         <div class="monitor-summary__grid">
                             <div class="monitor-summary__item"><span>连接成功</span><strong data-field="runtimeSummary.connectionSucceeded">0</strong></div>
@@ -195,7 +225,7 @@
                             <div class="monitor-summary__item"><span>协议异常</span><strong data-field="runtimeSummary.protocolExceptions">0</strong></div>
                         </div>
                     </section>
-                    <section class="monitor-summary__section">
+                    <section class="monitor-summary__section monitor-summary__section--wide">
                         <h3>资源占用</h3>
                         <div class="monitor-summary__grid">
                             <div class="monitor-summary__item"><span>Heap 使用</span><strong data-field="runtimeSummary.runtimeResources.heapUsedBytes" data-format="bytes">0</strong></div>
