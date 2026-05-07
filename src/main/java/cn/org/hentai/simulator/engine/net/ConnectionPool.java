@@ -3,6 +3,7 @@ package cn.org.hentai.simulator.engine.net;
 import cn.org.hentai.simulator.engine.core.AbstractDriveTask;
 import cn.org.hentai.simulator.engine.core.SimpleDriveTask;
 import cn.org.hentai.simulator.engine.event.EventDispatcher;
+import cn.org.hentai.simulator.engine.event.EventEnum;
 import io.github.yezhihao.netmc.codec.MessageDecoder;
 import io.github.yezhihao.netmc.codec.MessageEncoder;
 import io.github.yezhihao.netmc.core.model.Message;
@@ -209,6 +210,7 @@ public class ConnectionPool
             if (conn != null && conn.watcher instanceof SimpleDriveTask task)
             {
                 task.onProtocolException(cause);
+                EventDispatcher.getInstance().dispatchNow(task, EventEnum.disconnected.name(), null, null);
             }
             logger.error("protocol exception", cause);
             ctx.close();

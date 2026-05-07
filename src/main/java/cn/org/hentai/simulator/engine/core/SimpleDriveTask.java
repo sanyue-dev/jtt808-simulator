@@ -135,6 +135,7 @@ public class SimpleDriveTask extends AbstractDriveTask
     @Listen(when = EventEnum.disconnected)
     public void onDisconnected()
     {
+        if (isTerminated()) return;
         log(LogType.EXCEPTION, "disconnected");
         TaskLifecycleObserver observer = getLifecycleObserver();
         if (observer != null) observer.onDisconnected(getInfo());
