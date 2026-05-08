@@ -17,7 +17,7 @@ class BatchTemplateTest
         );
 
         assertThat(template).contains("id=\"batch-progress\"");
-        assertThat(template).contains("$.post('./progress'");
+        assertThat(template).contains("request.post('./progress'");
         assertThat(template).contains("startProgressPolling()");
     }
 }

@@ -3,7 +3,6 @@ package cn.org.hentai.simulator.web.controller;
 import cn.org.hentai.simulator.service.task.TaskGroupMonitorService;
 import cn.org.hentai.simulator.service.task.TaskGroupMonitorSnapshot;
 import cn.org.hentai.simulator.service.monitor.TaskStopResult;
-import cn.org.hentai.simulator.web.vo.Result;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -20,10 +19,9 @@ class TaskGroupMonitorControllerTest
         TaskGroupMonitorSnapshot snapshot = new TaskGroupMonitorSnapshot(null, List.of());
         ReflectionTestUtils.setField(controller, "taskGroupMonitorService", new SnapshotTaskGroupMonitorService(snapshot));
 
-        Result result = controller.snapshot();
+        TaskGroupMonitorSnapshot result = controller.snapshot();
 
-        assertEquals(0, result.getError().getCode());
-        assertEquals(snapshot, result.getData());
+        assertEquals(snapshot, result);
     }
 
     @Test
@@ -41,11 +39,10 @@ class TaskGroupMonitorControllerTest
         StopTaskGroupMonitorService service = new StopTaskGroupMonitorService(stopResult);
         ReflectionTestUtils.setField(controller, "taskGroupMonitorService", service);
 
-        Result result = controller.stop("TG-1");
+        TaskStopResult result = controller.stop("TG-1");
 
         assertEquals("TG-1", service.taskGroupId);
-        assertEquals(0, result.getError().getCode());
-        assertEquals(stopResult, result.getData());
+        assertEquals(stopResult, result);
     }
 
     private static class SnapshotTaskGroupMonitorService extends TaskGroupMonitorService

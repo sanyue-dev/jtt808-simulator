@@ -4,7 +4,7 @@ import cn.org.hentai.simulator.domain.entity.Route;
 import cn.org.hentai.simulator.service.RouteService;
 import cn.org.hentai.simulator.service.task.SingleTaskLaunchRequest;
 import cn.org.hentai.simulator.service.task.SingleTaskLaunchService;
-import cn.org.hentai.simulator.web.vo.Result;
+import cn.org.hentai.simulator.service.task.TaskCreationResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -50,33 +50,24 @@ public class TaskController
 
     @RequestMapping("/run")
     @ResponseBody
-    public Result run(@RequestParam Long routeId,
-                      @RequestParam(required = false) String vehicleNumber,
-                      @RequestParam(required = false) String deviceSn,
-                      @RequestParam(required = false) String simNumber,
-                      @RequestParam(required = false) String mileages,
-                      @RequestParam(required = false) String serverAddress,
-                      @RequestParam(required = false) String serverPort)
+    public TaskCreationResult run(@RequestParam Long routeId,
+                                  @RequestParam(required = false) String vehicleNumber,
+                                  @RequestParam(required = false) String deviceSn,
+                                  @RequestParam(required = false) String simNumber,
+                                  @RequestParam(required = false) String mileages,
+                                  @RequestParam(required = false) String serverAddress,
+                                  @RequestParam(required = false) String serverPort)
     {
-        Result result = new Result();
-        try
-        {
-            SingleTaskLaunchRequest request = new SingleTaskLaunchRequest();
-            request.setRouteId(routeId);
-            request.setVehicleNumber(vehicleNumber);
-            request.setDeviceSn(deviceSn);
-            request.setSimNumber(simNumber);
-            request.setMileages(mileages);
-            request.setServerAddress(serverAddress);
-            request.setServerPort(serverPort);
-            request.setMode(mode);
-            result.setData(singleTaskLaunchService.launch(request));
-        }
-        catch(Exception ex)
-        {
-            result.setError(ex);
-        }
-        return result;
+        SingleTaskLaunchRequest request = new SingleTaskLaunchRequest();
+        request.setRouteId(routeId);
+        request.setVehicleNumber(vehicleNumber);
+        request.setDeviceSn(deviceSn);
+        request.setSimNumber(simNumber);
+        request.setMileages(mileages);
+        request.setServerAddress(serverAddress);
+        request.setServerPort(serverPort);
+        request.setMode(mode);
+        return singleTaskLaunchService.launch(request);
     }
 
     @Value("${simulator.mode}")

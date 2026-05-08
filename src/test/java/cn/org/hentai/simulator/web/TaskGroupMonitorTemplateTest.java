@@ -13,7 +13,7 @@ class TaskGroupMonitorTemplateTest
     {
         String template = read("/templates/task-group-monitor.ftlh");
 
-        assertThat(template).contains("$.post('/task-groups/snapshot', function(result)");
+        assertThat(template).contains("request.post('/task-groups/snapshot'");
         assertThat(template).contains("setInterval(loadSnapshot, 1000)");
         assertThat(template).contains("expandedTaskGroupIds");
         assertThat(template).contains("data-field=\"runtimeSummary.totalTasks\"");
@@ -21,7 +21,7 @@ class TaskGroupMonitorTemplateTest
         assertThat(template).contains("id=\"task-group-list\"");
         assertThat(template).doesNotContain("paginate(");
         assertThat(template).doesNotContain("toastr");
-        assertThat(template).contains("appNotify(");
+        assertThat(template).contains("console.error(xhr.responseJSON || xhr.responseText)");
     }
 
     @Test
@@ -96,8 +96,8 @@ class TaskGroupMonitorTemplateTest
         String taskCreate = read("/templates/task-create.ftlh");
         String batchCreate = read("/templates/task-batch-create.ftlh");
 
-        assertThat(taskCreate).contains("window.location.href = '/task-groups/monitor?taskGroupId=' + result.data.taskGroupId");
-        assertThat(batchCreate).contains("window.location.href = '/task-groups/monitor?taskGroupId=' + result.data.taskGroupId");
+        assertThat(taskCreate).contains("window.location.href = '/task-groups/monitor?taskGroupId=' + result.taskGroupId");
+        assertThat(batchCreate).contains("window.location.href = '/task-groups/monitor?taskGroupId=' + result.taskGroupId");
     }
 
     @Test
@@ -106,7 +106,7 @@ class TaskGroupMonitorTemplateTest
         String template = read("/templates/task-group-monitor.ftlh");
 
         assertThat(template).contains("停止任务组");
-        assertThat(template).contains("$.post('/task-groups/stop'");
+        assertThat(template).contains("request.post('/task-groups/stop'");
         assertThat(template).contains("data-action=\"stop\"");
         assertThat(template).contains("data-action=\"view-tasks\"");
         assertThat(template).contains("layui-btn-group task-group-actions");

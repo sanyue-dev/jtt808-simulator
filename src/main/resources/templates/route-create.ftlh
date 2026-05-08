@@ -1000,9 +1000,8 @@
 
             var submitSave = function()
             {
-                $.post(saveUrl, payload, function(result)
+                request.post(saveUrl, payload).done(function()
                 {
-                    if (result.error && result.error.code) return appNotify('error', result.error.reason);
                     appNotify('success', '保存成功', 1200);
                     setTimeout(function()
                     {

@@ -1,7 +1,8 @@
 package cn.org.hentai.simulator.web.controller;
 
+import cn.org.hentai.simulator.service.monitor.TaskStopResult;
 import cn.org.hentai.simulator.service.task.TaskGroupMonitorService;
-import cn.org.hentai.simulator.web.vo.Result;
+import cn.org.hentai.simulator.service.task.TaskGroupMonitorSnapshot;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,33 +23,15 @@ public class TaskGroupMonitorController
 
     @RequestMapping("/snapshot")
     @ResponseBody
-    public Result snapshot()
+    public TaskGroupMonitorSnapshot snapshot()
     {
-        Result result = new Result();
-        try
-        {
-            result.setData(taskGroupMonitorService.snapshot());
-        }
-        catch(Exception ex)
-        {
-            result.setError(ex);
-        }
-        return result;
+        return taskGroupMonitorService.snapshot();
     }
 
     @RequestMapping("/stop")
     @ResponseBody
-    public Result stop(String taskGroupId)
+    public TaskStopResult stop(String taskGroupId)
     {
-        Result result = new Result();
-        try
-        {
-            result.setData(taskGroupMonitorService.stopTaskGroup(taskGroupId));
-        }
-        catch(Exception ex)
-        {
-            result.setError(ex);
-        }
-        return result;
+        return taskGroupMonitorService.stopTaskGroup(taskGroupId);
     }
 }

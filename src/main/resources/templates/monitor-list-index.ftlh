@@ -84,23 +84,11 @@
         layui.use('table', function()
         {
             var table = layui.table;
-            window.monitorTable = table.render({
+            window.monitorTable = table.render($.extend(true, request.table('/monitor/list/json'), {
                 elem: '#monitor-table',
-                url: '/monitor/list/json',
-                method: 'post',
                 page: true,
                 limit: 20,
                 where: filterParams(),
-                request: { pageName: 'pageIndex', limitName: 'pageSize' },
-                parseData: function(result)
-                {
-                    if (result.error && result.error.code)
-                    {
-                        return { code: result.error.code, msg: result.error.reason, count: 0, data: [] };
-                    }
-                    var page = result.data || {};
-                    return { code: 0, msg: '', count: page.recordCount || 0, data: page.list || [] };
-                },
                 cols: [[
                     { field: 'state', title: '状态', align: 'center' },
                     {
@@ -167,7 +155,7 @@
                         }
                     }
                 ]]
-            });
+            }));
 
             table.on('tool(monitor-table)', function(obj)
             {
@@ -194,9 +182,8 @@
         {
             appConfirm('确定停止这个行程任务？', function()
             {
-                $.post('/monitor/list/terminate', { id: id }, function(result)
+                request.post('/monitor/list/terminate', { id: id }).done(function()
                 {
-                    if (result.error && result.error.code) return appNotify('error', result.error.reason);
                     appNotify('success', '已提交停止任务');
                     reloadTable();
                 });
@@ -207,10 +194,9 @@
         {
             appConfirm('确定停止全部未终止的行程任务？', function()
             {
-                $.post('/monitor/list/terminate-all', {}, function(result)
+                request.post('/monitor/list/terminate-all', {}).done(function(data)
                 {
-                    if (result.error && result.error.code) return appNotify('error', result.error.reason);
-                    var data = result.data || {};
+                    data = data || {};
                     var message = '停止提交完成：成功 ' + (data.succeeded || 0) + ' 个，失败 ' + (data.failed || 0) + ' 个';
                     appNotify(data.failed ? 'error' : 'success', message);
                     reloadTable();

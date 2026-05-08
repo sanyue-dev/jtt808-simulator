@@ -2,6 +2,7 @@ package cn.org.hentai.simulator.service;
 
 import cn.org.hentai.simulator.domain.entity.DeviceProfile;
 import cn.org.hentai.simulator.infrastructure.persistence.mapper.DeviceProfileMapper;
+import cn.org.hentai.simulator.web.exception.ValidationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -23,7 +24,7 @@ class DeviceProfileServiceTest
         profile.setAuthMode("direct");
         profile.setAuthToken("");
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.save(profile));
+        ValidationException ex = assertThrows(ValidationException.class, () -> service.save(profile));
 
         assertEquals("直接鉴权设备必须填写鉴权码", ex.getMessage());
     }

@@ -2,6 +2,7 @@ package cn.org.hentai.simulator.service;
 
 import cn.org.hentai.simulator.domain.entity.DeviceProfile;
 import cn.org.hentai.simulator.infrastructure.persistence.mapper.DeviceProfileMapper;
+import cn.org.hentai.simulator.web.exception.ValidationException;
 import cn.org.hentai.simulator.web.vo.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -49,7 +50,7 @@ public class DeviceProfileService
     {
         if ("direct".equals(profile.getAuthMode()) && !StringUtils.hasText(profile.getAuthToken()))
         {
-            throw new RuntimeException("直接鉴权设备必须填写鉴权码");
+            throw new ValidationException("直接鉴权设备必须填写鉴权码");
         }
     }
 }

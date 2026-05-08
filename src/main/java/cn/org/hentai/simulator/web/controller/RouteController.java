@@ -12,18 +12,20 @@ import cn.org.hentai.simulator.service.RoutePointService;
 import cn.org.hentai.simulator.service.RouteService;
 import cn.org.hentai.simulator.service.StayPointService;
 import cn.org.hentai.simulator.service.TroubleSegmentService;
+import cn.org.hentai.simulator.web.exception.ValidationException;
 import cn.org.hentai.simulator.web.vo.Page;
-import cn.org.hentai.simulator.web.vo.Result;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -61,19 +63,9 @@ public class RouteController
 
     @RequestMapping("/list")
     @ResponseBody
-    public Result list(@RequestParam(defaultValue = "1") int pageIndex, @RequestParam(defaultValue = "20") int pageSize)
+    public Page<Route> list(@RequestParam(defaultValue = "1") int pageIndex, @RequestParam(defaultValue = "20") int pageSize)
     {
-        Result result = new Result();
-        try
-        {
-            Page<Route> routes = routeService.find(null, pageIndex, pageSize);
-
-            result.setData(routes);
-        } catch (Exception ex)
-        {
-            result.setError(ex);
-        }
-        return result;
+        return routeService.find(null, pageIndex, pageSize);
     }
 
     /**
@@ -112,33 +104,8 @@ public class RouteController
 
     @RequestMapping("/create/save")
     @ResponseBody
-    public Result createSave(@RequestParam String name,
-                             @RequestParam Integer minSpeed,
-                             @RequestParam Integer maxSpeed,
-                             @RequestParam Integer mileages,
-                             @RequestParam String stationsJsonText,
-                             @RequestParam String pointsJsonText,
-                             @RequestParam String stayPointsJsonText,
-                             @RequestParam String segmentsJsonText)
-    {
-        Result result = new Result();
-        try
-        {
-            Route route = buildRoute(null, name, minSpeed, maxSpeed, mileages, stationsJsonText, pointsJsonText, stayPointsJsonText, segmentsJsonText);
-            routeService.create(route);
-            saveRouteDetails(route, pointsJsonText, stayPointsJsonText, segmentsJsonText);
-        }
-        catch (Exception e)
-        {
-            result.setError(e);
-        }
-        return result;
-    }
-
-    @RequestMapping("/edit/save")
-    @ResponseBody
-    public Result editSave(@RequestParam Long id,
-                           @RequestParam String name,
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void createSave(@RequestParam String name,
                            @RequestParam Integer minSpeed,
                            @RequestParam Integer maxSpeed,
                            @RequestParam Integer mileages,
@@ -147,41 +114,42 @@ public class RouteController
                            @RequestParam String stayPointsJsonText,
                            @RequestParam String segmentsJsonText)
     {
-        Result result = new Result();
-        try
-        {
-            Route route = routeService.getById(id);
-            if (route == null) throw new RuntimeException("no such route: " + id);
+        Route route = buildRoute(null, name, minSpeed, maxSpeed, mileages, stationsJsonText, pointsJsonText, stayPointsJsonText, segmentsJsonText);
+        routeService.create(route);
+        saveRouteDetails(route, pointsJsonText, stayPointsJsonText, segmentsJsonText);
+    }
 
-            route = buildRoute(route, name, minSpeed, maxSpeed, mileages, stationsJsonText, pointsJsonText, stayPointsJsonText, segmentsJsonText);
-            routeService.update(route);
-            saveRouteDetails(route, pointsJsonText, stayPointsJsonText, segmentsJsonText);
-        }
-        catch (Exception e)
-        {
-            result.setError(e);
-        }
-        return result;
+    @RequestMapping("/edit/save")
+    @ResponseBody
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void editSave(@RequestParam Long id,
+                         @RequestParam String name,
+                         @RequestParam Integer minSpeed,
+                         @RequestParam Integer maxSpeed,
+                         @RequestParam Integer mileages,
+                         @RequestParam String stationsJsonText,
+                         @RequestParam String pointsJsonText,
+                         @RequestParam String stayPointsJsonText,
+                         @RequestParam String segmentsJsonText)
+    {
+        Route route = routeService.getById(id);
+        if (route == null) throw new ValidationException("no such route: " + id);
+
+        route = buildRoute(route, name, minSpeed, maxSpeed, mileages, stationsJsonText, pointsJsonText, stayPointsJsonText, segmentsJsonText);
+        routeService.update(route);
+        saveRouteDetails(route, pointsJsonText, stayPointsJsonText, segmentsJsonText);
     }
 
     @RequestMapping("/remove")
     @ResponseBody
-    public Result remove(@RequestParam Long id)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void remove(@RequestParam Long id)
     {
-        Result result = new Result();
-        try
-        {
-            routeService.removeById(id);
-            routePointService.removeByRouteId(id);
-            stayPointService.removeByRouteId(id);
-            troubleSegmentService.removeByRouteId(id);
-            RouteManager.getInstance().remove(id);
-        }
-        catch(Exception ex)
-        {
-            result.setError(ex);
-        }
-        return result;
+        routeService.removeById(id);
+        routePointService.removeByRouteId(id);
+        stayPointService.removeByRouteId(id);
+        troubleSegmentService.removeByRouteId(id);
+        RouteManager.getInstance().remove(id);
     }
 
     private void fillRoutePageModel(Model model, String pageMode, Route route, List<RoutePoint> points, List<StayPoint> stayPoints, List<TroubleSegment> troubleSegments)

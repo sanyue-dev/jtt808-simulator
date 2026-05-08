@@ -256,11 +256,13 @@
 
         function loadProgress()
         {
-            $.post('./progress', function(result)
+            request.post('./progress', {}, { silentError: true }).done(function(result)
             {
-                if (result.error && result.error.code) return appNotify('error', result.error.reason);
-                renderProgress(result.data || {});
-                stopProgressPollingIfFinished(result.data || {});
+                renderProgress(result || {});
+                stopProgressPollingIfFinished(result || {});
+            }).fail(function(xhr)
+            {
+                console.error(xhr.responseJSON || xhr.responseText);
             });
         }
 
@@ -306,10 +308,9 @@
                 rampUpBatchSize : $('#rampUpBatchSize').val(),
                 rampUpIntervalMillis : $('#rampUpIntervalMillis').val()
             };
-            $.post('./run', params, function(result)
+            request.post('./run', params).done(function(result)
             {
-                if (result.error && result.error.code) return appNotify('error', result.error.reason);
-                window.location.href = '/task-groups/monitor?taskGroupId=' + result.data.taskGroupId;
+                window.location.href = '/task-groups/monitor?taskGroupId=' + result.taskGroupId;
             });
         });
     });

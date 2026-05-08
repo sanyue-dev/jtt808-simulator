@@ -2,11 +2,10 @@ package cn.org.hentai.simulator.web.controller;
 
 import cn.org.hentai.simulator.domain.entity.Route;
 import cn.org.hentai.simulator.service.RouteService;
-import cn.org.hentai.simulator.service.task.BatchTaskLaunchResult;
+import cn.org.hentai.simulator.service.task.BatchTaskLaunchProgress;
 import cn.org.hentai.simulator.service.task.BatchTaskLaunchRequest;
-import cn.org.hentai.simulator.service.task.PreflightCheckException;
+import cn.org.hentai.simulator.service.task.BatchTaskLaunchResult;
 import cn.org.hentai.simulator.service.task.TaskBatchLaunchService;
-import cn.org.hentai.simulator.web.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -50,77 +49,54 @@ public class BatchController extends BaseController
     // 批量创建
     @RequestMapping("/run")
     @ResponseBody
-    public Result run(@RequestParam int vehicleCount,
-                       @RequestParam(name = "routeIdList[]", required = false) Long[] routeIdList,
-                       @RequestParam String vehicleNumberPattern,
-                       @RequestParam String deviceSnPattern,
-                       @RequestParam String simNumberPattern,
-                       @RequestParam String serverAddress,
-                       @RequestParam String serverPort,
-                       @RequestParam(defaultValue = "5") int reportIntervalSeconds,
-                       @RequestParam(defaultValue = "0") int runDurationSeconds,
-                       @RequestParam(defaultValue = "0") int rampUpBatchSize,
-                       @RequestParam(defaultValue = "1") int rampUpIntervalMillis)
+    public BatchTaskLaunchResult run(@RequestParam int vehicleCount,
+                                     @RequestParam(name = "routeIdList[]", required = false) Long[] routeIdList,
+                                     @RequestParam String vehicleNumberPattern,
+                                     @RequestParam String deviceSnPattern,
+                                     @RequestParam String simNumberPattern,
+                                     @RequestParam String serverAddress,
+                                     @RequestParam String serverPort,
+                                     @RequestParam(defaultValue = "5") int reportIntervalSeconds,
+                                     @RequestParam(defaultValue = "0") int runDurationSeconds,
+                                     @RequestParam(defaultValue = "0") int rampUpBatchSize,
+                                     @RequestParam(defaultValue = "1") int rampUpIntervalMillis)
     {
-        Result result = new Result();
-        try
+        List<Long> routeIds = new ArrayList<>();
+        if (routeIdList != null)
         {
-            List<Long> routeIds = new ArrayList<>();
-            if (routeIdList != null)
+            for (Long id : routeIdList)
             {
-                for (Long id : routeIdList)
+                if (id == null || id == 0L)
                 {
-                    if (id == null || id == 0L)
-                    {
-                        routeIds.clear();
-                        break;
-                    }
-                    routeIds.add(id);
+                    routeIds.clear();
+                    break;
                 }
+                routeIds.add(id);
             }
+        }
 
-            BatchTaskLaunchRequest request = new BatchTaskLaunchRequest();
-            request.setTerminalCount(vehicleCount);
-            request.setRouteIds(routeIds);
-            request.setVehicleNumberPattern(vehicleNumberPattern);
-            request.setDeviceSnPattern(deviceSnPattern);
-            request.setSimNumberPattern(simNumberPattern);
-            request.setServerAddress(serverAddress);
-            request.setServerPort(parseServerPort(serverPort));
-            request.setMode(mode);
-            request.setReportIntervalSeconds(reportIntervalSeconds);
-            request.setRunDurationSeconds(runDurationSeconds);
-            request.setRampUpBatchSize(rampUpBatchSize);
-            request.setRampUpIntervalMillis(rampUpIntervalMillis);
+        BatchTaskLaunchRequest request = new BatchTaskLaunchRequest();
+        request.setTerminalCount(vehicleCount);
+        request.setRouteIds(routeIds);
+        request.setVehicleNumberPattern(vehicleNumberPattern);
+        request.setDeviceSnPattern(deviceSnPattern);
+        request.setSimNumberPattern(simNumberPattern);
+        request.setServerAddress(serverAddress);
+        request.setServerPort(parseServerPort(serverPort));
+        request.setMode(mode);
+        request.setReportIntervalSeconds(reportIntervalSeconds);
+        request.setRunDurationSeconds(runDurationSeconds);
+        request.setRampUpBatchSize(rampUpBatchSize);
+        request.setRampUpIntervalMillis(rampUpIntervalMillis);
 
-            result.setData(taskBatchLaunchService.launch(request));
-        }
-        catch(PreflightCheckException ex)
-        {
-            result.setError(new Result.ResultError(1, ex.getMessage()));
-            result.setData(new BatchTaskLaunchResult(0, 0, false, ex.getPreflight()));
-        }
-        catch(Exception ex)
-        {
-            result.setError(ex);
-        }
-        return result;
+        return taskBatchLaunchService.launch(request);
     }
 
     @RequestMapping("/progress")
     @ResponseBody
-    public Result progress()
+    public BatchTaskLaunchProgress progress()
     {
-        Result result = new Result();
-        try
-        {
-            result.setData(taskBatchLaunchService.currentProgress());
-        }
-        catch(Exception ex)
-        {
-            result.setError(ex);
-        }
-        return result;
+        return taskBatchLaunchService.currentProgress();
     }
 
     private int parseServerPort(String serverPort)

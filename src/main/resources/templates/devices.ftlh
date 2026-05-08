@@ -196,23 +196,11 @@
         {
             var table = layui.table;
             var form = layui.form;
-            window.deviceTable = table.render({
+            window.deviceTable = table.render($.extend(true, request.table('/device/list'), {
                 elem: '#device-table',
-                url: '/device/list',
-                method: 'post',
                 page: true,
                 limit: 20,
                 where: filterParams(),
-                request: { pageName: 'pageIndex', limitName: 'pageSize' },
-                parseData: function(result)
-                {
-                    if (result.error && result.error.code)
-                    {
-                        return { code: result.error.code, msg: result.error.reason, count: 0, data: [] };
-                    }
-                    var page = result.data || {};
-                    return { code: 0, msg: '', count: page.recordCount || 0, data: page.list || [] };
-                },
                 done: function()
                 {
                     form.render('checkbox');
@@ -248,7 +236,7 @@
                         }
                     }
                 ]]
-            });
+            }));
 
             table.on('tool(device-table)', function(obj)
             {
@@ -277,14 +265,11 @@
         layui.form.on('switch(device-status)', function(data)
         {
             var checkbox = data.elem;
-            $.post('/device/status', { id: $(checkbox).attr('data-id'), enabled: checkbox.checked ? 1 : 0 }, function(result)
+            request.post('/device/status', { id: $(checkbox).attr('data-id'), enabled: checkbox.checked ? 1 : 0 })
+                .fail(function()
             {
-                if (result.error && result.error.code)
-                {
-                    checkbox.checked = !checkbox.checked;
-                    layui.form.render('checkbox');
-                    return appNotify('error', result.error.reason);
-                }
+                checkbox.checked = !checkbox.checked;
+                layui.form.render('checkbox');
             });
         });
 
@@ -292,9 +277,8 @@
         {
             appConfirm('确定删除这个设备档案？', function()
             {
-                $.post('/device/remove', { id: id }, function(result)
+                request.post('/device/remove', { id: id }).done(function()
                 {
-                    if (result.error && result.error.code) return appNotify('error', result.error.reason);
                     appNotify('success', '删除成功');
                     reloadTable();
                 });
@@ -326,9 +310,8 @@
                 btn: ['保存', '取消'],
                 yes: function(index)
                 {
-                    $.post('/device/save', $('#device-form').serialize(), function(result)
+                    request.post('/device/save', $('#device-form').serialize()).done(function()
                     {
-                        if (result.error && result.error.code) return appNotify('error', result.error.reason);
                         layui.layer.close(index);
                         appNotify('success', '保存成功');
                         reloadTable();

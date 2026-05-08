@@ -24,8 +24,8 @@ class TaskCreationTemplateTest
         assertThat(template).contains("id=\"serverPort\"");
         assertThat(template).contains("id=\"btn-regen-all\"");
         assertThat(template).contains("id=\"btn-run\"");
-        assertThat(template).contains("$.post('./run', params");
-        assertThat(template).contains("window.location.href = '/task-groups/monitor?taskGroupId=' + result.data.taskGroupId");
+        assertThat(template).contains("request.post('./run', params)");
+        assertThat(template).contains("window.location.href = '/task-groups/monitor?taskGroupId=' + result.taskGroupId");
     }
 
     @Test
@@ -55,9 +55,9 @@ class TaskCreationTemplateTest
         assertThat(template).contains("id=\"rampUpIntervalMillis\"");
         assertThat(template).contains("id=\"batch-progress\"");
         assertThat(template).contains("startProgressPolling()");
-        assertThat(template).contains("$.post('./progress'");
-        assertThat(template).contains("$.post('./run', params");
-        assertThat(template).contains("window.location.href = '/task-groups/monitor?taskGroupId=' + result.data.taskGroupId");
+        assertThat(template).contains("request.post('./progress'");
+        assertThat(template).contains("request.post('./run', params)");
+        assertThat(template).contains("window.location.href = '/task-groups/monitor?taskGroupId=' + result.taskGroupId");
     }
 
     @Test

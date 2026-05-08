@@ -348,20 +348,21 @@
             var on = !(el.hasClass('active'));
             var bitIndex = el.index();
 
-            $.post('/monitor/bit/set', { id : taskId, type : type, bitIndex : bitIndex, on : on }, function(result)
+            request.post('/monitor/bit/set', { id : taskId, type : type, bitIndex : bitIndex, on : on }, { silentError: true }).done(function()
             {
-                if (result.error && result.error.code) return console.error(result);
                 if (on) el.addClass('active');
                 else el.removeClass('active');
+            }).fail(function(xhr)
+            {
+                console.error(xhr.responseJSON || xhr.responseText);
             });
         });
     });
 
     function terminate()
     {
-        $.post('/monitor/terminate', { id : taskId }, function(result)
+        request.post('/monitor/terminate', { id : taskId }).done(function()
         {
-            if (result.error && result.error.code) return appNotify('error', result.error.reason);
             appNotify('success', '已成功终止任务');
         });
     }
@@ -373,10 +374,8 @@
 
     function loadTaskInfo()
     {
-        $.post('/monitor/info', { id : taskId }, function(result)
+        request.post('/monitor/info', { id : taskId }).done(function(info)
         {
-            if (result.error && result.error.code) return appNotify('error', result.error.reason);
-            var info = result.data;
             $('#routeName').html(info.routeName);
             $('#routeMileages').html((info.routeMileages / 1000).toFixed(2) + ' km');
             $('#vehicleNumber').html(info.vehicleNumber);
@@ -418,10 +417,8 @@
 
     function loadLogs()
     {
-        $.post('/monitor/logs', { id : taskId, timeAfter : lastLogTime }, function(result)
+        request.post('/monitor/logs', { id : taskId, timeAfter : lastLogTime }, { silentError: true }).done(function(logs)
         {
-            if (result.error && result.error.code) return console.error(result), setTimeout(loadLogs, 2000);
-            var logs = result.data;
             var table = $('#logs');
             for (var i = 0; logs && i < logs.length; i++)
             {
@@ -445,26 +442,32 @@
             }
 
             setTimeout(loadLogs, 2000);
+        }).fail(function(xhr)
+        {
+            console.error(xhr.responseJSON || xhr.responseText);
+            setTimeout(loadLogs, 2000);
         });
     }
 
     function trace()
     {
-        $.post('/monitor/position', { id : taskId, time : lastPositionTime }, function(result)
+        request.post('/monitor/position', { id : taskId, time : lastPositionTime }, { silentError: true }).done(function(result)
         {
-            if (result.error && result.error.code) return console.error(result), setTimeout(trace, 2000);
-
-            if (result.data)
+            if (result)
             {
-                lastPositionTime = result.data.reportTime;
-                showCurrentPosition(result.data.longitude, result.data.latitude, result.data.reportTime);
+                lastPositionTime = result.reportTime;
+                showCurrentPosition(result.longitude, result.latitude, result.reportTime);
                 if (vehicle) {
-                    var target = L.latLng(result.data.latitude, result.data.longitude);
-                    target.arrivalTime = result.data.reportTime;
-                    vehicle.moveTo(target, result.data.reportTime, result.data.direction);
+                    var target = L.latLng(result.latitude, result.longitude);
+                    target.arrivalTime = result.reportTime;
+                    vehicle.moveTo(target, result.reportTime, result.direction);
                 }
             }
 
+            setTimeout(trace, 2000);
+        }).fail(function(xhr)
+        {
+            console.error(xhr.responseJSON || xhr.responseText);
             setTimeout(trace, 2000);
         });
     }

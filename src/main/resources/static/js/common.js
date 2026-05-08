@@ -47,3 +47,56 @@ function appConfirm(text, onOk, onCancel)
         });
     });
 }
+
+var request = {
+    errorMessage: function(xhr)
+    {
+        var body = xhr && xhr.responseJSON;
+        if (body && body.message) return body.message;
+        if (xhr && xhr.responseText) return xhr.responseText;
+        return '请求失败';
+    },
+    ajax: function(options)
+    {
+        var settings = $.extend({
+            type: 'post',
+            method: 'post'
+        }, options || {});
+        var silentError = settings.silentError === true;
+        delete settings.silentError;
+
+        var jqxhr = $.ajax(settings);
+        if (!silentError)
+        {
+            jqxhr.fail(function(xhr)
+            {
+                appNotify('error', request.errorMessage(xhr));
+            });
+        }
+        return jqxhr;
+    },
+    post: function(url, data, options)
+    {
+        return request.ajax($.extend({
+            url: url,
+            data: data
+        }, options || {}));
+    },
+    table: function(options)
+    {
+        var settings = typeof(options) === 'string' ? { url: options } : $.extend({}, options || {});
+        return $.extend({
+            method: 'post',
+            request: { pageName: 'pageIndex', limitName: 'pageSize' },
+            parseData: function(page)
+            {
+                page = page || {};
+                return { code: 0, msg: '', count: page.recordCount || 0, data: page.list || [] };
+            },
+            error: function(xhr)
+            {
+                appNotify('error', request.errorMessage(xhr));
+            }
+        }, settings);
+    }
+};

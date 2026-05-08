@@ -3,7 +3,6 @@ package cn.org.hentai.simulator.web.controller;
 import cn.org.hentai.simulator.service.task.SingleTaskLaunchRequest;
 import cn.org.hentai.simulator.service.task.SingleTaskLaunchService;
 import cn.org.hentai.simulator.service.task.TaskCreationResult;
-import cn.org.hentai.simulator.web.vo.Result;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -17,10 +16,8 @@ class TaskControllerTest
         TaskController controller = new TaskController();
         ReflectionTestUtils.setField(controller, "singleTaskLaunchService", new RecordingSingleTaskLaunchService());
 
-        Result result = controller.run(10L, "京A00001", "DEVICE001", "13800000001", "0", "127.0.0.1", "20021");
+        TaskCreationResult data = controller.run(10L, "京A00001", "DEVICE001", "13800000001", "0", "127.0.0.1", "20021");
 
-        assertEquals(0, result.getError().getCode());
-        TaskCreationResult data = (TaskCreationResult) result.getData();
         assertEquals("TG-1", data.getTaskGroupId());
         assertEquals("单车创建 #1", data.getTaskGroupDisplayName());
         assertEquals("single", data.getTaskGroupSource());

@@ -5,13 +5,16 @@ import cn.org.hentai.simulator.service.RouteManager;
 import cn.org.hentai.simulator.service.TaskManager;
 import cn.org.hentai.simulator.domain.entity.Route;
 import cn.org.hentai.simulator.service.RouteService;
+import cn.org.hentai.simulator.service.monitor.TaskRuntimeSummary;
+import cn.org.hentai.simulator.service.monitor.TaskStopResult;
 import cn.org.hentai.simulator.web.vo.Page;
-import cn.org.hentai.simulator.web.vo.Result;
+import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 @Controller
 @RequestMapping("/monitor/list")
@@ -28,79 +31,44 @@ public class MonitorController extends BaseController
 
     @RequestMapping("/json")
     @ResponseBody
-    public Result listJson(@RequestParam(defaultValue = "1") int pageIndex,
-                           @RequestParam(defaultValue = "20") int pageSize,
-                           @RequestParam(required = false) String state,
-                           @RequestParam(required = false) String keyword,
-                           @RequestParam(required = false) String taskGroupId)
+    public Page<TaskInfo> listJson(@RequestParam(defaultValue = "1") int pageIndex,
+                                   @RequestParam(defaultValue = "20") int pageSize,
+                                   @RequestParam(required = false) String state,
+                                   @RequestParam(required = false) String keyword,
+                                   @RequestParam(required = false) String taskGroupId)
     {
-        Result result = new Result();
-        try
+        Page<TaskInfo> page = TaskManager.getInstance().find(pageIndex, pageSize, state, keyword, taskGroupId);
+        for (TaskInfo task : page.getList())
         {
-            Page<TaskInfo> page = TaskManager.getInstance().find(pageIndex, pageSize, state, keyword, taskGroupId);
-            for (TaskInfo task : page.getList())
+            Route route = routeService.getById(task.getRouteId());
+            if (route != null)
             {
-                Route route = routeService.getById(task.getRouteId());
-                if (route != null)
-                {
-                    task.setRouteName(route.getName());
-                    task.setRouteMileages(route.getMileages());
-                }
+                task.setRouteName(route.getName());
+                task.setRouteMileages(route.getMileages());
             }
-            result.setData(page);
         }
-        catch(Exception ex)
-        {
-            result.setError(ex);
-        }
-        return result;
+        return page;
     }
 
     @RequestMapping("/summary")
     @ResponseBody
-    public Result summary()
+    public TaskRuntimeSummary summary()
     {
-        Result result = new Result();
-        try
-        {
-            result.setData(TaskManager.getInstance().getRuntimeSummary());
-        }
-        catch(Exception ex)
-        {
-            result.setError(ex);
-        }
-        return result;
+        return TaskManager.getInstance().getRuntimeSummary();
     }
 
     @RequestMapping("/terminate")
     @ResponseBody
-    public Result terminate(@RequestParam Long id)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void terminate(@RequestParam Long id)
     {
-        Result result = new Result();
-        try
-        {
-            TaskManager.getInstance().terminate(id);
-        }
-        catch(Exception ex)
-        {
-            result.setError(ex);
-        }
-        return result;
+        TaskManager.getInstance().terminate(id);
     }
 
     @RequestMapping("/terminate-all")
     @ResponseBody
-    public Result terminateAll()
+    public TaskStopResult terminateAll()
     {
-        Result result = new Result();
-        try
-        {
-            result.setData(TaskManager.getInstance().terminateActiveTasks());
-        }
-        catch(Exception ex)
-        {
-            result.setError(ex);
-        }
-        return result;
+        return TaskManager.getInstance().terminateActiveTasks();
     }
 }

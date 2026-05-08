@@ -7,7 +7,6 @@ import cn.org.hentai.simulator.engine.core.AbstractDriveTask;
 import cn.org.hentai.simulator.service.RouteService;
 import cn.org.hentai.simulator.service.TaskManager;
 import cn.org.hentai.simulator.web.vo.Page;
-import cn.org.hentai.simulator.web.vo.Result;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -37,10 +36,8 @@ class MonitorControllerTest
         tasks().put(first.getId(), first);
         tasks().put(second.getId(), second);
 
-        Result result = controller.listJson(1, 20, null, null, "TG-1");
+        Page<TaskInfo> page = controller.listJson(1, 20, null, null, "TG-1");
 
-        Page<TaskInfo> page = (Page<TaskInfo>) result.getData();
-        assertEquals(0, result.getError().getCode());
         assertEquals(1L, page.getRecordCount());
         assertEquals(1L, page.getList().get(0).getId());
         assertEquals("TG-1", page.getList().get(0).getTaskGroupId());

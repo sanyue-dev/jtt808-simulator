@@ -284,10 +284,12 @@
 
         function loadSnapshot()
         {
-            $.post('/task-groups/snapshot', function(result)
+            request.post('/task-groups/snapshot', {}, { silentError: true }).done(function(result)
             {
-                if (result.error && result.error.code) return appNotify('error', result.error.reason);
-                renderSnapshot(result.data || {});
+                renderSnapshot(result || {});
+            }).fail(function(xhr)
+            {
+                console.error(xhr.responseJSON || xhr.responseText);
             });
         }
 
@@ -386,9 +388,8 @@
         $('#task-group-list').on('click', '[data-action="stop"]', function()
         {
             var id = $(this).closest('tr').attr('data-task-group-id');
-            $.post('/task-groups/stop', { taskGroupId: id }, function(result)
+            request.post('/task-groups/stop', { taskGroupId: id }).done(function()
             {
-                if (result.error && result.error.code) return appNotify('error', result.error.reason);
                 loadSnapshot();
             });
         });

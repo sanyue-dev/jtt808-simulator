@@ -2,14 +2,15 @@ package cn.org.hentai.simulator.web.controller;
 
 import cn.org.hentai.simulator.domain.entity.DeviceProfile;
 import cn.org.hentai.simulator.service.DeviceProfileService;
+import cn.org.hentai.simulator.web.exception.ValidationException;
 import cn.org.hentai.simulator.web.vo.Page;
-import cn.org.hentai.simulator.web.vo.Result;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class DeviceControllerTest
 {
@@ -20,7 +21,7 @@ class DeviceControllerTest
         RecordingDeviceProfileService service = new RecordingDeviceProfileService();
         ReflectionTestUtils.setField(controller, "deviceProfileService", service);
 
-        Result result = controller.save(null,
+        DeviceProfile saved = controller.save(null,
                 "线上设备复现",
                 "京A12345",
                 "DEVICE001",
@@ -33,8 +34,6 @@ class DeviceControllerTest
                 "100",
                 "复现报警联调");
 
-        assertEquals(0, result.getError().getCode());
-        DeviceProfile saved = (DeviceProfile) result.getData();
         assertEquals(1L, saved.getId());
         assertEquals("线上设备复现", service.recorded.getName());
         assertEquals("京A12345", service.recorded.getVehicleNumber());
@@ -57,15 +56,35 @@ class DeviceControllerTest
         RecordingDeviceProfileService service = new RecordingDeviceProfileService();
         ReflectionTestUtils.setField(controller, "deviceProfileService", service);
 
-        Result result = controller.list(2, 10, "线上");
+        Page<DeviceProfile> page = controller.list(2, 10, "线上");
 
-        assertEquals(0, result.getError().getCode());
-        Page<DeviceProfile> page = (Page<DeviceProfile>) result.getData();
         assertEquals(2, page.getPageIndex());
         assertEquals(10, page.getPageSize());
         assertEquals(1, page.getList().size());
         assertEquals("线上设备复现", page.getList().get(0).getName());
         assertEquals("线上", service.keyword);
+    }
+
+    @Test
+    void saveRejectsInvalidServerPortAsValidationFailure()
+    {
+        DeviceController controller = new DeviceController();
+        ReflectionTestUtils.setField(controller, "deviceProfileService", new RecordingDeviceProfileService());
+
+        ValidationException ex = assertThrows(ValidationException.class, () -> controller.save(null,
+                "线上设备复现",
+                "京A12345",
+                "DEVICE001",
+                "013800000001",
+                "AUTH-CODE",
+                "direct",
+                10L,
+                "127.0.0.1",
+                "abc",
+                "100",
+                "复现报警联调"));
+
+        assertEquals("服务端端口必须是整数", ex.getMessage());
     }
 
     @Test
@@ -75,9 +94,8 @@ class DeviceControllerTest
         RecordingDeviceProfileService service = new RecordingDeviceProfileService();
         ReflectionTestUtils.setField(controller, "deviceProfileService", service);
 
-        Result result = controller.remove(12L);
+        controller.remove(12L);
 
-        assertEquals(0, result.getError().getCode());
         assertEquals(12L, service.removedId);
     }
 
@@ -88,9 +106,8 @@ class DeviceControllerTest
         RecordingDeviceProfileService service = new RecordingDeviceProfileService();
         ReflectionTestUtils.setField(controller, "deviceProfileService", service);
 
-        Result result = controller.status(12L, 0);
+        controller.status(12L, 0);
 
-        assertEquals(0, result.getError().getCode());
         assertEquals(12L, service.statusId);
         assertEquals(0, service.enabled);
     }

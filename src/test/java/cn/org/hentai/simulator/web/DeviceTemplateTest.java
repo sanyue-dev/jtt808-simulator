@@ -63,10 +63,11 @@ class DeviceTemplateTest
     {
         String template = read("/templates/devices.ftlh");
 
-        assertThat(template).contains("window.deviceTable = table.render({");
+        assertThat(template).contains("window.deviceTable = table.render($.extend(true, request.table('/device/list')");
         assertThat(template).contains("elem: '#device-table'");
-        assertThat(template).contains("parseData: function(result)");
-        assertThat(template).contains("request: { pageName: 'pageIndex', limitName: 'pageSize' }");
+        assertThat(template).doesNotContain("parseData: function(result)");
+        assertThat(template).doesNotContain("result.error");
+        assertThat(template).doesNotContain("result.data");
         assertThat(template).contains("{ field: 'vehicleNumber', title: '车牌号', align: 'left'");
         assertThat(template).contains("{ field: 'deviceSn', title: '终端ID', align: 'left'");
         assertThat(template).contains("{ field: 'simNumber', title: 'SIM卡号', align: 'left'");
@@ -80,6 +81,7 @@ class DeviceTemplateTest
         assertThat(template).contains("title: '状态'");
         assertThat(template).contains("field: 'enabled'");
         assertThat(template).contains("layui.form.on('switch(device-status)'");
+        assertThat(template).contains("request.post('/device/status'");
         assertThat(template).doesNotContain("class=\"layui-btn layui-btn-xs layui-btn-primary btn-status\"");
         assertThat(template).doesNotContain("layui-badge layui-bg-gray");
         assertThat(template).doesNotContain("layui-badge layui-bg-green");

@@ -54,10 +54,11 @@ class MonitorTemplateTest
     {
         String template = read("/templates/monitor-list-index.ftlh");
 
-        assertThat(template).contains("window.monitorTable = table.render({");
+        assertThat(template).contains("window.monitorTable = table.render($.extend(true, request.table('/monitor/list/json')");
         assertThat(template).contains("elem: '#monitor-table'");
-        assertThat(template).contains("parseData: function(result)");
-        assertThat(template).contains("request: { pageName: 'pageIndex', limitName: 'pageSize' }");
+        assertThat(template).doesNotContain("parseData: function(result)");
+        assertThat(template).doesNotContain("result.error");
+        assertThat(template).doesNotContain("result.data");
         assertThat(template).contains("name=\"taskGroupId\"");
         assertThat(template).contains("id=\"task-group-filter-context\"");
         assertThat(template).contains("id=\"task-group-filter-value\"");
@@ -97,7 +98,7 @@ class MonitorTemplateTest
 
         assertThat(template).contains("id=\"btn-terminate-all\"");
         assertThat(template).contains("停止全部未终止任务");
-        assertThat(template).contains("$.post('/monitor/list/terminate-all'");
+        assertThat(template).contains("request.post('/monitor/list/terminate-all'");
     }
 
     @Test
