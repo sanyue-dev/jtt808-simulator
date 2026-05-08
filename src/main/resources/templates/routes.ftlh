@@ -11,9 +11,14 @@
         <div class="app-page">
             <div class="page-header">
                 <h2>线路管理</h2>
-                <a href="/route/create" class="layui-btn layui-btn-sm"><i class="layui-icon layui-icon-add-1"></i>创建新线路</a>
             </div>
             <div class="page-body">
+                <div class="table-toolbar">
+                    <div class="table-toolbar__filters"></div>
+                    <div class="table-toolbar__actions">
+                        <a href="/route/create" class="layui-btn layui-btn-sm"><i class="layui-icon layui-icon-add-1"></i>创建新线路</a>
+                    </div>
+                </div>
                 <div class="app-table-panel">
                     <table id="route-table" lay-filter="route-table"></table>
                 </div>

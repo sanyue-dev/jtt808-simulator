@@ -12,6 +12,7 @@ class DeviceTemplateTest
     void deviceCreateActionStaysInTableToolbarActions() throws Exception
     {
         String template = read("/templates/devices.ftlh");
+        String commonCss = read("/static/css/common.css");
 
         assertThat(template).contains("<div class=\"table-toolbar\">");
         assertThat(template).contains("<form class=\"layui-form table-toolbar__filters\" id=\"device-filter\">");
@@ -36,16 +37,16 @@ class DeviceTemplateTest
         String actions = template.substring(actionsStart, actionsEnd);
         assertThat(actions).contains("id=\"btn-create-device\"");
 
-        assertThat(template).contains(".table-toolbar");
-        assertThat(template).contains("justify-content: space-between;");
-        assertThat(template).contains(".table-toolbar__actions");
-        assertThat(template).contains("margin-left: auto;");
-        assertThat(template).contains(".table-toolbar .layui-btn");
-        assertThat(template).contains("margin-left: 0;");
-        assertThat(template).contains("transition: none;");
-        assertThat(template).contains(".table-toolbar .layui-input,");
-        assertThat(template).contains("height: 32px;");
-        assertThat(template).contains("line-height: 32px;");
+        assertThat(commonCss).contains(".table-toolbar");
+        assertThat(commonCss).contains("justify-content: space-between;");
+        assertThat(commonCss).contains(".table-toolbar__actions");
+        assertThat(commonCss).contains("margin-left: auto;");
+        assertThat(commonCss).contains(".table-toolbar .layui-btn");
+        assertThat(commonCss).contains("margin-left: 0;");
+        assertThat(commonCss).contains("transition: none;");
+        assertThat(commonCss).contains(".table-toolbar .layui-input,");
+        assertThat(commonCss).contains("height: 32px;");
+        assertThat(commonCss).contains("line-height: 32px;");
     }
 
     @Test

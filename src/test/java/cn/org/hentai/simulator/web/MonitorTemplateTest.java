@@ -106,9 +106,12 @@ class MonitorTemplateTest
     {
         String template = read("/templates/monitor-list-index.ftlh");
 
-        assertThat(template).contains("<form class=\"layui-form toolbar\"");
+        assertThat(template).contains("<div class=\"table-toolbar\">");
+        assertThat(template).contains("<form class=\"layui-form table-toolbar__filters monitor-toolbar__filters\"");
+        assertThat(template).contains("<div class=\"table-toolbar__actions\">");
         assertThat(template).contains("class=\"layui-input\" type=\"text\" name=\"keyword\"");
-        assertThat(template).contains(".toolbar .layui-input-inline:nth-child(3)");
+        assertThat(template).contains("monitor-toolbar__keyword");
+        assertThat(template).contains(".monitor-toolbar__keyword");
         assertThat(template).contains("width: 260px;");
     }
 

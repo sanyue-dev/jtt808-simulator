@@ -13,24 +13,28 @@
                 <h2>行程任务</h2>
             </div>
             <div class="page-body">
-                <form class="layui-form toolbar" id="monitor-filter">
-                    <input type="hidden" name="taskGroupId" value="" />
-                    <div class="layui-input-inline">
-                        <select name="state" id="stateSelect">
-                            <option value="">全部状态</option>
-                            <option value="空闲">空闲</option>
-                            <option value="行驶中">行驶中</option>
-                            <option value="停车中">停车中</option>
-                            <option value="行驶终止">行驶终止</option>
-                        </select>
+                <div class="table-toolbar">
+                    <form class="layui-form table-toolbar__filters monitor-toolbar__filters" id="monitor-filter">
+                        <input type="hidden" name="taskGroupId" value="" />
+                        <div class="layui-input-inline monitor-toolbar__state">
+                            <select name="state" id="stateSelect">
+                                <option value="">全部状态</option>
+                                <option value="空闲">空闲</option>
+                                <option value="行驶中">行驶中</option>
+                                <option value="停车中">停车中</option>
+                                <option value="行驶终止">行驶终止</option>
+                            </select>
+                        </div>
+                        <div class="layui-input-inline monitor-toolbar__keyword">
+                            <input class="layui-input" type="text" name="keyword" placeholder="车牌号 / SIM / 终端ID" />
+                        </div>
+                        <button class="layui-btn layui-btn-sm" type="submit"><i class="layui-icon layui-icon-search"></i>筛选</button>
+                        <button class="layui-btn layui-btn-primary layui-btn-sm" type="button" id="btn-clear-filter">清空</button>
+                    </form>
+                    <div class="table-toolbar__actions">
+                        <button class="layui-btn layui-btn-danger layui-btn-sm" type="button" id="btn-terminate-all">停止全部未终止任务</button>
                     </div>
-                    <div class="layui-input-inline">
-                        <input class="layui-input" type="text" name="keyword" placeholder="车牌号 / SIM / 终端ID" />
-                    </div>
-                    <button class="layui-btn layui-btn-sm" type="submit"><i class="layui-icon layui-icon-search"></i>筛选</button>
-                    <button class="layui-btn layui-btn-primary layui-btn-sm" type="button" id="btn-clear-filter">清空</button>
-                    <button class="layui-btn layui-btn-danger layui-btn-sm" type="button" id="btn-terminate-all">停止全部未终止任务</button>
-                </form>
+                </div>
                 <blockquote class="layui-elem-quote layui-quote-nm monitor-filter-context" id="task-group-filter-context">
                     <span>当前按任务组过滤：</span>
                     <strong id="task-group-filter-value"></strong>
@@ -47,8 +51,8 @@
 <#include "inc/footer.ftlh">
 <style>
     .monitor-filter-context { display: none; margin-bottom: 12px; }
-    .toolbar .layui-input-inline { width: 180px; margin-right: 0; }
-    .toolbar .layui-input-inline:nth-child(3) { width: 260px; }
+    .monitor-toolbar__state { width: 180px; }
+    .monitor-toolbar__keyword { width: 260px; }
 </style>
 <script type="text/javascript">
     layui.use('form', function() { layui.form.render(); });
