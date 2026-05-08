@@ -86,7 +86,7 @@
             var table = layui.table;
             window.monitorTable = table.render($.extend(true, request.table('/monitor/list/json'), {
                 elem: '#monitor-table',
-                page: true,
+                page: { layout: ['prev', 'page', 'next', 'count', 'limit'] },
                 limit: 20,
                 where: filterParams(),
                 cols: [[

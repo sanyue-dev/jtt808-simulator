@@ -32,7 +32,7 @@
             var table = layui.table;
             window.routeTable = table.render($.extend(true, request.table('/route/list'), {
                 elem: '#route-table',
-                page: true,
+                page: { layout: ['prev', 'page', 'next', 'count', 'limit'] },
                 limit: 20,
                 cols: [[
                     {

@@ -198,7 +198,7 @@
             var form = layui.form;
             window.deviceTable = table.render($.extend(true, request.table('/device/list'), {
                 elem: '#device-table',
-                page: true,
+                page: { layout: ['prev', 'page', 'next', 'count', 'limit'] },
                 limit: 20,
                 where: filterParams(),
                 done: function()
