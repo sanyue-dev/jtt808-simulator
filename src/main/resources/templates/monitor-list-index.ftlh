@@ -53,6 +53,24 @@
     .monitor-filter-context { display: none; margin-bottom: 12px; }
     .monitor-toolbar__state { width: 180px; }
     .monitor-toolbar__keyword { width: 260px; }
+    .monitor-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        white-space: nowrap;
+    }
+    .monitor-action-link {
+        color: var(--color-primary);
+        line-height: 22px;
+    }
+    .monitor-action-link:hover {
+        color: var(--color-primary);
+        text-decoration: underline;
+    }
+    .monitor-action-danger,
+    .monitor-action-danger:hover {
+        color: var(--app-danger);
+    }
 </style>
 <script type="text/javascript">
     layui.use('form', function() { layui.form.render(); });
@@ -148,13 +166,14 @@
                     },
                     {
                         title: '操作',
-                        align: 'center',
-                        width: 170,
+                        align: 'left',
+                        width: 120,
                         templet: function(r)
                         {
-                            var html = '';
-                            html += '<a href="/monitor/view?id=' + r.id + '" target="_blank" class="layui-btn layui-btn-xs">详情</a>';
-                            if (r.state !== '行驶终止') html += ' <a href="javascript:;" lay-event="terminate" class="layui-btn layui-btn-xs layui-btn-primary">停止</a>';
+                            var html = '<span class="monitor-actions">';
+                            html += '<a href="/monitor/view?id=' + r.id + '" target="_blank" class="monitor-action-link">详情</a>';
+                            if (r.state !== '行驶终止') html += '<a href="javascript:;" lay-event="terminate" class="monitor-action-link monitor-action-danger">停止</a>';
+                            html += '</span>';
                             return html;
                         }
                     }

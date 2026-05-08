@@ -3,6 +3,26 @@
 <head>
 <#include "inc/resource.ftlh">
     <title>线路管理</title>
+    <style>
+        .route-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            white-space: nowrap;
+        }
+        .route-action-link {
+            color: var(--color-primary);
+            line-height: 22px;
+        }
+        .route-action-link:hover {
+            color: var(--color-primary);
+            text-decoration: underline;
+        }
+        .route-action-danger,
+        .route-action-danger:hover {
+            color: var(--app-danger);
+        }
+    </style>
 </head>
 <body>
 <div class="layui-layout layui-layout-admin app-layout">
@@ -87,13 +107,14 @@
                     },
                     {
                         title: '操作',
-                        align: 'center',
-                        width: 160,
+                        align: 'left',
+                        width: 120,
                         templet: function(r)
                         {
-                            var html = '';
-                            html += '<a href="/route/edit?id=' + r.id + '" class="layui-btn layui-btn-xs">编辑</a>';
-                            html += '<a href="javascript:;" lay-event="remove" class="layui-btn layui-btn-xs layui-btn-danger">删除</a>';
+                            var html = '<span class="route-actions">';
+                            html += '<a href="/route/edit?id=' + r.id + '" class="route-action-link">编辑</a>';
+                            html += '<a href="javascript:;" lay-event="remove" class="route-action-link route-action-danger">删除</a>';
+                            html += '</span>';
                             return html;
                         }
                     }

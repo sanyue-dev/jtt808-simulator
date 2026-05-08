@@ -115,6 +115,22 @@ class MonitorTemplateTest
         assertThat(template).contains("width: 260px;");
     }
 
+    @Test
+    void tripTaskActionsUseLightweightLeftAlignedTextActions() throws Exception
+    {
+        String template = read("/templates/monitor-list-index.ftlh");
+
+        assertThat(template).contains(".monitor-actions");
+        assertThat(template).contains("display: inline-flex;");
+        assertThat(template).contains("title: '操作'");
+        assertThat(template).contains("align: 'left'");
+        assertThat(template).contains("width: 120");
+        assertThat(template).contains("target=\"_blank\" class=\"monitor-action-link\">详情");
+        assertThat(template).contains("lay-event=\"terminate\" class=\"monitor-action-link monitor-action-danger\">停止");
+        assertThat(template).doesNotContain("class=\"layui-btn layui-btn-xs\">详情");
+        assertThat(template).doesNotContain("class=\"layui-btn layui-btn-xs layui-btn-primary\">停止");
+    }
+
     private String read(String path) throws Exception
     {
         return new String(getClass().getResourceAsStream(path).readAllBytes(), StandardCharsets.UTF_8);
